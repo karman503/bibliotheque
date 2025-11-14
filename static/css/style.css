@@ -1,0 +1,208 @@
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .15);
+    transition: box-shadow 0.3s;
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
+
+.card-hover:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+}
+
+.sidebar {
+    width: 260px;
+    min-height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background: #fff;
+    z-index: 1000;
+}
+
+.content {
+    min-height: 100vh;
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+}
+
+/* Contenu avec sidebar (utilisateur connecté) */
+.has-sidebar .content,
+.has-sidebar header,
+.has-sidebar footer {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+}
+
+/* Contenu sans sidebar (utilisateur non connecté) */
+.no-sidebar .content,
+.no-sidebar header,
+.no-sidebar footer {
+    margin-left: 0;
+    width: 100%;
+}
+
+.sidebar a {
+    border-radius: 8px;
+}
+
+/* Style pour les pages de connexion et création d'admin */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+}
+
+/* pour la page statistiques */
+.progress {
+    height: 20px;
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Hero image circular and responsive */
+.hero-image {
+    /* make the hero image large, perfectly circular and responsive
+       it will take available column width up to a cap and keep 1:1 ratio */
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 1 / 1;
+    display: block;
+    margin: 0 auto;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 6px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+/* Animated title */
+.static-text {
+    display: inline-block;
+    margin-right: 8px;
+}
+
+#animated-title {
+    display: inline-block;
+    color: #0d6efd;
+    font-weight: 700;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Card equalization to match 'Livres à la une' */
+:root {
+    --featured-img-height: 260px;
+    --featured-card-min-height: 380px;
+}
+
+.card-match-featured {
+    height: 100%;
+}
+
+.card-match-featured .card-body {
+    height: 100%;
+    padding: 1.5rem;
+}
+
+/* Stronger visible shadow for all cards */
+.card {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Progressive section backgrounds */
+.section-1 {
+    background: #ffffff;
+}
+
+.section-2 {
+    background: #fbfbfd;
+}
+
+.section-3 {
+    background: #f7f8fb;
+}
+
+.section-4 {
+    background: #f2f4f9;
+}
+
+/* Small responsive tweaks */
+@media (max-width: 767px) {
+    .hero-image {
+        width: 70%;
+        max-width: 260px;
+    }
+}
+/* --- Profile / header tweaks --- */
+/* Hide the bootstrap dropdown caret for profile icon */
+.dropdown-toggle-no-caret::after {
+    display: none !important;
+}
+
+/* Small avatar in header */
+.header-profile-avatar {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Center dropdown toggle contents and remove extra spacing */
+.navbar .nav-link.profile-only {
+    padding: .25rem .5rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+/* Sidebar hidden on profile view (applied via body class 'no-sidebar-on-profile') */
+body.no-sidebar-on-profile .sidebar {
+    display: none !important;
+}
+
+/* Adjust main content to be full width when sidebar hidden */
+body.no-sidebar-on-profile .content {
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+/* Profile page avatar larger and camera button positioned */
+.profile-avatar-lg {
+    width: 130px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.profile-avatar-wrapper {
+    width: 130px;
+    height: 130px;
+    position: relative;
+    display: inline-block;
+}
+
+.profile-camera-btn {
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+/* --- Fix footer full-width on profile page --- */
+body.no-sidebar-on-profile footer {
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+body.no-sidebar-on-profile .site-footer,
+body.no-sidebar-on-profile footer {
+    max-width: 100% !important;
+}

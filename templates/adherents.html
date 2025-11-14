@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid p-4">
+
+    <!-- Titre -->
+    <div class="mb-4">
+        <h2 class="fw-bold">Gestion des adhérents</h2>
+        <p class="text-muted">Gérez les membres de la bibliothèque</p>
+    </div>
+
+    <!-- Filtres + Boutons -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                <!-- Recherche -->
+                <div class="col-md-4">
+                    <label class="form-label">Rechercher</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-search-line"></i></span>
+                        <input type="text" class="form-control" placeholder="Nom, email, téléphone...">
+                    </div>
+                </div>
+
+                <!-- Classe -->
+                <div class="col-md-4">
+                    <label class="form-label">Classe</label>
+                    <select class="form-select">
+                        <option>Toutes les classes</option>
+                        <option>Licence FS</option>
+                        <option>Licence FLLSH</option>
+                        <option>Licence EG</option>
+                        <option>Licence FDEG</option>
+                    </select>
+                </div>
+
+                <!-- Statut -->
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select">
+                        <option>Tous</option>
+                        <option>Actif</option>
+                        <option>Suspendu</option>
+                        <option>Inactif</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Boutons -->
+            <div class="mt-4 d-flex gap-2">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nouvelAdherentModal">
+                    <i class="ri-user-add-line me-1"></i> Nouvel adhérent
+                </button>
+
+                <button class="btn btn-outline-secondary">
+                    <i class="ri-download-line me-1"></i> Exporter
+                </button>
+
+                <button class="btn btn-outline-secondary">
+                    <i class="ri-mail-line me-1"></i> Envoyer rappel
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body table-responsive">
+
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Adhérent</th>
+                        <th>Contact</th>
+                        <th>Classe</th>
+                        <th>Emprunts</th>
+                        <th>Date inscription</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for a in adherents %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center"
+                                    style="width:40px; height:40px;">
+                                    {{ a.nom[0] }}{{ a.prenom[0] }}
+                                </div>
+                                <div class="ms-3">
+                                    <div class="fw-semibold">{{ a.nom }} {{ a.prenom }}</div>
+                                    <small class="text-muted">ID {{ a.id }}</small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            {{ a.email }}<br>
+                            <small class="text-muted">{{ a.telephone or '-' }}</small>
+                        </td>
+
+                        <td>
+                            {% if a.classe %}{{ a.classe }}{% else %}-{% endif %}
+                        </td>
+
+                        <td>
+                            {{ a.emprunts|length }} en cours
+                        </td>
+
+                        <td>
+                            {{ a.date_inscription.strftime('%d/%m/%Y') }}
+                        </td>
+
+                        <td class="d-flex gap-1">
+                            <a href="#" class="btn btn-outline-secondary btn-sm">
+                                <i class="ri-eye-line me-1"></i> Voir
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary btn-sm">
+                                <i class="ri-edit-line me-1"></i> Modifier
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary btn-sm">
+                                <i class="ri-bookmark-line me-1"></i> Emprunts
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Nouvel Adhérent -->
+<div class="modal fade" id="nouvelAdherentModal" tabindex="-1" aria-labelledby="nouvelAdherentLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="nouvelAdherentLabel">
+                    <i class="ri-user-add-line me-1 text-primary"></i> Ajouter un nouvel adhérent
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="formNouvelAdherent" method="POST" action="{{ url_for('adherents') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nom</label>
+                            <input type="text" name="nom" class="form-control" placeholder="Ex: Dubois" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Prénom</label>
+                            <input type="text" name="prenom" class="form-control" placeholder="Ex: Marie" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control"
+                                placeholder="Ex: marie.dubois@ecole.fr" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Téléphone</label>
+                            <input type="text" name="telephone" class="form-control" placeholder="Ex: 01 23 45 67 89">
+                        </div>
+
+                        <!-- Nouvelle sélection Classe -->
+                        <div class="col-md-6">
+                            <label class="form-label">Classe</label>
+                            <select name="classe" class="form-select">
+                                <option>Licence FS</option>
+                                <option>Licence FLLSH</option>
+                                <option>Licence EG</option>
+                                <option>Licence FDEG</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" class="btn btn-primary" form="formNouvelAdherent">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

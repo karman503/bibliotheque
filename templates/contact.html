@@ -1,0 +1,168 @@
+{% include "header.html" %}
+<main class="container py-5">
+    <!-- Section titre -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold mb-3">Contactez-nous</h1>
+        <p class="lead text-muted mx-auto" style="max-width: 700px;">
+            Notre équipe est à votre disposition pour répondre à toutes vos questions et vous accompagner dans vos
+            recherches.
+        </p>
+    </div>
+
+    <!-- Grille principale -->
+    <div class="row g-4">
+        <!-- Colonne gauche : Informations + Map -->
+        <div class="col-lg-4">
+            <!-- Informations de contact -->
+            <div class="card mb-4 shadow-sm border">
+                <div class="card-body">
+                    <h2 class="h5 fw-bold mb-4">Informations de contact</h2>
+
+                    <div class="d-flex mb-3">
+                        <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center me-3"
+                            style="width:48px; height:48px;">
+                            <i class="ri-map-pin-line fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Adresse</h6>
+                            <p class="mb-0 text-muted">5 Rue de la Bibliothèque<br>Balbala, Djibouti</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex mb-3">
+                        <div class="bg-success text-white rounded d-flex align-items-center justify-content-center me-3"
+                            style="width:48px; height:48px;">
+                            <i class="ri-phone-line fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Téléphone</h6>
+                            <p class="mb-0 text-muted">77 59 35 38</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex mb-3">
+                        <div class="bg-purple text-white rounded d-flex align-items-center justify-content-center me-3"
+                            style="width:48px; height:48px;">
+                            <i class="ri-mail-line fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Email</h6>
+                            <p class="mb-0 text-muted">contact@BibliosDjib.fr</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex">
+                        <div class="bg-warning text-white rounded d-flex align-items-center justify-content-center me-3"
+                            style="width:48px; height:48px;">
+                            <i class="ri-time-line fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Horaires</h6>
+                            <p class="mb-0 text-muted small">
+                                Dimanche - Jeudi : 8h - 20h<br>
+                                Samedi : 9h - 18h<br>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carte Google Maps -->
+            <div class="card shadow-sm border">
+                <div class="ratio ratio-16x9">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3401.576899069631!2d43.13423281568005!3d11.59583181604635!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x16208e66fa413b2d%3A0x949f04a9dcd7e2d4!2sUniversit%C3%A9%20de%20Djibouti%20-%20Campus%20Balbala!5e0!3m2!1sfr!2sdj!4v1699199999999!5m2!1sfr!2sdj"
+                        style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                        title="Localisation Université de Djibouti – Bibliothèque">
+                    </iframe>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Colonne droite : Formulaire -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border">
+                <div class="card-body">
+                    <h2 class="h5 fw-bold mb-4">Envoyez-nous un message</h2>
+                    <form>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Nom complet *</label>
+                                <input type="text" class="form-control" id="name" placeholder="Votre nom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" placeholder="votre@email.com"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Sujet *</label>
+                            <select id="subject" class="form-select" required>
+                                <option value="">Sélectionnez un sujet</option>
+                                <option value="inscription">Inscription / Adhésion</option>
+                                <option value="emprunt">Questions sur les emprunts</option>
+                                <option value="catalogue">Catalogue et recherche</option>
+                                <option value="technique">Problème technique</option>
+                                <option value="suggestion">Suggestion d'amélioration</option>
+                                <option value="autre">Autre</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message *</label>
+                            <textarea class="form-control" id="message" rows="6" maxlength="500"
+                                placeholder="Décrivez votre demande en détail..." required></textarea>
+                            <div class="form-text">0/500 caractères</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="ri-send-plane-line me-2"></i>Envoyer le message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section FAQ -->
+    <section class="mt-5">
+        <div class="card shadow-sm border p-4">
+            <h2 class="h5 fw-bold mb-4 text-center">Questions fréquentes</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h6 class="fw-semibold">Comment devenir membre ?</h6>
+                    <p class="text-muted small mb-3">L'inscription est gratuite ! Présentez-vous avec une pièce
+                        d'identité et un justificatif de domicile.</p>
+
+                    <h6 class="fw-semibold">Combien de livres puis-je emprunter ?</h6>
+                    <p class="text-muted small mb-3">Vous pouvez emprunter jusqu'à 5 livres simultanément pour une durée
+                        de 3 semaines.</p>
+
+                    <h6 class="fw-semibold">Puis-je renouveler mes emprunts ?</h6>
+                    <p class="text-muted small">Oui, vous pouvez renouveler vos emprunts une fois si aucune réservation
+                        n'est en attente.</p>
+                </div>
+
+                <div class="col-md-6">
+                    <h6 class="fw-semibold">Comment réserver un livre ?</h6>
+                    <p class="text-muted small mb-3">Connectez-vous à votre espace personnel ou contactez-nous
+                        directement.</p>
+
+                    <h6 class="fw-semibold">Que faire en cas de retard ?</h6>
+                    <p class="text-muted small mb-3">Des frais de retard de 0,50€ par jour et par livre s'appliquent
+                        après la date d'échéance.</p>
+
+                    <h6 class="fw-semibold">Proposez-vous des services numériques ?</h6>
+                    <p class="text-muted small">Oui, nous proposons l'accès à des ressources numériques et des livres
+                        électroniques.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+
+{% include "footer.html" %}

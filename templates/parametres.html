@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Paramètres -->
+<div class="container-fluid p-4">
+
+    <!-- Titre -->
+    <div class="mb-4">
+        <h2 class="fw-bold">Paramètres</h2>
+        <p class="text-muted">Configurez votre compte et les paramètres de la bibliothèque</p>
+    </div>
+
+    <!-- Navigation onglets -->
+    <div class="mb-4">
+        <ul class="nav nav-tabs border-bottom-2">
+            <li class="nav-item">
+                <button class="nav-link active" type="button">Profil</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" type="button">Notifications</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" type="button">Bibliothèque</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" type="button">Sécurité</button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Informations personnelles -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="fw-semibold mb-4">Informations personnelles</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nom d'utilisateur</label>
+                    <!-- <input type="text" class="form-control" value="dior" readonly> A chercher Pourquoi ici Karman c'est important-->
+                    <input type="text" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" placeholder="admin@BibliosDjib.dj">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Téléphone</label>
+                    <input type="tel" class="form-control" placeholder="+253 77 59 35 38">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Poste</label>
+                    <input type="text" class="form-control" placeholder="Bibliothécaire principal">
+                </div>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-primary">Sauvegarder les modifications</button>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+
+{% endblock %}

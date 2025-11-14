@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid p-4">
+    <div class="mb-4">
+        <h2 class="fw-bold">Mes Emprunts</h2>
+        <p class="text-muted">Consultez l'historique de vos emprunts</p>
+
+        <div class="d-flex gap-2 mb-3">
+            <a href="{{ url_for('catalogue') }}" class="btn btn-outline-secondary btn-sm">Catalogue</a>
+            <a href="{{ url_for('mes_emprunts') }}" class="btn btn-outline-primary btn-sm">Mes Emprunts</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Livre</th>
+                            <th>Auteur</th>
+                            <th>Date d'emprunt</th>
+                            <th>Date de retour prévue</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emprunt in emprunts %}
+                        <tr>
+                            <td>{{ emprunt.livre.titre }}</td>
+                            <td>{{ emprunt.livre.auteur }}</td>
+                            <td>{{ emprunt.date_emprunt.strftime('%d/%m/%Y') }}</td>
+                            <td
+                                class="{% if emprunt.date_retour_prevue < now and not emprunt.date_retour_effective %}text-danger{% endif %}">
+                                {{ emprunt.date_retour_prevue.strftime('%d/%m/%Y') }}
+                            </td>
+                            <td>
+                                {% if emprunt.date_retour_effective %}
+                                <span class="badge bg-success">Rendu</span>
+                                <br><small>Le {{ emprunt.date_retour_effective.strftime('%d/%m/%Y') }}</small>
+                                {% elif emprunt.date_retour_prevue < now %} <span class="badge bg-danger">En
+                                    retard</span>
+                                    {% else %}
+                                    <span class="badge bg-primary">En cours</span>
+                                    {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="ri-book-line display-4"></i>
+                                <p class="mt-2">Aucun emprunt pour le moment</p>
+                                <a href="{{ url_for('catalogue') }}" class="btn btn-primary mt-2">Parcourir le
+                                    catalogue</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

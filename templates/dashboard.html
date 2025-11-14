@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid p-4">
+
+    <h2 class="fw-bold mb-2">Tableau de bord</h2>
+    <p class="text-muted mb-4">Bienvenue, {{ current_user.username }}</p>
+
+    <!-- Boutons rapides -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('livres') }}" class="btn btn-primary">
+            <i class="ri-book-add-line me-1"></i> Ajouter un livre
+        </a>
+        <a href="{{ url_for('adherents') }}" class="btn btn-success">
+            <i class="ri-user-add-line me-1"></i> Ajouter un adhérent
+        </a>
+        {% endif %}
+
+        <a href="{{ url_for('statistiques') }}" class="btn btn-outline-secondary">
+            <i class="ri-bar-chart-line me-1"></i> Statistiques
+        </a>
+
+        <a href="{{ url_for('parametres') }}" class="btn btn-outline-secondary">
+            <i class="ri-settings-3-line me-1"></i> Paramètres
+        </a>
+
+    </div>
+
+    <!-- Cartes statistiques principales : 2 par ligne -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-3">
+            <div class="card text-white bg-primary shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Taux de disponibilité</p>
+                        <h3 class="fw-bold">{{ (livres_disponibles / total_livres * 100)|round|int if total_livres > 0
+                            else 100 }}%</h3>
+                        <small>{{ livres_disponibles }}/{{ total_livres }} livres</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-pie-chart-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-success shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Emprunts en cours</p>
+                        <h3 class="fw-bold">{{ emprunts_en_cours }}</h3>
+                        <small>Emprunts actifs</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-bookmark-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-warning shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Total adhérents</p>
+                        <h3 class="fw-bold">{{ total_adherents }}</h3>
+                        <small>Membres inscrits</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-user-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-info shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Total livres</p>
+                        <h3 class="fw-bold">{{ total_livres }}</h3>
+                        <small>Collection totale</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-book-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Cartes actions rapides -->
+    <div class="row g-4">
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 p-3">
+                <h5>Actions adhérents</h5>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <a href="{{ url_for('adherents') }}" class="btn btn-success">
+                        <i class="ri-user-add-line me-1"></i> Ajouter
+                    </a>
+                    <a href="{{ url_for('adherents') }}" class="btn btn-primary">
+                        <i class="ri-user-line me-1"></i> Gérer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 p-3">
+                <h5>Actions emprunts</h5>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <a href="{{ url_for('emprunts') }}" class="btn btn-warning text-white">
+                        <i class="ri-bookmark-line me-1"></i> Nouvel emprunt
+                    </a>
+                    <a href="{{ url_for('emprunts') }}" class="btn btn-primary">
+                        <i class="ri-book-line me-1"></i> Gérer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

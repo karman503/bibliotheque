@@ -1,0 +1,222 @@
+{% include "header.html" %}
+
+<main>
+    <!-- section hero -->
+    <section class="py-5 section-1">
+        <div class="container">
+            <div class="row align-items-center">
+                <!-- Colonne texte -->
+                <div class="col-md-6">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <span class="static-text">Bienvenue à</span>
+                        <span id="animated-title"
+                            data-phrases="BibliosDjib|Votre bibliothèque communautaire|La porte des découvertes|Lire, partager, grandir">BibliosDjib</span>
+                    </h1>
+                    <p class="lead mb-4 text-muted" id="hero-description">
+                        BibliosDjib est une bibliothèque moderne et engagée qui met la lecture au coeur de la
+                        communauté. Nous offrons un catalogue riche et varié, des services numériques intuitifs,
+                        des horaires étendus et des activités culturelles pour tous les âges.
+                    </p>
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <a href="#" class="btn btn-primary btn-lg px-4 py-2 mb-2 mb-sm-0">Explorer le catalogue</a>
+                        <a href="#" class="btn btn-outline-primary btn-lg px-4 py-2">En savoir plus</a>
+                    </div>
+                </div>
+
+                <!-- Colonne image -->
+                <div class="col-md-6 text-center">
+                    <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80"
+                        alt="BibliosDjib" class="img-fluid hero-image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Nos services -->
+    <section class="py-5 section-2">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="h2 fw-bold mb-3">Nos services</h2>
+                <p class="text-muted mx-auto" style="max-width: 600px;">Une bibliothèque moderne qui vous accompagne
+                    dans vos recherches et découvertes littéraires</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card border shadow-sm text-center h-100 card-hover card-match-featured">
+                        <div class="card-body">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                style="width: 64px; height: 64px;">
+                                <i class="ri-book-open-line text-primary fs-2"></i>
+                            </div>
+                            <h3 class="h5 fw-semibold mb-3">Catalogue riche</h3>
+                            <p class="text-muted">Plus de 720 ouvrages dans tous les domaines : littérature, sciences,
+                                histoire, arts et bien plus encore.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border shadow-sm text-center h-100 card-hover card-match-featured">
+                        <div class="card-body">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                style="width: 64px; height: 64px;">
+                                <i class="ri-smartphone-line text-success fs-2"></i>
+                            </div>
+                            <h3 class="h5 fw-semibold mb-3">Gestion simplifiée</h3>
+                            <p class="text-muted">Consultez vos emprunts, réservez vos livres et gérez votre compte en
+                                ligne facilement.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border shadow-sm text-center h-100 card-hover card-match-featured">
+                        <div class="card-body">
+                            <div class="bg-purple bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                style="width: 64px; height: 64px;">
+                                <i class="ri-time-line text-purple fs-2"></i>
+                            </div>
+                            <h3 class="h5 fw-semibold mb-3">Horaires flexibles</h3>
+                            <p class="text-muted">Ouvert 7j/7 avec des horaires étendus pour s'adapter à votre emploi du
+                                temps.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Livres à la une -->
+    <section class="py-5 section-3">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="h2 fw-bold mb-3">Livres à la une</h2>
+                <p class="text-muted">Découvrez notre sélection de livres populaires</p>
+            </div>
+
+            <div class="row g-4">
+
+                <!-- Carte livre -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100 border shadow-sm cursor-pointer card-hover">
+                        <div style="height: 260px; overflow: hidden;">
+                            <img src="/static/images/cigaal_shidaad.jpg"
+                                style="width: 100%; height: 100%; object-fit: cover;" alt="Cigaal Shidaad">
+                        </div>
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-2">Cigaal Shidaad</h5>
+                            <p class="text-muted mb-2">Auteur inconnu</p>
+                            <span class="badge bg-success">Disponible</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte livre -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100 border shadow-sm cursor-pointer card-hover">
+                        <div style="height: 260px; overflow: hidden;">
+                            <img src="/static/images/miserables.jpg"
+                                style="width: 100%; height: 100%; object-fit: cover;" alt="Les Misérables">
+                        </div>
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-2">Les Misérables</h5>
+                            <p class="text-muted mb-2">Victor Hugo</p>
+                            <span class="badge bg-danger">Emprunté</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte livre -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100 border shadow-sm cursor-pointer card-hover">
+                        <div style="height: 260px; overflow: hidden;">
+                            <img src="/static/images/etranger.jpg" style="width: 100%; height: 100%; object-fit: cover;"
+                                alt="L'Étranger">
+                        </div>
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-2">L'Étranger</h5>
+                            <p class="text-muted mb-2">Albert Camus</p>
+                            <span class="badge bg-warning text-dark">Réservé</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte livre -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="card h-100 border shadow-sm cursor-pointer card-hover">
+                        <div style="height: 260px; overflow: hidden;">
+                            <img src="/static/images/ismael_livre.jpeg"
+                                style="width: 100%; height: 100%; object-fit: cover;"
+                                alt="Ismael Omar Guelleh - Une histoire de Djibouti">
+                        </div>
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-2">Ismael Omar Guelleh</h5>
+                            <p class="text-muted mb-2">Une histoire de Djibouti</p>
+                            <span class="badge bg-success">Disponible</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="#" class="btn btn-outline-secondary btn-lg">Voir tout le catalogue</a>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Objectif -->
+    <section class="py-5 section-4">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="h2 fw-bold mb-3">Notre Objectif</h2>
+                <p class="text-muted mx-auto" style="max-width: 600px;">
+                    Chez BibliosDjib, notre objectif est de rendre la lecture accessible à tous et d’accompagner nos
+                    lecteurs dans leurs découvertes littéraires. Nous voulons créer un espace où chacun peut trouver,
+                    emprunter et explorer des livres facilement.
+                </p>
+            </div>
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <div class="card border shadow-sm h-100 card-hover p-3 card-match-featured">
+                        <div class="mb-3"><i class="ri-book-open-line text-primary fs-2"></i></div>
+                        <h5 class="fw-semibold mb-2">Accès facile</h5>
+                        <p class="text-muted mb-0">Un catalogue complet et facile à naviguer pour trouver vos livres
+                            rapidement.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border shadow-sm h-100 card-hover p-3 card-match-featured">
+                        <div class="mb-3"><i class="ri-group-line text-success fs-2"></i></div>
+                        <h5 class="fw-semibold mb-2">Communauté</h5>
+                        <p class="text-muted mb-0">Rejoignez une communauté de lecteurs passionnés et partagez vos
+                            découvertes.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border shadow-sm h-100 card-hover p-3 card-match-featured">
+                        <div class="mb-3"><i class="ri-time-line text-warning fs-2"></i></div>
+                        <h5 class="fw-semibold mb-2">Flexibilité</h5>
+                        <p class="text-muted mb-0">Des horaires étendus et des services en ligne pour s’adapter à votre
+                            emploi du temps.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="py-5 bg-primary">
+        <div class="container text-center">
+            <h2 class="display-5 fw-bold text-white mb-4">Rejoignez notre communauté de lecteurs</h2>
+            <p class="lead text-white-50 mb-4">Inscrivez-vous dès aujourd'hui et profitez de tous nos services</p>
+            <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                <a href="#" class="btn btn-light btn-lg px-4 py-2 text-primary fw-semibold">Devenir membre</a>
+                <a href="#" class="btn btn-outline-light btn-lg px-4 py-2 fw-semibold">Nous contacter</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+{% include "footer.html" %}

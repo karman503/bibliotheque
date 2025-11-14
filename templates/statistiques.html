@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid p-4">
+    <!-- Titre -->
+    <div class="mb-4">
+        <h2 class="fw-bold">Statistiques</h2>
+        <p class="text-muted">Analyse et rapports de la bibliothèque</p>
+    </div>
+
+    <!-- Période d'analyse (boutons) -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Période d'analyse</h5>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm">Semaine</button>
+                <button class="btn btn-primary btn-sm">Mois</button>
+                <button class="btn btn-outline-secondary btn-sm">Trimestre</button>
+                <button class="btn btn-outline-secondary btn-sm">Année</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cartes statistiques principales -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Taux de disponibilité</p>
+                        <h3 class="fw-bold">{{ (livres_disponibles / total_livres * 100)|round|int if total_livres > 0
+                            else 100 }}%</h3>
+                        <small>{{ livres_disponibles }}/{{ total_livres }} livres</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-pie-chart-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-success shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Emprunts en cours</p>
+                        <h3 class="fw-bold">{{ emprunts_en_cours }}</h3>
+                        <small>Emprunts actifs</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-bookmark-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-warning shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Total Adhérents</p>
+                        <h3 class="fw-bold">{{ total_adherents }}</h3>
+                        <small>Membres inscrits</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-user-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-info shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Total Livres</p>
+                        <h3 class="fw-bold">{{ total_livres }}</h3>
+                        <small>Collection totale</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-book-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Graphiques répartition par catégorie et adhérents actifs -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-4">Répartition des emprunts par catégorie</h5>
+                    {% for stat in stats_categories %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>{{ stat.categorie }}</span>
+                            <span>{{ stat.count }} ({{ stat.pourcentage }}%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-primary category-progress"
+                                data-percentage="{{ stat.pourcentage }}" role="progressbar" aria-valuenow="0"
+                                aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-4">Adhérents les plus actifs</h5>
+                    {% for stat in stats_adherents %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>{{ stat.adherent.nom }} {{ stat.adherent.prenom }}</span>
+                            <span class="badge bg-primary">{{ stat.total }} emprunts</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success adherent-progress"
+                                data-percentage="{{ stat.pourcentage }}" role="progressbar" aria-valuenow="0"
+                                aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique des emprunts par semaine -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-4">Emprunts par semaine</h5>
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <span>Sem 1</span>
+                        <div class="flex-grow-1 mx-2">
+                            <div class="progress mb-1">
+                                <div class="progress-bar bg-primary" style="width:57.5%">23</div>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width:45%">18</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <span>Sem 2</span>
+                        <div class="flex-grow-1 mx-2">
+                            <div class="progress mb-1">
+                                <div class="progress-bar bg-primary" style="width:77.5%">31</div>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width:62.5%">25</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rapports et exports -->
+    <div class="card shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-semibold mb-1">Rapports et exports</h5>
+                <p class="text-muted mb-0">Générez des rapports détaillés pour vos analyses</p>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm"><i class="ri-file-excel-line me-1"></i> Excel</button>
+                <button class="btn btn-outline-secondary btn-sm"><i class="ri-file-pdf-line me-1"></i> PDF</button>
+                <button class="btn btn-primary btn-sm"><i class="ri-printer-line me-1"></i> Imprimer</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

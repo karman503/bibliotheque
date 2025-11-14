@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow rounded-4">
+                <div class="card-header bg-primary text-white py-3 d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0">
+                        <i class="ri-user-line me-2"></i> Mon Profil
+                    </h4>
+                </div>
+
+                <div class="card-body p-4 text-center">
+                    <!-- Photo de profil -->
+                    <div class="position-relative d-inline-block mb-4">
+                        {% if current_user.image %}
+                            <img id="currentProfileImg" src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.image) }}"
+                                 class="rounded-circle shadow border" width="130" height="130" style="object-fit: cover;">
+                        {% else %}
+                            {% if current_user.role == 'admin' %}
+                                <div id="currentProfileImg" class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                    style="width:130px;height:130px;font-size:2.5rem;">A</div>
+                            {% else %}
+                                <div id="currentProfileImg" class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
+                                    style="width:130px;height:130px;font-size:2.5rem;">U</div>
+                            {% endif %}
+                        {% endif %}
+                        <button class="btn btn-sm btn-light rounded-circle position-absolute bottom-0 end-0"
+                                data-bs-toggle="modal" data-bs-target="#photoModal" aria-label="Changer la photo">
+                            <i class="ri-camera-line"></i>
+                        </button>
+                    </div>
+
+                    <!-- Infos utilisateur -->
+                    <div class="text-start">
+                        <div class="mb-3 p-3 bg-light rounded">
+                            <small class="text-muted d-block">Nom d’utilisateur</small>
+                            <strong>{{ current_user.username }}</strong>
+                        </div>
+                        <div class="mb-3 p-3 bg-light rounded">
+                            <small class="text-muted d-block">Adresse e-mail</small>
+                            <strong>{{ current_user.email }}</strong>
+                        </div>
+                        <div class="p-3 bg-light rounded">
+                            <small class="text-muted d-block">Rôle</small>
+                            <span class="badge {% if current_user.role == 'admin' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                                {{ current_user.role }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Bouton modifier -->
+                    <div class="mt-4 d-grid">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="ri-edit-line me-1"></i> Modifier mes informations
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL - Changer la photo -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ri-camera-line me-2"></i>Changer la photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('upload_image') }}" method="POST" enctype="multipart/form-data" id="uploadImageForm">
+                    <div class="mb-3 text-center">
+                        <img id="previewImage" src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.image) if current_user.image else url_for('static', filename='images/avatar-default.png') }}"
+                             class="rounded-circle mb-3" width="100" height="100" style="object-fit:cover;">
+                    </div>
+                    <input type="file" name="image" class="form-control mb-3" accept="image/*" id="profileImageInput">
+                    <button type="submit" class="btn btn-primary w-100">Télécharger</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL - Modifier infos -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ri-edit-line me-2"></i>Modifier mes informations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('update_profil') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Nom d’utilisateur</label>
+                        <input type="text" class="form-control" name="username" value="{{ current_user.username }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" class="form-control" name="email" value="{{ current_user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mot de passe actuel (pour valider)</label>
+                        <input type="password" class="form-control" name="current_password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Enregistrer les changements</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+ // Preview sélection image dans le modal
+const input = document.getElementById('profileImageInput');
+const preview = document.getElementById('previewImage');
+if (input) {
+  input.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    preview.src = URL.createObjectURL(file);
+  });
+}
+</script>
+{% endblock %}

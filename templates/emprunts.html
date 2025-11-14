@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid p-4">
+
+    <!-- Titre -->
+    <div class="mb-4">
+        <h2 class="fw-bold">Gestion des emprunts</h2>
+        <p class="text-muted">Suivez les emprunts, retours et réservations</p>
+    </div>
+
+    <!-- Onglets Emprunts / Réservations + Bouton -->
+    <div class="mb-4 d-flex align-items-center justify-content-between">
+        <ul class="nav nav-tabs mb-0" id="empruntTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="emprunts-tab" data-bs-toggle="tab" data-bs-target="#emprunts"
+                    type="button" role="tab" aria-controls="emprunts" aria-selected="true">
+                    Emprunts ({{ emprunts|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reservations-tab" data-bs-toggle="tab" data-bs-target="#reservations"
+                    type="button" role="tab" aria-controls="reservations" aria-selected="false">
+                    Réservations ({{ reservations|length }})
+                </button>
+            </li>
+        </ul>
+
+        <button class="btn btn-primary ms-3" data-bs-toggle="modal" data-bs-target="#nouvelEmpruntModal">
+            <i class="ri-add-line me-1"></i> Nouvel emprunt
+        </button>
+    </div>
+
+    <!-- Filtres + Boutons -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- Recherche -->
+                <div class="col-md-4">
+                    <label class="form-label">Rechercher</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-search-line"></i></span>
+                        <input type="text" class="form-control" placeholder="Livre, adhérent...">
+                    </div>
+                </div>
+                <!-- Statut -->
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select">
+                        <option>Tous les statuts</option>
+                        <option>En cours</option>
+                        <option>En retard</option>
+                        <option>Rendu</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="tab-content" id="empruntTabsContent">
+        <!-- Onglet Emprunts -->
+        <div class="tab-pane fade show active" id="emprunts" role="tabpanel" aria-labelledby="emprunts-tab">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Livre</th>
+                                <th>Adhérent</th>
+                                <th>Date d'emprunt</th>
+                                <th>Date de retour</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for emprunt in emprunts %}
+                            <tr>
+                                <td>{{ emprunt.livre.titre }}</td>
+                                <td>{{ emprunt.adherent.nom }} {{ emprunt.adherent.prenom }}</td>
+                                <td>{{ emprunt.date_emprunt.strftime('%d/%m/%Y') }}</td>
+                                <td
+                                    class="{% if emprunt.date_retour_prevue < now and emprunt.date_retour_effective is none %}text-danger{% endif %}">
+                                    {{ emprunt.date_retour_prevue.strftime('%d/%m/%Y') }}
+                                    {% if emprunt.prolongations %}
+                                    <br><small class="text-muted">Prolongé {{ emprunt.prolongations }} fois</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if emprunt.date_retour_effective %}
+                                    <span class="badge bg-success">rendu</span>
+                                    {% elif emprunt.date_retour_prevue < now and not emprunt.date_retour_effective %}
+                                        <span class="badge bg-danger">en retard</span>
+                                        <br><small class="text-danger">Amende: {{ emprunt.amende }}€</small>
+                                        {% else %}
+                                        <span class="badge bg-primary">en cours</span>
+                                        {% endif %}
+                                </td>
+                                <td class="d-flex gap-1">
+                                    {% if not emprunt.date_retour_effective %}
+                                    <button class="btn btn-outline-secondary btn-sm"><i
+                                            class="ri-check-line me-1"></i>Retour</button>
+                                    <button class="btn btn-outline-secondary btn-sm"><i
+                                            class="ri-time-line me-1"></i>Prolonger</button>
+                                    {% endif %}
+                                    <button class="btn btn-outline-secondary btn-sm"><i
+                                            class="ri-eye-line me-1"></i>Détails</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Réservations -->
+        <div class="tab-pane fade" id="reservations" role="tabpanel" aria-labelledby="reservations-tab">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Livre</th>
+                                <th>Adhérent</th>
+                                <th>Date de réservation</th>
+                                <th>Priorité</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for res in reservations %}
+                            <tr>
+                                <td>{{ res.livre.titre }}</td>
+                                <td>{{ res.adherent.nom }} {{ res.adherent.prenom }}</td>
+                                <td>{{ res.date_reservation.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ res.priorite }}</td>
+                                <td>{{ res.status.replace('_', ' ') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded mb-2 d-inline-block">
+                        <i class="ri-book-line fs-3 text-primary"></i>
+                    </div>
+                    <h3 class="fw-bold">{{ emprunts|selectattr('date_retour_effective', '==', None)|list|length }}</h3>
+                    <p class="text-muted">Emprunts en cours</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <div class="bg-success bg-opacity-10 p-3 rounded mb-2 d-inline-block">
+                        <i class="ri-check-line fs-3 text-success"></i>
+                    </div>
+                    <h3 class="fw-bold">{{ emprunts|selectattr('date_retour_effective')|list|length }}</h3>
+                    <p class="text-muted">Rendus</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <div class="bg-danger bg-opacity-10 p-3 rounded mb-2 d-inline-block">
+                        <i class="ri-alert-line fs-3 text-danger"></i>
+                    </div>
+                    <h3 class="fw-bold">
+                        {{ emprunts
+                        | selectattr('date_retour_prevue', 'lt', now)
+                        | selectattr('date_retour_effective', '==', None)
+                        | list
+                        | length
+                        }}
+                    </h3>
+                    <p class="text-muted">En retard</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <div class="bg-warning bg-opacity-10 p-3 rounded mb-2 d-inline-block">
+                        <i class="ri-calendar-line fs-3 text-warning"></i>
+                    </div>
+                    <h3 class="fw-bold">{{ emprunts|map(attribute='prolongations')|sum }}</h3>
+                    <p class="text-muted">Prolongations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Bootstrap 5 pour Nouvel emprunt -->
+    <div class="modal fade" id="nouvelEmpruntModal" tabindex="-1" aria-labelledby="nouvelEmpruntLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-4">
+                <h3 class="mb-4">Nouvel emprunt</h3>
+                <form method="POST" action="{{ url_for('emprunts') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Adhérent</label>
+                        <select name="adherent_id" class="form-select">
+                            {% for adherent in adherents %}
+                            <option value="{{ adherent.id }}">{{ adherent.nom }} {{ adherent.prenom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Livre</label>
+                        <select name="livre_id" class="form-select">
+                            {% for livre in livres %}
+                            <option value="{{ livre.id }}">{{ livre.titre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date de retour prévue</label>
+                        <input name="date_retour" type="date" class="form-control" min="{{ today }}">
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary flex-fill">Créer l'emprunt</button>
+                        <button type="button" class="btn btn-secondary flex-fill"
+                            data-bs-dismiss="modal">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
