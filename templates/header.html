@@ -57,52 +57,52 @@
                     </li>
 
                     <!-- Icône profil -->
-{% if current_user.is_authenticated %}
-<li class="nav-item dropdown ms-3">
-    <a class="nav-link dropdown-toggle dropdown-toggle-no-caret profile-only" href="#" id="navbarProfile"
-       role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        {% if current_user.image %}
-            <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.image) }}"
-                 class="header-profile-avatar shadow-sm" alt="Profil">
-        {% else %}
-            {% if current_user.role == 'admin' %}
-                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                     style="width:36px; height:36px; font-size:1rem;">A</div>
-            {% else %}
-                <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
-                     style="width:36px; height:36px; font-size:1rem;">U</div>
-            {% endif %}
-        {% endif %}
-    </a>
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown ms-3">
+                        <a class="nav-link dropdown-toggle dropdown-toggle-no-caret profile-only" href="#"
+                            id="navbarProfile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if current_user.image %}
+                            <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.image) }}"
+                                class="header-profile-avatar shadow-sm" alt="Profil">
+                            {% else %}
+                            {% if current_user.role == 'admin' %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                style="width:36px; height:36px; font-size:1rem;">A</div>
+                            {% else %}
+                            <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
+                                style="width:36px; height:36px; font-size:1rem;">U</div>
+                            {% endif %}
+                            {% endif %}
+                        </a>
 
-    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3"
-        aria-labelledby="navbarProfile">
-        <li>
-            <a class="dropdown-item" href="{{ url_for('profil') }}">
-                <i class="ri-user-line me-2 text-primary"></i> Mon profil
-            </a>
-        </li>
-        {% if current_user.role == 'admin' %}
-        <li>
-            <a class="dropdown-item" href="{{ url_for('dashboard') }}">
-                <i class="ri-dashboard-line me-2 text-success"></i> Dashboard
-            </a>
-        </li>
-        {% endif %}
-        <li><hr class="dropdown-divider"></li>
-        <li>
-            <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
-                <i class="ri-logout-box-line me-2"></i> Déconnexion
-            </a>
-        </li>
-    </ul>
-</li>
-{% else %}
-<!-- Bouton connexion si non connecté -->
-<a href="{{ url_for('login') }}" class="btn btn-primary ms-md-3">
-    <i class="ri-login-box-line me-1"></i> Connexion
-</a>
-{% endif %}
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3"
+                            aria-labelledby="navbarProfile">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('profil') }}">
+                                    <i class="ri-user-line me-2 text-primary"></i> Mon profil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('dashboard') }}">
+                                    <i class="ri-dashboard-line me-2 text-success"></i> Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                    <i class="ri-logout-box-line me-2"></i> Déconnexion
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <!-- Bouton connexion si non connecté -->
+                    <a href="{{ url_for('login') }}" class="btn btn-primary ms-md-3">
+                        <i class="ri-login-box-line me-1"></i> Connexion
+                    </a>
+                    {% endif %}
 
                 </ul>
             </div>

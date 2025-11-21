@@ -333,19 +333,45 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    total_livres = Livre.query.count()
-    livres_disponibles = Livre.query.filter_by(disponible=True).count()
-    total_adherents = Adherent.query.count()
-    emprunts_en_cours = Emprunt.query.filter_by(status='en_cours').count()
+    # Si l'utilisateur est admin, afficher les statistiques globales
+    if getattr(current_user, 'role', None) == 'admin':
+        total_livres = Livre.query.count()
+        livres_disponibles = Livre.query.filter_by(disponible=True).count()
+        total_adherents = Adherent.query.count()
+        emprunts_en_cours = Emprunt.query.filter_by(status='en_cours').count()
 
+        return render_template(
+            "dashboard.html",
+            title="Dashboard",
+            user=current_user,
+            is_admin=True,
+            total_livres=total_livres,
+            livres_disponibles=livres_disponibles,
+            total_adherents=total_adherents,
+            emprunts_en_cours=emprunts_en_cours
+        )
+    
+    # Sinon, afficher les statistiques personnelles de l'utilisateur
+    adherent_id_for_query = current_user.adherent_id if getattr(current_user, 'adherent_id', None) else current_user.id
+    
+    total_emprunts_user = Emprunt.query.filter_by(adherent_id=adherent_id_for_query).count()
+    emprunts_en_cours_user = Emprunt.query.filter_by(adherent_id=adherent_id_for_query, status='en_cours').count()
+    retards_user = Emprunt.query.filter(
+        Emprunt.adherent_id == adherent_id_for_query,
+        Emprunt.date_retour_effective == None,
+        Emprunt.date_retour_prevue < datetime.utcnow()
+    ).count()
+    total_amende_user = db.session.query(db.func.coalesce(db.func.sum(Emprunt.amende), 0.0)).filter(Emprunt.adherent_id == adherent_id_for_query).scalar() or 0.0
+    
     return render_template(
         "dashboard.html",
         title="Dashboard",
         user=current_user,
-        total_livres=total_livres,
-        livres_disponibles=livres_disponibles,
-        total_adherents=total_adherents,
-        emprunts_en_cours=emprunts_en_cours
+        is_admin=False,
+        total_emprunts_user=total_emprunts_user,
+        emprunts_en_cours_user=emprunts_en_cours_user,
+        retards_user=retards_user,
+        total_amende_user=total_amende_user
     )
 
 # Routes admin (gardez vos routes existantes avec modifications)

@@ -14,19 +14,22 @@
                     <!-- Photo de profil -->
                     <div class="position-relative d-inline-block mb-4">
                         {% if current_user.image %}
-                            <img id="currentProfileImg" src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.image) }}"
-                                 class="rounded-circle shadow border" width="130" height="130" style="object-fit: cover;">
+                        <img id="currentProfileImg"
+                            src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.image) }}"
+                            class="rounded-circle shadow border" width="130" height="130" style="object-fit: cover;">
                         {% else %}
-                            {% if current_user.role == 'admin' %}
-                                <div id="currentProfileImg" class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                                    style="width:130px;height:130px;font-size:2.5rem;">A</div>
-                            {% else %}
-                                <div id="currentProfileImg" class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
-                                    style="width:130px;height:130px;font-size:2.5rem;">U</div>
-                            {% endif %}
+                        {% if current_user.role == 'admin' %}
+                        <div id="currentProfileImg"
+                            class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                            style="width:130px;height:130px;font-size:2.5rem;">A</div>
+                        {% else %}
+                        <div id="currentProfileImg"
+                            class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
+                            style="width:130px;height:130px;font-size:2.5rem;">U</div>
+                        {% endif %}
                         {% endif %}
                         <button class="btn btn-sm btn-light rounded-circle position-absolute bottom-0 end-0"
-                                data-bs-toggle="modal" data-bs-target="#photoModal" aria-label="Changer la photo">
+                            data-bs-toggle="modal" data-bs-target="#photoModal" aria-label="Changer la photo">
                             <i class="ri-camera-line"></i>
                         </button>
                     </div>
@@ -43,7 +46,8 @@
                         </div>
                         <div class="p-3 bg-light rounded">
                             <small class="text-muted d-block">Rôle</small>
-                            <span class="badge {% if current_user.role == 'admin' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                            <span
+                                class="badge {% if current_user.role == 'admin' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
                                 {{ current_user.role }}
                             </span>
                         </div>
@@ -51,7 +55,8 @@
 
                     <!-- Bouton modifier -->
                     <div class="mt-4 d-grid">
-                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal"
+                            data-bs-target="#editProfileModal">
                             <i class="ri-edit-line me-1"></i> Modifier mes informations
                         </button>
                     </div>
@@ -70,10 +75,12 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
             <div class="modal-body">
-                <form action="{{ url_for('upload_image') }}" method="POST" enctype="multipart/form-data" id="uploadImageForm">
+                <form action="{{ url_for('upload_image') }}" method="POST" enctype="multipart/form-data"
+                    id="uploadImageForm">
                     <div class="mb-3 text-center">
-                        <img id="previewImage" src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.image) if current_user.image else url_for('static', filename='images/avatar-default.png') }}"
-                             class="rounded-circle mb-3" width="100" height="100" style="object-fit:cover;">
+                        <img id="previewImage"
+                            src="{{ url_for('static', filename='uploads/profiles/' ~ current_user.image) if current_user.image else url_for('static', filename='images/avatar-default.png') }}"
+                            class="rounded-circle mb-3" width="100" height="100" style="object-fit:cover;">
                     </div>
                     <input type="file" name="image" class="form-control mb-3" accept="image/*" id="profileImageInput">
                     <button type="submit" class="btn btn-primary w-100">Télécharger</button>
@@ -95,7 +102,8 @@
                 <form action="{{ url_for('update_profil') }}" method="POST">
                     <div class="mb-3">
                         <label class="form-label">Nom d’utilisateur</label>
-                        <input type="text" class="form-control" name="username" value="{{ current_user.username }}" required>
+                        <input type="text" class="form-control" name="username" value="{{ current_user.username }}"
+                            required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">E-mail</label>
@@ -115,15 +123,15 @@
 </div>
 
 <script>
- // Preview sélection image dans le modal
-const input = document.getElementById('profileImageInput');
-const preview = document.getElementById('previewImage');
-if (input) {
-  input.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    preview.src = URL.createObjectURL(file);
-  });
-}
+    // Preview sélection image dans le modal
+    const input = document.getElementById('profileImageInput');
+    const preview = document.getElementById('previewImage');
+    if (input) {
+        input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            preview.src = URL.createObjectURL(file);
+        });
+    }
 </script>
 {% endblock %}
