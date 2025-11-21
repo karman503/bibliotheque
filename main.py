@@ -492,54 +492,96 @@ def retourner_livre(emprunt_id):
 @app.route("/dashboard/statistiques")
 @login_required
 def statistiques():
-    total_adherents = Adherent.query.count()
-    total_livres = Livre.query.count()
-    emprunts_en_cours = Emprunt.query.filter_by(status='en_cours').count()
-    livres_disponibles = Livre.query.filter_by(disponible=True).count()
-    
-    # Calcul du taux de disponibilité
-    taux_disponibilite = round((livres_disponibles / total_livres * 100) if total_livres > 0 else 100)
-    
-    # Statistiques des emprunts par catégorie avec pourcentages pré-calculés
-    emprunts_par_categorie = db.session.query(
-        Livre.categorie, 
+    # Si l'utilisateur est admin, on affiche les statistiques globales
+    if getattr(current_user, 'role', None) == 'admin':
+        total_adherents = Adherent.query.count()
+        total_livres = Livre.query.count()
+        emprunts_en_cours = Emprunt.query.filter_by(status='en_cours').count()
+        livres_disponibles = Livre.query.filter_by(disponible=True).count()
+        
+        # Calcul du taux de disponibilité
+        taux_disponibilite = round((livres_disponibles / total_livres * 100) if total_livres > 0 else 100)
+        
+        # Statistiques des emprunts par catégorie avec pourcentages pré-calculés
+        emprunts_par_categorie = db.session.query(
+            Livre.categorie, 
+            db.func.count(Emprunt.id).label('count')
+        ).join(Emprunt).group_by(Livre.categorie).all()
+        
+        stats_categories = []
+        for categorie, count in emprunts_par_categorie:
+            pourcentage = round((count / emprunts_en_cours * 100) if emprunts_en_cours > 0 else 0)
+            stats_categories.append({
+                'categorie': categorie,
+                'count': count,
+                'pourcentage': pourcentage
+            })
+        
+        # Adhérents les plus actifs avec pourcentages pré-calculés
+        adherents_actifs = db.session.query(
+            Adherent,
+            db.func.count(Emprunt.id).label('total_emprunts')
+        ).join(Emprunt).group_by(Adherent).order_by(db.text('total_emprunts DESC')).limit(5).all()
+        
+        stats_adherents = []
+        max_emprunts = max([total for _, total in adherents_actifs]) if adherents_actifs else 1
+        for adherent, total in adherents_actifs:
+            pourcentage = round((total / max_emprunts * 100))
+            stats_adherents.append({
+                'adherent': adherent,
+                'total': total,
+                'pourcentage': pourcentage
+            })
+        
+        return render_template("statistiques.html", 
+                             title="Statistiques",
+                             is_admin=True,
+                             total_adherents=total_adherents,
+                             total_livres=total_livres,
+                             emprunts_en_cours=emprunts_en_cours,
+                             livres_disponibles=livres_disponibles,
+                             taux_disponibilite=taux_disponibilite,
+                             stats_categories=stats_categories,
+                             stats_adherents=stats_adherents)
+
+    # Sinon, afficher uniquement les statistiques personnelles de l'utilisateur
+    adherent_id_for_query = current_user.adherent_id if getattr(current_user, 'adherent_id', None) else current_user.id
+
+    total_emprunts_user = Emprunt.query.filter_by(adherent_id=adherent_id_for_query).count()
+    emprunts_en_cours_user = Emprunt.query.filter_by(adherent_id=adherent_id_for_query, status='en_cours').count()
+    retards_user = Emprunt.query.filter(
+        Emprunt.adherent_id == adherent_id_for_query,
+        Emprunt.date_retour_effective == None,
+        Emprunt.date_retour_prevue < datetime.utcnow()
+    ).count()
+    total_amende_user = db.session.query(db.func.coalesce(db.func.sum(Emprunt.amende), 0.0)).filter(Emprunt.adherent_id == adherent_id_for_query).scalar() or 0.0
+
+    # Répartition des emprunts par catégorie pour cet utilisateur
+    emprunts_par_categorie_user = db.session.query(
+        Livre.categorie,
         db.func.count(Emprunt.id).label('count')
-    ).join(Emprunt).group_by(Livre.categorie).all()
-    
+    ).join(Emprunt).filter(Emprunt.adherent_id == adherent_id_for_query).group_by(Livre.categorie).all()
+
     stats_categories = []
-    for categorie, count in emprunts_par_categorie:
-        pourcentage = round((count / emprunts_en_cours * 100) if emprunts_en_cours > 0 else 0)
+    for categorie, count in emprunts_par_categorie_user:
+        pourcentage = round((count / total_emprunts_user * 100) if total_emprunts_user > 0 else 0)
         stats_categories.append({
             'categorie': categorie,
             'count': count,
             'pourcentage': pourcentage
         })
-    
-    # Adhérents les plus actifs avec pourcentages pré-calculés
-    adherents_actifs = db.session.query(
-        Adherent,
-        db.func.count(Emprunt.id).label('total_emprunts')
-    ).join(Emprunt).group_by(Adherent).order_by(db.text('total_emprunts DESC')).limit(5).all()
-    
-    stats_adherents = []
-    max_emprunts = max([total for _, total in adherents_actifs]) if adherents_actifs else 1
-    for adherent, total in adherents_actifs:
-        pourcentage = round((total / max_emprunts * 100))
-        stats_adherents.append({
-            'adherent': adherent,
-            'total': total,
-            'pourcentage': pourcentage
-        })
-    
-    return render_template("statistiques.html", 
-                         title="Statistiques",
-                         total_adherents=total_adherents,
-                         total_livres=total_livres,
-                         emprunts_en_cours=emprunts_en_cours,
-                         livres_disponibles=livres_disponibles,
-                         taux_disponibilite=taux_disponibilite,
+
+    recent_emprunts = Emprunt.query.filter_by(adherent_id=adherent_id_for_query).order_by(Emprunt.date_emprunt.desc()).limit(6).all()
+
+    return render_template("statistiques.html",
+                         title="Mes statistiques",
+                         is_admin=False,
+                         total_emprunts_user=total_emprunts_user,
+                         emprunts_en_cours_user=emprunts_en_cours_user,
+                         retards_user=retards_user,
+                         total_amende_user=total_amende_user,
                          stats_categories=stats_categories,
-                         stats_adherents=stats_adherents)
+                         recent_emprunts=recent_emprunts)
 
 
 @app.route("/dashboard/parametres")
