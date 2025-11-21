@@ -13,56 +13,73 @@
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
 
-            <div class="row g-3">
+            <form method="GET" class="row g-3">
 
                 <!-- Recherche -->
                 <div class="col-md-4">
                     <label class="form-label">Rechercher</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="ri-search-line"></i></span>
-                        <input type="text" class="form-control" placeholder="Nom, email, téléphone...">
+                        <input type="text" name="recherche" value="{{ recherche_term or '' }}" class="form-control"
+                            placeholder="Nom, email, téléphone...">
                     </div>
                 </div>
 
                 <!-- Classe -->
                 <div class="col-md-4">
                     <label class="form-label">Classe</label>
-                    <select class="form-select">
-                        <option>Toutes les classes</option>
-                        <option>Licence FS</option>
-                        <option>Licence FLLSH</option>
-                        <option>Licence EG</option>
-                        <option>Licence FDEG</option>
+                    <select name="classe" class="form-select">
+                        <option {% if classe_selected in ['Toutes','Toutes les classes'] %}selected{% endif %}>Toutes
+                            les classes</option>
+                        <option {% if classe_selected=='Licence FS' %}selected{% endif %}>Licence FS</option>
+                        <option {% if classe_selected=='Licence FLLSH' %}selected{% endif %}>Licence FLLSH</option>
+                        <option {% if classe_selected=='Licence EG' %}selected{% endif %}>Licence EG</option>
+                        <option {% if classe_selected=='Licence FDEG' %}selected{% endif %}>Licence FDEG</option>
                     </select>
                 </div>
 
                 <!-- Statut -->
                 <div class="col-md-4">
                     <label class="form-label">Statut</label>
-                    <select class="form-select">
-                        <option>Tous</option>
-                        <option>Actif</option>
-                        <option>Suspendu</option>
-                        <option>Inactif</option>
+                    <select name="statut" class="form-select">
+                        <option {% if statut_selected in ['Tous', None] %}selected{% endif %}>Tous</option>
+                        <option value="Actif" {% if statut_selected=='Actif' %}selected{% endif %}>Actif</option>
+                        <option value="Suspendu" {% if statut_selected=='Suspendu' %}selected{% endif %}>Suspendu
+                        </option>
+                        <option value="Inactif" {% if statut_selected=='Inactif' %}selected{% endif %}>Inactif</option>
                     </select>
                 </div>
+
+                <div class="col-12 mt-3 d-flex gap-2 align-items-center">
+                    <button type="submit" class="btn btn-outline-primary">Filtrer</button>
+                    <a href="{{ url_for('adherents') }}" class="btn btn-outline-secondary">Réinitialiser</a>
+
+                    <button class="btn btn-primary ms-auto" data-bs-toggle="modal"
+                        data-bs-target="#nouvelAdherentModal">
+                        <i class="ri-user-add-line me-1"></i> Nouvel adhérent
+                    </button>
+
+                    <button class="btn btn-outline-secondary">
+                        <i class="ri-mail-line me-1"></i> Envoyer rappel
+                    </button>
+                </div>
+
+            </form>
+
+            <div class="mt-3">
+                <form method="GET" class="d-flex align-items-center gap-2">
+                    <input type="hidden" name="recherche" value="{{ recherche_term or '' }}">
+                    <input type="hidden" name="classe" value="{{ classe_selected or 'Toutes' }}">
+                    <input type="hidden" name="statut" value="{{ statut_selected or 'Tous' }}">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="1" id="emprunteursOnly"
+                            name="emprunteurs" {% if emprunteurs_selected=='1' %}checked{% endif %}>
+                        <label class="form-check-label" for="emprunteursOnly">Afficher uniquement les adhérents ayant
+                            emprunté</label>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Appliquer</button>
+                </form>
             </div>
-
-            <!-- Boutons -->
-            <div class="mt-4 d-flex gap-2">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nouvelAdherentModal">
-                    <i class="ri-user-add-line me-1"></i> Nouvel adhérent
-                </button>
-
-                <button class="btn btn-outline-secondary">
-                    <i class="ri-download-line me-1"></i> Exporter
-                </button>
-
-                <button class="btn btn-outline-secondary">
-                    <i class="ri-mail-line me-1"></i> Envoyer rappel
-                </button>
-            </div>
-
         </div>
     </div>
 
@@ -116,13 +133,16 @@
                         </td>
 
                         <td class="d-flex gap-1">
-                            <a href="#" class="btn btn-outline-secondary btn-sm">
+                            <a href="{{ url_for('view_adherent', adherent_id=a.id) }}"
+                                class="btn btn-outline-secondary btn-sm">
                                 <i class="ri-eye-line me-1"></i> Voir
                             </a>
-                            <a href="#" class="btn btn-outline-secondary btn-sm">
+                            <a href="{{ url_for('edit_adherent', adherent_id=a.id) }}"
+                                class="btn btn-outline-secondary btn-sm">
                                 <i class="ri-edit-line me-1"></i> Modifier
                             </a>
-                            <a href="#" class="btn btn-outline-secondary btn-sm">
+                            <a href="{{ url_for('adherent_emprunts', adherent_id=a.id) }}"
+                                class="btn btn-outline-secondary btn-sm">
                                 <i class="ri-bookmark-line me-1"></i> Emprunts
                             </a>
                         </td>
@@ -180,6 +200,45 @@
                                 <option>Licence EG</option>
                                 <option>Licence FDEG</option>
                             </select>
+                        </div>
+
+                        <!-- Statut -->
+                        <div class="col-md-6">
+                            <label class="form-label">Statut</label>
+                            <select name="statut" class="form-select">
+                                <option value="Actif">Actif</option>
+                                <option value="Suspendu">Suspendu</option>
+                                <option value="Inactif">Inactif</option>
+                            </select>
+                        </div>
+                        <!-- Option: Créer un compte utilisateur lié -->
+                        <div class="col-12 mt-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="1" id="createUser"
+                                    name="create_user" checked>
+                                <label class="form-check-label" for="createUser">
+                                    Créer également un compte utilisateur pour cet adhérent
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="userAccountFields" class="col-12 mt-2">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Nom d'utilisateur</label>
+                                    <input type="text" name="username" class="form-control" placeholder="Ex: m.dubois">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Mot de passe</label>
+                                    <input type="password" name="password" class="form-control"
+                                        placeholder="Mot de passe">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Confirmer mot de passe</label>
+                                    <input type="password" name="confirm_password" class="form-control"
+                                        placeholder="Confirmer mot de passe">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>

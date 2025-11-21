@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container p-4">
+  <h3>{{ adherent.nom }} {{ adherent.prenom }}</h3>
+  <p><strong>Email:</strong> {{ adherent.email }}</p>
+  <p><strong>Téléphone:</strong> {{ adherent.telephone or '-' }}</p>
+  <p><strong>Classe:</strong> {{ adherent.classe or '-' }}</p>
+  <p><strong>Statut:</strong> {{ adherent.statut if adherent.statut is not none else '-' }}</p>
+  <p><strong>Date d'inscription:</strong> {{ adherent.date_inscription.strftime('%d/%m/%Y') }}</p>
+
+  <div class="mt-3">
+    <a class="btn btn-primary" href="{{ url_for('edit_adherent', adherent_id=adherent.id) }}">Modifier</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('adherent_emprunts', adherent_id=adherent.id) }}">Voir emprunts</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('adherents') }}">Retour</a>
+  </div>
+</div>
+{% endblock %}

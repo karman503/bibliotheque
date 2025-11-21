@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container p-4">
+  <h3>Emprunts de {{ adherent.nom }} {{ adherent.prenom }}</h3>
+  <table class="table mt-3">
+    <thead>
+      <tr>
+        <th>Livre</th>
+        <th>Date emprunt</th>
+        <th>Date retour prévue</th>
+        <th>Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in emprunts %}
+      <tr>
+        <td>{{ e.livre.titre if e.livre else '—' }}</td>
+        <td>{{ e.date_emprunt.strftime('%d/%m/%Y') }}</td>
+        <td>{{ e.date_retour_prevue.strftime('%d/%m/%Y') if e.date_retour_prevue else '-' }}</td>
+        <td>{{ e.status }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">Aucun emprunt trouvé.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <a class="btn btn-outline-secondary" href="{{ url_for('adherents') }}">Retour</a>
+</div>
+{% endblock %}

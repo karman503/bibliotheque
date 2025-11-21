@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, current_app
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text, inspect
+from sqlalchemy.exc import IntegrityError
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
@@ -73,6 +75,7 @@ class Adherent(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     telephone = db.Column(db.String(20))
     classe = db.Column(db.String(50))
+    statut = db.Column(db.String(20), default='Actif')
     date_inscription = db.Column(db.DateTime, default=datetime.utcnow)
     emprunts = db.relationship('Emprunt', backref='adherent', lazy=True)
 
@@ -124,6 +127,17 @@ def setup_admin():
 # Création des tables
 with app.app_context():
     db.create_all()
+    # S'assurer que la colonne 'statut' existe dans la table 'adherent' (utile si la table existait déjà)
+    try:
+        inspector = inspect(db.engine)
+        if 'adherent' in inspector.get_table_names():
+            cols = [c['name'] for c in inspector.get_columns('adherent')]
+            if 'statut' not in cols:
+                db.session.execute('ALTER TABLE adherent ADD COLUMN statut VARCHAR(20) DEFAULT "Actif"')
+                db.session.commit()
+    except Exception:
+        # Ne pas bloquer l'application si l'ajout échoue (migration manuelle préférable en prod)
+        current_app.logger.exception('Impossible de vérifier/ajouter la colonne statut sur adherent')
 
 @app.route("/")
 def index():
@@ -379,19 +393,180 @@ def dashboard():
 @login_required
 def adherents():
     if request.method == 'POST':
+        # Logging pour debug: afficher les données reçues
+        try:
+            form_data = {k: (v.strip() if isinstance(v, str) else v) for k, v in request.form.items()}
+        except Exception:
+            form_data = dict(request.form)
+        current_app.logger.info(f"Ajout adhérent - données reçues: {form_data}")
+
+        # Normaliser et récupérer les champs (trim pour éviter les espaces inutiles)
+        nom = (request.form.get('nom') or '').strip()
+        prenom = (request.form.get('prenom') or '').strip()
+        email = (request.form.get('email') or '').strip()
+        telephone = (request.form.get('telephone') or '').strip()
+        classe = (request.form.get('classe') or '').strip() or None
+        statut = (request.form.get('statut') or 'Actif').strip()
+
+        if not nom or not prenom or not email:
+            flash('Veuillez remplir au moins le nom, le prénom et l\'email', 'danger')
+            return redirect(url_for('adherents'))
+
         nouveau_adherent = Adherent(
-            nom=request.form['nom'],
-            prenom=request.form['prenom'],
-            email=request.form['email'],
-            telephone=request.form['telephone'],
-            classe=request.form.get('classe')
+            nom=nom,
+            prenom=prenom,
+            email=email,
+            telephone=telephone,
+            classe=classe,
+            statut=statut
         )
         db.session.add(nouveau_adherent)
-        db.session.commit()
+        try:
+            db.session.commit()
+
+            # Si l'admin a demandé la création d'un compte utilisateur lié
+            if request.form.get('create_user'):
+                username = (request.form.get('username') or '').strip()
+                password = request.form.get('password') or ''
+                confirm_password = request.form.get('confirm_password') or ''
+
+                # Si le nom d'utilisateur n'est pas fourni, générer à partir de l'email
+                if not username:
+                    # utiliser la partie locale de l'email comme fallback
+                    username = (nouveau_adherent.email.split('@')[0] if nouveau_adherent.email else f'user{nouveau_adherent.id}').strip()
+
+                # Validation minimale
+                if password and password != confirm_password:
+                    # supprimer l'adherent créé pour éviter entrées orphelines
+                    db.session.delete(nouveau_adherent)
+                    db.session.commit()
+                    flash('Les mots de passe ne correspondent pas. Opération annulée.', 'danger')
+                    return redirect(url_for('adherents'))
+
+                # Vérifier unicité username/email
+                existing_user = User.query.filter((User.username == username) | (User.email == nouveau_adherent.email)).first()
+                if existing_user:
+                    # supprimer l'adherent créé pour éviter doublons/confusions
+                    db.session.delete(nouveau_adherent)
+                    db.session.commit()
+                    flash('Un utilisateur avec ce nom d\'utilisateur ou cet email existe déjà. Opération annulée.', 'danger')
+                    return redirect(url_for('adherents'))
+
+                # Créer le User lié
+                try:
+                    user = User(username=username, email=nouveau_adherent.email, role='user')
+                    user.set_password(password if password else uuid.uuid4().hex)
+                    # Lier l'adhérent au user
+                    user.adherent = nouveau_adherent
+                    db.session.add(user)
+                    db.session.commit()
+                    flash('Adhérent et compte utilisateur créés avec succès', 'success')
+                except IntegrityError:
+                    db.session.rollback()
+                    # Rollback de l'adherent si besoin
+                    try:
+                        db.session.delete(nouveau_adherent)
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                    flash('Erreur : impossible de créer le compte utilisateur (doublon).', 'danger')
+                    return redirect(url_for('adherents'))
+                except Exception:
+                    db.session.rollback()
+                    current_app.logger.exception('Erreur lors de la création du compte utilisateur')
+                    flash('Erreur lors de la création du compte utilisateur.', 'danger')
+                    return redirect(url_for('adherents'))
+
+            # Rediriger vers la page d'édition pour compléter les informations si souhaité
+            flash('Adhérent ajouté avec succès', 'success')
+            return redirect(url_for('edit_adherent', adherent_id=nouveau_adherent.id))
+        except IntegrityError as ie:
+            db.session.rollback()
+            # Probablement email dupliqué ou contrainte unique
+            current_app.logger.exception('IntegrityError lors de l\'ajout d\'un adhérent')
+            flash('Erreur : l\'email est déjà utilisé ou données invalides.', 'danger')
+            return redirect(url_for('adherents'))
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('Erreur inattendue lors de l\'ajout d\'un adhérent')
+            flash('Une erreur est survenue lors de l\'ajout de l\'adhérent.', 'danger')
+            return redirect(url_for('adherents'))
+
+    # Filtres GET
+    recherche = request.args.get('recherche', '').strip()
+    classe = request.args.get('classe', 'Toutes')
+    statut = request.args.get('statut', 'Tous')
+    emprunteurs_only = request.args.get('emprunteurs', '0') == '1'
+
+    query = Adherent.query
+
+    if recherche:
+        pattern = f"%{recherche}%"
+        query = query.filter(
+            db.or_(
+                Adherent.nom.ilike(pattern),
+                Adherent.prenom.ilike(pattern),
+                Adherent.email.ilike(pattern),
+                Adherent.telephone.ilike(pattern)
+            )
+        )
+
+    if classe and classe not in ('Toutes', 'Toutes les classes'):
+        query = query.filter(Adherent.classe == classe)
+
+    if statut and statut != 'Tous':
+        try:
+            inspector = inspect(db.engine)
+            cols = [c['name'] for c in inspector.get_columns('adherent')]
+            if 'statut' in cols:
+                query = query.filter(text("statut = :statut")).params(statut=statut)
+        except Exception:
+            current_app.logger.exception('Erreur lors du filtrage par statut')
+
+    # Filtrer pour ne garder que les adhérents ayant au moins un emprunt si demandé
+    if emprunteurs_only:
+        query = query.join(Emprunt).group_by(Adherent.id)
+
+    adherents_liste = query.order_by(Adherent.nom.asc()).all()
+    return render_template("adherents.html", title="Adhérents", adherents=adherents_liste,
+                           recherche_term=recherche, classe_selected=classe, statut_selected=statut,
+                           emprunteurs_selected= ('1' if emprunteurs_only else '0'))
+
+
+@app.route('/dashboard/adherents/<int:adherent_id>')
+@login_required
+def view_adherent(adherent_id):
+    a = Adherent.query.get_or_404(adherent_id)
+    return render_template('adherent_view.html', title=f"Adhérent {a.nom}", adherent=a)
+
+
+@app.route('/dashboard/adherents/<int:adherent_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_adherent(adherent_id):
+    a = Adherent.query.get_or_404(adherent_id)
+    if request.method == 'POST':
+        a.nom = request.form.get('nom', a.nom)
+        a.prenom = request.form.get('prenom', a.prenom)
+        a.email = request.form.get('email', a.email)
+        a.telephone = request.form.get('telephone', a.telephone)
+        a.classe = request.form.get('classe', a.classe)
+        a.statut = request.form.get('statut', a.statut if hasattr(a, 'statut') else 'Actif')
+        try:
+            db.session.commit()
+            flash('Adhérent mis à jour', 'success')
+        except Exception:
+            db.session.rollback()
+            flash('Erreur lors de la mise à jour', 'danger')
         return redirect(url_for('adherents'))
-    
-    adherents_liste = Adherent.query.all()
-    return render_template("adherents.html", title="Adhérents", adherents=adherents_liste)
+    return render_template('adherent_edit.html', title=f"Modifier {a.nom}", adherent=a)
+
+
+@app.route('/dashboard/adherents/<int:adherent_id>/emprunts')
+@login_required
+def adherent_emprunts(adherent_id):
+    a = Adherent.query.get_or_404(adherent_id)
+    emprunts_liste = Emprunt.query.filter_by(adherent_id=adherent_id).order_by(Emprunt.date_emprunt.desc()).all()
+    return render_template('adherent_emprunts.html', title=f"Emprunts {a.nom}", adherent=a, emprunts=emprunts_liste)
 
 @app.route("/dashboard/emprunts", methods=['GET', 'POST'])
 @login_required
