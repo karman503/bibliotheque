@@ -13,12 +13,16 @@
     <div class="card mb-4 shadow-sm">
         <div class="card-body d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Période d'analyse</h5>
-            <div class="btn-group">
-                <button class="btn btn-outline-secondary btn-sm">Semaine</button>
-                <button class="btn btn-primary btn-sm">Mois</button>
-                <button class="btn btn-outline-secondary btn-sm">Trimestre</button>
-                <button class="btn btn-outline-secondary btn-sm">Année</button>
-            </div>
+            <form id="periodeForm" method="GET" class="d-flex align-items-center gap-2">
+                <input type="hidden" name="period" id="periodInput" value="{{ request.args.get('period','month') }}">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-period="week">Semaine</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-period="month">Mois</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-period="quarter">Trimestre</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-period="year">Année</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -235,4 +239,24 @@
 
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var buttons = document.querySelectorAll('[data-period]');
+        var periodInput = document.getElementById('periodInput');
+        var current = periodInput ? periodInput.value : 'month';
+        buttons.forEach(function (b) {
+            if (b.getAttribute('data-period') === current) {
+                b.classList.remove('btn-outline-secondary'); b.classList.add('btn-primary');
+            }
+            b.addEventListener('click', function () {
+                if (periodInput) periodInput.value = b.getAttribute('data-period');
+                document.getElementById('periodeForm').submit();
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="auth-page">
+<div class="auth-page login-container">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
-                <div class="card shadow-sm">
+                <div class="card">
                     <div class="card-body p-5">
                         <div class="text-center mb-4">
                             <h2 class="fw-bold">Connexion</h2>
@@ -23,7 +23,7 @@
                         {% endif %}
                         {% endwith %}
 
-                        <form method="POST" action="{{ url_for('login') }}">
+                        <form method="POST" action="{{ url_for('login') }}" id="loginForm">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Nom d'utilisateur</label>
                                 <div class="input-group">
@@ -57,8 +57,10 @@
                                 <a href="#" class="text-primary text-decoration-none">Mot de passe oublié?</a>
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 mb-3">
-                                <i class="ri-login-box-line me-2"></i>Se connecter
+                            <button type="submit" class="btn btn-primary w-100 mb-3" id="loginButton">
+                                <span class="btn-text">
+                                    <i class="ri-login-box-line me-2"></i>Se connecter
+                                </span>
                             </button>
                         </form>
 
@@ -74,4 +76,15 @@
             </div>
         </div>
     </div>
-    {% endblock %}
+</div>
+
+<script>
+// Script spécifique pour gérer la soumission du formulaire
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const button = document.getElementById('loginButton');
+    if (!button.classList.contains('loading')) {
+        button.classList.add('loading');
+    }
+});
+</script>
+{% endblock %}

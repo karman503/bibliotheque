@@ -54,10 +54,11 @@
                     <button type="submit" class="btn btn-outline-primary">Filtrer</button>
                     <a href="{{ url_for('adherents') }}" class="btn btn-outline-secondary">Réinitialiser</a>
 
-                    <button class="btn btn-primary ms-auto" data-bs-toggle="modal"
-                        data-bs-target="#nouvelAdherentModal">
+                    {% if current_user and current_user.role == 'admin' %}
+                    <a href="{{ url_for('new_adherent') }}" class="btn btn-primary ms-auto">
                         <i class="ri-user-add-line me-1"></i> Nouvel adhérent
-                    </button>
+                    </a>
+                    {% endif %}
 
                     <button class="btn btn-outline-secondary">
                         <i class="ri-mail-line me-1"></i> Envoyer rappel
@@ -104,13 +105,21 @@
                     <tr>
                         <td>
                             <div class="d-flex align-items-center">
+                                {% if a.user and a.user.image %}
+                                <img src="{{ url_for('static', filename='uploads/profiles/' ~ a.user.image) }}"
+                                    alt="{{ a.nom }} {{ a.prenom }}" class="rounded-circle"
+                                    style="width:40px; height:40px; object-fit:cover;">
+                                {% else %}
                                 <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center"
                                     style="width:40px; height:40px;">
-                                    {{ a.nom[0] }}{{ a.prenom[0] }}
+                                    {{ (a.nom[:1] if a.nom) | default('') }}{{ (a.prenom[:1] if a.prenom) | default('')
+                                    }}
                                 </div>
+                                {% endif %}
                                 <div class="ms-3">
                                     <div class="fw-semibold">{{ a.nom }} {{ a.prenom }}</div>
-                                    <small class="text-muted">ID {{ a.id }}</small>
+                                    <small class="text-muted">ID {{ a.id }}</small><br>
+                                    <small class="text-muted">Statut: {{ a.statut or 'Actif' }}</small>
                                 </div>
                             </div>
                         </td>
@@ -125,7 +134,9 @@
                         </td>
 
                         <td>
-                            {{ a.emprunts|length }} en cours
+                            {% set emprunts_en_cours = a.emprunts | selectattr('date_retour_effective', 'equalto', None)
+                            | list | length %}
+                            {{ emprunts_en_cours }} en cours
                         </td>
 
                         <td>
@@ -220,6 +231,8 @@
                                     Créer également un compte utilisateur pour cet adhérent
                                 </label>
                             </div>
+                            <div class="small text-muted mt-1">Laisser le mot de passe vide pour le générer
+                                automatiquement.</div>
                         </div>
 
                         <div id="userAccountFields" class="col-12 mt-2">
@@ -253,4 +266,45 @@
 </div>
 
 
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var createUserCheckbox = document.getElementById('createUser');
+        var userAccountFields = document.getElementById('userAccountFields');
+        var emailInput = document.querySelector('input[name="email"]');
+        var usernameInput = document.querySelector('input[name="username"]');
+
+        function toggleUserFields() {
+            if (!createUserCheckbox) return;
+            if (createUserCheckbox.checked) {
+                userAccountFields.style.display = '';
+            } else {
+                userAccountFields.style.display = 'none';
+            }
+        }
+
+        if (createUserCheckbox) {
+            createUserCheckbox.addEventListener('change', toggleUserFields);
+            toggleUserFields();
+        }
+
+        // Pré-remplir le nom d'utilisateur avec la partie locale de l'email
+        if (emailInput && usernameInput) {
+            emailInput.addEventListener('blur', function () {
+                try {
+                    var val = emailInput.value || '';
+                    if (val && (!usernameInput.value || usernameInput.value.trim() === '')) {
+                        var local = val.split('@')[0];
+                        usernameInput.value = local;
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

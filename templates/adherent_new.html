@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-4">
+    <div class="card mx-auto" style="max-width:800px;">
+        <div class="card-body">
+            <h4 class="fw-bold mb-3"><i class="ri-user-add-line me-1 text-primary"></i> Ajouter un nouvel adhérent</h4>
+
+            <form method="POST" action="{{ url_for('new_adherent') }}">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nom</label>
+                        <input type="text" name="nom" class="form-control" placeholder="Ex: Dubois" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" name="prenom" class="form-control" placeholder="Ex: Marie" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="Ex: marie.dubois@ecole.fr"
+                            required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Téléphone</label>
+                        <input type="text" name="telephone" class="form-control" placeholder="Ex: 01 23 45 67 89">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Classe</label>
+                        <select name="classe" class="form-select">
+                            <option>Licence FS</option>
+                            <option>Licence FLLSH</option>
+                            <option>Licence EG</option>
+                            <option>Licence FDEG</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Statut</label>
+                        <select name="statut" class="form-select">
+                            <option value="Actif">Actif</option>
+                            <option value="Suspendu">Suspendu</option>
+                            <option value="Inactif">Inactif</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="1" id="createUser" name="create_user"
+                                checked>
+                            <label class="form-check-label" for="createUser">Créer également un compte utilisateur pour
+                                cet adhérent</label>
+                        </div>
+                        <div class="small text-muted mt-1">Laisser le mot de passe vide pour le générer automatiquement.
+                        </div>
+                    </div>
+
+                    <div id="userAccountFields" class="col-12 mt-2">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Nom d'utilisateur</label>
+                                <input type="text" name="username" class="form-control" placeholder="Ex: m.dubois">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Mot de passe</label>
+                                <input type="password" name="password" class="form-control" placeholder="Mot de passe">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Confirmer mot de passe</label>
+                                <input type="password" name="confirm_password" class="form-control"
+                                    placeholder="Confirmer mot de passe">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 text-end mt-3">
+                        <a href="{{ url_for('adherents') }}" class="btn btn-outline-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var createUserCheckbox = document.getElementById('createUser');
+        var userAccountFields = document.getElementById('userAccountFields');
+        var emailInput = document.querySelector('input[name="email"]');
+        var usernameInput = document.querySelector('input[name="username"]');
+
+        function toggleUserFields() {
+            if (!createUserCheckbox) return;
+            if (createUserCheckbox.checked) {
+                userAccountFields.style.display = '';
+            } else {
+                userAccountFields.style.display = 'none';
+            }
+        }
+
+        if (createUserCheckbox) {
+            createUserCheckbox.addEventListener('change', toggleUserFields);
+            toggleUserFields();
+        }
+
+        if (emailInput && usernameInput) {
+            emailInput.addEventListener('blur', function () {
+                try {
+                    var val = emailInput.value || '';
+                    if (val && (!usernameInput.value || usernameInput.value.trim() === '')) {
+                        var local = val.split('@')[0];
+                        usernameInput.value = local;
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+/* Overrides to add standard properties where Bootstrap uses vendor-prefixed only
+   and to avoid non-standard properties that some editors warn about.
+   This file should be included after bootstrap.min.css in your templates. */
+
+/* Ensure standard appearance is set alongside vendor-prefixed ones */
+[type=button], [type=reset], [type=submit], button,
+button, select, input, textarea {
+  appearance: button;
+}
+
+[type=search] {
+  appearance: textfield;
+}
+
+/* Form element pseudo-elements */
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+::-webkit-file-upload-button,
+::file-selector-button {
+  -webkit-appearance: button;
+  appearance: button;
+  font: inherit;
+}
+
+/* Keep print-color-adjust vendor + standard and avoid deprecated property */
+.form-check-input {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Range and other controls: ensure standard appearance is present */
+.form-range,
+.form-range::-webkit-slider-thumb,
+.form-range::-moz-range-thumb {
+  appearance: none;
+}
+
+/* Add any extra compatibility fallbacks as needed */

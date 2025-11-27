@@ -11,53 +11,131 @@
 
     <!-- Navigation onglets -->
     <div class="mb-4">
-        <ul class="nav nav-tabs border-bottom-2">
+        <ul class="nav nav-tabs border-bottom-2" role="tablist">
             <li class="nav-item">
-                <button class="nav-link active" type="button">Profil</button>
+                <button class="nav-link active" id="profil-tab" data-bs-toggle="tab" data-bs-target="#profil"
+                    type="button" role="tab" aria-controls="profil" aria-selected="true">Profil</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" type="button">Notifications</button>
+                <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications"
+                    type="button" role="tab" aria-controls="notifications" aria-selected="false">Notifications</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" type="button">Bibliothèque</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" type="button">Sécurité</button>
+                <button class="nav-link" id="securite-tab" data-bs-toggle="tab" data-bs-target="#securite" type="button"
+                    role="tab" aria-controls="securite" aria-selected="false">Sécurité</button>
             </li>
         </ul>
     </div>
 
-    <!-- Informations personnelles -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h5 class="fw-semibold mb-4">Informations personnelles</h5>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Nom d'utilisateur</label>
-                    <!-- <input type="text" class="form-control" value="dior" readonly> A chercher Pourquoi ici Karman c'est important-->
-                    <input type="text" class="form-control">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" placeholder="admin@BibliosDjib.dj">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Téléphone</label>
-                    <input type="tel" class="form-control" placeholder="+253 77 59 35 38">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Poste</label>
-                    <input type="text" class="form-control" placeholder="Bibliothécaire principal">
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="profil" role="tabpanel" aria-labelledby="profil-tab">
+
+            <!-- Informations personnelles -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-4">Informations personnelles</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <form method="POST" action="{{ url_for('update_profil') }}">
+                                <label class="form-label">Nom d'utilisateur</label>
+                                <input type="text" name="username" class="form-control"
+                                    value="{{ current_user.username }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ current_user.email }}"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Téléphone</label>
+                            <input type="tel" name="telephone" class="form-control"
+                                value="{{ current_user.adherent.telephone if current_user.adherent else '' }}">
+                        </div>
+                        {% if current_user.role == 'admin' %}
+                        <div class="col-md-6">
+                            <label class="form-label">Poste</label>
+                            <input type="text" name="poste" class="form-control" placeholder="(optionnel)">
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="mt-3">
+                        <input type="hidden" name="current_password" value="">
+                        <button class="btn btn-primary">Sauvegarder les modifications</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <div class="mt-3">
-                <button class="btn btn-primary">Sauvegarder les modifications</button>
+
+            <!-- Upload photo de profil -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-4">Photo de profil</h5>
+                    <div class="d-flex align-items-center gap-3">
+                        {% if current_user.image %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.image) }}"
+                            alt="Profil" class="rounded-circle" width="80" height="80" style="object-fit:cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                            style="width:80px; height:80px;">{{ current_user.username[:1]|upper }}</div>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('upload_image') }}" enctype="multipart/form-data">
+                            <div class="mb-2">
+                                <input type="file" name="image" accept="image/*" class="form-control">
+                            </div>
+                            <button class="btn btn-outline-primary">Mettre à jour la photo</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-4">Notifications</h5>
+                    <p class="text-muted">Paramètres de notification (à configurer)</p>
+                </div>
             </div>
         </div>
+
+        <div class="tab-pane fade" id="securite" role="tabpanel" aria-labelledby="securite-tab">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-4">Sécurité</h5>
+                    <p class="text-muted">Actions sensibles du compte</p>
+                    <div class="mt-3">
+                        <button class="btn btn-danger" data-bs-toggle="modal"
+                            data-bs-target="#confirmDeleteModal">Supprimer le compte</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal confirmation suppression -->
+        <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content p-4">
+                    <h5 class="mb-3">Confirmer la suppression du compte</h5>
+                    <p>Cette action est irréversible. Entrez votre mot de passe pour confirmer.</p>
+                    <form method="POST" action="{{ url_for('delete_account') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Mot de passe</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">Supprimer le compte</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+
     </div>
 
-
-
-</div>
-
-{% endblock %}
+    {% endblock %}

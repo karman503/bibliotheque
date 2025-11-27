@@ -70,11 +70,15 @@
                     <i class="ri-settings-line"></i> Paramètres
                 </a>
 
-                <!-- LIEN VERS LE PROFIL -->
-                <a href="/dashboard/profil" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2 
-                {% if title == 'Mon Profil' %}bg-primary text-white{% else %}bg-light text-dark{% endif %}">
-                    <i class="ri-user-3-line"></i> Mon Profil
+                {# Lien vers les réservations pour les utilisateurs normaux #}
+                {% if current_user.role != 'admin' %}
+                <a href="{{ url_for('mes_reservations') }}" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2 
+                {% if title == 'Mes Réservations' %}bg-primary text-white{% else %}bg-light text-dark{% endif %}">
+                    <i class="ri-calendar-line"></i> Mes Réservations
                 </a>
+                {% endif %}
+
+                <!-- LIEN VERS LE PROFIL (remplacé par Paramètres) -->
 
             </nav>
         </div>

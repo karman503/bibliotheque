@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container p-4">
+    <h3>Réservations</h3>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Adhérent</th>
+                <th>Livre</th>
+                <th>Date réservation</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reservations %}
+            <tr>
+                <td>{{ r.adherent.nom }} {{ r.adherent.prenom }}</td>
+                <td>{{ r.livre.titre if r.livre else '—' }}</td>
+                <td>{{ r.date_reservation.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ r.status }}</td>
+                <td>
+                    {% if r.status == 'active' %}
+                    <form method="post" action="{{ url_for('fulfill_reservation', res_id=r.id) }}"
+                        style="display:inline">
+                        <button class="btn btn-sm btn-primary">Transformer en emprunt</button>
+                    </form>
+                    <form method="post" action="{{ url_for('cancel_reservation', res_id=r.id) }}"
+                        style="display:inline">
+                        <button class="btn btn-sm btn-outline-danger">Annuler</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">Aucune réservation.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container p-4">
+    <h3>Mes Réservations</h3>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Livre</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reservations %}
+            <tr>
+                <td>{{ r.livre.titre if r.livre else '—' }}</td>
+                <td>{{ r.date_reservation.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ r.status }}</td>
+                <td>
+                    {% if r.status == 'active' %}
+                    <form method="post" action="{{ url_for('user_cancel_reservation', res_id=r.id) }}"
+                        style="display:inline">
+                        <button class="btn btn-sm btn-outline-danger">Annuler</button>
+                    </form>
+                    {% else %}
+                    <small class="text-muted">Aucune action</small>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">Aucune réservation.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

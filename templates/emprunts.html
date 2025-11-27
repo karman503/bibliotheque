@@ -26,9 +26,17 @@
             </li>
         </ul>
 
-        <button class="btn btn-primary ms-3" data-bs-toggle="modal" data-bs-target="#nouvelEmpruntModal">
-            <i class="ri-add-line me-1"></i> Nouvel emprunt
-        </button>
+        <div class="ms-3">
+            <button id="btnNouvelEmprunt" class="btn btn-primary" data-bs-toggle="modal"
+                data-bs-target="#nouvelEmpruntModal">
+                <i class="ri-add-line me-1"></i> Nouvel emprunt
+            </button>
+            <!-- BOUTON NOUVELLE RÉSERVATION AJOUTÉ -->
+            <button id="btnNouvelleReservation" class="btn btn-outline-primary" data-bs-toggle="modal"
+                data-bs-target="#nouvelleReservationModal">
+                <i class="ri-bookmark-line me-1"></i> Nouvelle réservation
+            </button>
+        </div>
     </div>
 
     <!-- Filtres + Boutons -->
@@ -99,13 +107,19 @@
                                 </td>
                                 <td class="d-flex gap-1">
                                     {% if not emprunt.date_retour_effective %}
-                                    <button class="btn btn-outline-secondary btn-sm"><i
-                                            class="ri-check-line me-1"></i>Retour</button>
-                                    <button class="btn btn-outline-secondary btn-sm"><i
-                                            class="ri-time-line me-1"></i>Prolonger</button>
+                                    <a href="{{ url_for('retourner_livre', emprunt_id=emprunt.id) }}"
+                                        class="btn btn-outline-secondary btn-sm"><i
+                                            class="ri-check-line me-1"></i>Retour</a>
+                                    <form method="POST"
+                                        action="{{ url_for('prolonger_emprunt', emprunt_id=emprunt.id) }}"
+                                        style="display:inline">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm"><i
+                                                class="ri-time-line me-1"></i>Prolonger</button>
+                                    </form>
                                     {% endif %}
-                                    <button class="btn btn-outline-secondary btn-sm"><i
-                                            class="ri-eye-line me-1"></i>Détails</button>
+                                    <a href="{{ url_for('view_emprunt', emprunt_id=emprunt.id) }}"
+                                        class="btn btn-outline-secondary btn-sm"><i
+                                            class="ri-eye-line me-1"></i>Détails</a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -127,6 +141,7 @@
                                 <th>Date de réservation</th>
                                 <th>Priorité</th>
                                 <th>Statut</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -135,8 +150,46 @@
                                 <td>{{ res.livre.titre }}</td>
                                 <td>{{ res.adherent.nom }} {{ res.adherent.prenom }}</td>
                                 <td>{{ res.date_reservation.strftime('%d/%m/%Y') }}</td>
-                                <td>{{ res.priorite }}</td>
-                                <td>{{ res.status.replace('_', ' ') }}</td>
+                                <td>{{ res.priorite|default('-') }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if res.status == 'en_attente' %}bg-warning
+                                        {% elif res.status == 'confirmee' %}bg-success
+                                        {% elif res.status == 'annulee' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ res.status.replace('_', ' ') }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if res.status == 'en_attente' %}
+                                        <form method="POST"
+                                            action="{{ url_for('confirmer_reservation', reservation_id=res.id) }}"
+                                            style="display:inline">
+                                            <button type="submit" class="btn btn-outline-success btn-sm">
+                                                <i class="ri-check-line"></i> Confirmer
+                                            </button>
+                                        </form>
+                                        <form method="POST"
+                                            action="{{ url_for('annuler_reservation', reservation_id=res.id) }}"
+                                            style="display:inline">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="ri-close-line"></i> Annuler
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        <a href="#" class="btn btn-outline-primary btn-sm">
+                                            <i class="ri-eye-line"></i> Voir
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="ri-inbox-line fs-1"></i><br>
+                                    Aucune réservation trouvée
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -201,7 +254,7 @@
         </div>
     </div>
 
-    <!-- Modal Bootstrap 5 pour Nouvel emprunt -->
+    <!-- Modal Nouvel emprunt -->
     <div class="modal fade" id="nouvelEmpruntModal" tabindex="-1" aria-labelledby="nouvelEmpruntLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -210,7 +263,8 @@
                 <form method="POST" action="{{ url_for('emprunts') }}">
                     <div class="mb-3">
                         <label class="form-label">Adhérent</label>
-                        <select name="adherent_id" class="form-select">
+                        <select name="adherent_id" class="form-select" required>
+                            <option value="">Choisir un adhérent</option>
                             {% for adherent in adherents %}
                             <option value="{{ adherent.id }}">{{ adherent.nom }} {{ adherent.prenom }}</option>
                             {% endfor %}
@@ -218,15 +272,17 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Livre</label>
-                        <select name="livre_id" class="form-select">
+                        <select name="livre_id" class="form-select" required>
+                            <option value="">Choisir un livre disponible</option>
                             {% for livre in livres %}
-                            <option value="{{ livre.id }}">{{ livre.titre }}</option>
+                            <option value="{{ livre.id }}">{{ livre.titre }} - {{ livre.auteur }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Date de retour prévue</label>
-                        <input name="date_retour" type="date" class="form-control" min="{{ today }}">
+                        <input name="date_retour" type="date" class="form-control" min="{{ today }}" required
+                            value="{{ (now + timedelta(days=14)).strftime('%Y-%m-%d') }}">
                     </div>
                     <div class="d-flex gap-2 mt-3">
                         <button type="submit" class="btn btn-primary flex-fill">Créer l'emprunt</button>
@@ -238,6 +294,92 @@
         </div>
     </div>
 
+    <!-- Modal Nouvelle réservation -->
+    <div class="modal fade" id="nouvelleReservationModal" tabindex="-1" aria-labelledby="nouvelleReservationLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-4">
+                <h3 class="mb-4">Nouvelle réservation</h3>
+                <form method="POST" action="{{ url_for('create_reservation') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Adhérent</label>
+                        <select name="adherent_id" class="form-select" required>
+                            <option value="">Choisir un adhérent</option>
+                            {% for adherent in adherents %}
+                            <option value="{{ adherent.id }}">{{ adherent.nom }} {{ adherent.prenom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Livre</label>
+                        <select name="livre_id" class="form-select" required>
+                            <option value="">Choisir un livre</option>
+                            {% for livre in livres %}
+                            <option value="{{ livre.id }}">{{ livre.titre }} - {{ livre.auteur }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary flex-fill">Créer la réservation</button>
+                        <button type="button" class="btn btn-secondary flex-fill"
+                            data-bs-dismiss="modal">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Toggle des boutons d'action principale
+        var empruntsTab = document.getElementById('emprunts-tab');
+        var reservationsTab = document.getElementById('reservations-tab');
+        var btnEmprunt = document.getElementById('btnNouvelEmprunt');
+        var btnReservation = document.getElementById('btnNouvelleReservation');
+
+        function showEmprunt() {
+            if (btnEmprunt) btnEmprunt.style.display = '';
+            if (btnReservation) btnReservation.style.display = '';
+        }
+
+        function showReservation() {
+            if (btnEmprunt) btnEmprunt.style.display = '';
+            if (btnReservation) btnReservation.style.display = '';
+        }
+
+        if (empruntsTab) {
+            empruntsTab.addEventListener('shown.bs.tab', showEmprunt);
+        }
+        if (reservationsTab) {
+            reservationsTab.addEventListener('shown.bs.tab', showReservation);
+        }
+
+        // État initial basé sur l'onglet actif
+        var active = document.querySelector('#empruntTabs .nav-link.active');
+        if (active && active.id === 'reservations-tab') showReservation();
+        else showEmprunt();
+
+        // Amélioration de l'UX : fermer les modals après soumission réussie
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.addEventListener('hidden.bs.modal', function () {
+                const forms = this.querySelectorAll('form');
+                forms.forEach(form => form.reset());
+            });
+        });
+
+        // Filtrage automatique des livres disponibles pour l'emprunt
+        const empruntLivreSelect = document.querySelector('#nouvelEmpruntModal select[name="livre_id"]');
+        if (empruntLivreSelect) {
+            // Ici vous pourriez ajouter une logique pour ne montrer que les livres disponibles
+            // Cela nécessiterait une API ou un pré-filtrage côté serveur
+        }
+    });
+</script>
 {% endblock %}

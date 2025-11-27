@@ -1,29 +1,87 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container p-4">
-  <h3>Emprunts de {{ adherent.nom }} {{ adherent.prenom }}</h3>
-  <table class="table mt-3">
-    <thead>
-      <tr>
-        <th>Livre</th>
-        <th>Date emprunt</th>
-        <th>Date retour prévue</th>
-        <th>Statut</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for e in emprunts %}
-      <tr>
-        <td>{{ e.livre.titre if e.livre else '—' }}</td>
-        <td>{{ e.date_emprunt.strftime('%d/%m/%Y') }}</td>
-        <td>{{ e.date_retour_prevue.strftime('%d/%m/%Y') if e.date_retour_prevue else '-' }}</td>
-        <td>{{ e.status }}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="4">Aucun emprunt trouvé.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <a class="btn btn-outline-secondary" href="{{ url_for('adherents') }}">Retour</a>
+  <h3>Emprunts en cours de {{ adherent.nom }} {{ adherent.prenom }}</h3>
+
+  <!-- Tableau des emprunts actuels -->
+  <div class="card shadow-sm">
+    <div class="card-header">
+      <h5 class="mb-0">Emprunts en cours</h5>
+    </div>
+    <div class="card-body">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Livre</th>
+            <th>Date emprunt</th>
+            <th>Date retour prévue</th>
+            <th>Jours restants</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in emprunts_actuels %}
+          <tr>
+            <td>
+              <strong>{{ e.livre.titre if e.livre else '—' }}</strong><br>
+              <small class="text-muted">{{ e.livre.auteur if e.livre else '' }}</small>
+            </td>
+            <td>{{ e.date_emprunt.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {{ e.date_retour_prevue.strftime('%d/%m/%Y') if e.date_retour_prevue else '-' }}
+              {% if e.prolongations > 0 %}
+              <br><small class="text-muted">Prolongé {{ e.prolongations }} fois</small>
+              {% endif %}
+            </td>
+            <td>
+              {% if e.date_retour_prevue %}
+              {% set jours_restants = (e.date_retour_prevue.date() - today).days %}
+              {% if jours_restants < 0 %} <span class="badge bg-danger">En retard ({{ -jours_restants }}j)</span>
+                {% else %}
+                <span class="badge bg-success">{{ jours_restants }}j</span>
+                {% endif %}
+                {% else %}
+                <span class="badge bg-secondary">-</span>
+                {% endif %}
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('retourner_livre', emprunt_id=e.id) }}" class="btn btn-outline-success">
+                  <i class="ri-check-line"></i> Retour
+                </a>
+                <a href="{{ url_for('view_emprunt', emprunt_id=e.id) }}" class="btn btn-outline-primary">
+                  <i class="ri-eye-line"></i> Détails
+                </a>
+                {% if not e.date_retour_effective %}
+                <form method="POST" action="{{ url_for('prolonger_emprunt', emprunt_id=e.id) }}" class="d-inline">
+                  <button type="submit" class="btn btn-outline-warning">
+                    <i class="ri-time-line"></i> Prolonger
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-4">
+              <i class="ri-inbox-line fs-1"></i><br>
+              Aucun emprunt en cours
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+
+  <!-- Bouton retour -->
+  <div class="mt-3">
+    <a class="btn btn-outline-secondary" href="{{ url_for('adherents') }}">
+      <i class="ri-arrow-left-line"></i> Retour à la liste des adhérents
+    </a>
+  </div>
 </div>
 {% endblock %}

@@ -10,6 +10,32 @@
             <a href="{{ url_for('catalogue') }}" class="btn btn-outline-secondary btn-sm">Catalogue</a>
             <a href="{{ url_for('mes_emprunts') }}" class="btn btn-outline-primary btn-sm">Mes Emprunts</a>
         </div>
+        {% if current_user.is_authenticated %}
+        <div class="mb-3">
+            {% if current_user.adherent %}
+            {% set adherent_id = current_user.adherent.id %}
+            {% elif current_user.adherent_id %}
+            {% set adherent_id = current_user.adherent_id %}
+            {% else %}
+            {% set adherent_id = None %}
+            {% endif %}
+            {% if adherent_id %}
+            <form method="POST" action="{{ url_for('create_reservation') }}" class="d-flex gap-2 align-items-center">
+                <input type="hidden" name="adherent_id" value="{{ adherent_id }}">
+                <select name="livre_id" class="form-select form-select-sm" style="max-width:400px;">
+                    <option value="">Réserver un livre...</option>
+                    {% for l in livres %}
+                    <option value="{{ l.id }}">{{ l.titre }} — {{ l.auteur }}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-sm btn-outline-secondary">Réserver</button>
+            </form>
+            {% else %}
+            <small class="text-muted">Pour réserver un livre, demandez à l'administrateur de lier votre profil
+                adhérent.</small>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 
     <div class="card shadow-sm">

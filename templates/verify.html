@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card p-4">
+        <h3 class="mb-3">Vérification d'email</h3>
+        <p>Entrez votre nom d'utilisateur ou votre email, puis le code reçu par email.</p>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+          <div class="mb-3">
+            <label for="username" class="form-label">Nom d'utilisateur ou email</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+          </div>
+          <div class="mb-3">
+            <label for="code" class="form-label">Code de vérification</label>
+            <input type="text" class="form-control" id="code" name="code" required>
+          </div>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">Vérifier</button>
+          </div>
+        </form>
+
+        <hr>
+        <p class="small text-muted">Vous n'avez pas reçu le code ?</p>
+        <form method="POST" action="{{ url_for('resend_code') }}">
+          <div class="input-group mb-3">
+            <input type="text" class="form-control" name="identifier" placeholder="Nom d'utilisateur ou email" required>
+            <button class="btn btn-outline-secondary" type="submit">Renvoyer le code</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

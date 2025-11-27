@@ -1,80 +1,196 @@
-/* main scripts consolidated: progress bars, login toggle, sidebar preservation, animated title */
+/* ===== INITIALISATION CORRIGÉE ===== */
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Progress bars (statistiques) ---
-    setTimeout(() => {
-        document.querySelectorAll('.progress-bar').forEach(bar => {
-            const percentage = bar.getAttribute('data-percentage');
-            if (percentage !== null) {
-                bar.style.width = percentage + '%';
+    console.log('🚀 Initialisation des scripts...');
+
+    // Désactiver certaines animations sur mobile
+    if (window.innerWidth <= 768) {
+        document.body.classList.add('reduced-motion');
+    }
+
+    initializeAboutPage();
+    initializeScrollAnimations();
+    initializeButtonLoaders();
+
+    console.log('✅ Scripts initialisés avec succès');
+});
+
+/* ===== INITIALISATION DE LA PAGE À PROPOS ===== */
+function initializeAboutPage() {
+    // Animation des statistiques
+    animateStatistics();
+
+    // Animation des cartes au hover
+    initializeCardAnimations();
+
+    // Animation de la section hero
+    initializeHeroAnimation();
+}
+
+/* ===== ANIMATION DES STATISTIQUES ===== */
+function animateStatistics() {
+    const statElements = document.querySelectorAll('.stat-number');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const statElement = entry.target;
+                const targetValue = parseInt(statElement.textContent.replace('+', ''));
+                let currentValue = 0;
+                const duration = 2000; // 2 seconds
+                const increment = targetValue / (duration / 50);
+
+                const timer = setInterval(() => {
+                    currentValue += increment;
+                    if (currentValue >= targetValue) {
+                        currentValue = targetValue;
+                        clearInterval(timer);
+                        if (statElement.textContent.includes('+')) {
+                            statElement.textContent = targetValue + '+';
+                        } else {
+                            statElement.textContent = Math.floor(currentValue);
+                        }
+                    } else {
+                        statElement.textContent = Math.floor(currentValue);
+                    }
+                }, 50);
+
+                observer.unobserve(statElement);
             }
         });
-    }, 200);
+    }, { threshold: 0.5 });
 
-    // --- Toggle password visibility (login) ---
-    const togglePassword = document.getElementById('togglePassword');
-    if (togglePassword) {
-        togglePassword.addEventListener('click', function () {
-            const passwordInput = document.getElementById('password');
-            const icon = this.querySelector('i');
-            if (passwordInput && icon) {
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    icon.classList.replace('ri-eye-line', 'ri-eye-off-line');
-                } else {
-                    passwordInput.type = 'password';
-                    icon.classList.replace('ri-eye-off-line', 'ri-eye-line');
+    statElements.forEach(stat => observer.observe(stat));
+}
+
+/* ===== ANIMATIONS AU SCROLL ===== */
+function initializeScrollAnimations() {
+    const revealElements = document.querySelectorAll('.reveal-on-scroll');
+
+    const scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+
+                // Animation en cascade pour les éléments enfants
+                const staggerItems = entry.target.querySelectorAll('.stagger-item');
+                staggerItems.forEach((item, index) => {
+                    item.style.animationDelay = ${index * 0.2}s;
+                });
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    revealElements.forEach(element => {
+        scrollObserver.observe(element);
+    });
+}
+
+/* ===== ANIMATION DE LA SECTION HERO ===== */
+function initializeHeroAnimation() {
+    const heroTitle = document.querySelector('.about-hero h1');
+    if (heroTitle) {
+        heroTitle.style.animation = 'fadeInUp 1s ease-out';
+    }
+
+    const heroText = document.querySelector('.about-hero .lead');
+    if (heroText) {
+        heroText.style.animation = 'fadeInUp 1s ease-out 0.3s both';
+    }
+}
+
+/* ===== ANIMATIONS DES CARTES ===== */
+function initializeCardAnimations() {
+    const cards = document.querySelectorAll('.about-values .card, .about-team .card');
+
+    cards.forEach((card, index) => {
+        card.style.animationDelay = ${index * 0.1}s;
+        card.classList.add('stagger-item');
+    });
+}
+
+/* ===== GESTION DES BOUTONS ===== */
+function initializeButtonLoaders() {
+    const buttons = document.querySelectorAll('button[type="submit"], .btn[type="submit"]');
+    buttons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            const form = this.closest('form');
+            const isFormValid = form ? form.checkValidity() : true;
+
+            if (isFormValid && !this.classList.contains('loading')) {
+                const originalText = this.innerHTML;
+                this.setAttribute('data-original-text', originalText);
+
+                this.classList.add('loading');
+                this.disabled = true;
+
+                this.innerHTML = '<span class="btn-text">Chargement...</span>';
+
+                // Si le bouton est à l'intérieur d'un formulaire, soumettre explicitement
+                if (form) {
+                    // Empêcher le comportement par défaut pour éviter un double envoi
+                    e.preventDefault();
+                    // Laisser un petit délai pour que l'UI se rafraîchisse avant la soumission
+                    setTimeout(() => form.submit(), 50);
                 }
+
+                // Fallback : annuler l'état "loading" au bout de 10s si rien ne se passe
+                setTimeout(() => {
+                    if (this.classList.contains('loading')) {
+                        this.classList.remove('loading');
+                        this.disabled = false;
+                        this.innerHTML = originalText;
+                    }
+                }, 10000);
             }
         });
-    }
+    });
+}
 
-    // --- Prevent sidebar disappearing when clicking navbar links ---
-    const sidebar = document.querySelector('.sidebar');
-    const navbar = document.querySelector('.navbar');
-    if (sidebar && navbar) {
-        // When any navbar link or dropdown item is clicked, ensure the sidebar remains visible.
-        const navSelectors = '.navbar-nav .nav-link, .dropdown-item, .nav-link';
-        navbar.querySelectorAll(navSelectors).forEach(link => {
-            link.addEventListener('click', function () {
-                // Do not prevent navigation. Just restore sidebar visibility/state.
-                sidebar.style.display = 'block';
-                sidebar.style.visibility = 'visible';
-                document.body.classList.add('has-sidebar');
-            });
-        });
-
-        // Also ensure clicks on the navbar container don't toggle sidebar off accidentally
-        navbar.addEventListener('click', function () {
-            sidebar.style.display = 'block';
-            sidebar.style.visibility = 'visible';
-            document.body.classList.add('has-sidebar');
-        });
-    }
-
-    // --- Animated hero title (phrases rotate) ---
-    const animated = document.getElementById('animated-title');
-    if (animated) {
-        const raw = (animated.getAttribute('data-phrases') || 'BibliosDjib').trim();
-        const phrases = raw.split('|').map(s => s.trim()).filter(Boolean);
-        if (phrases.length > 0) {
-            let idx = 0;
-            animated.textContent = phrases[0];
-            animated.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-            animated.style.display = 'inline-block';
-            animated.style.opacity = '1';
-
-            const showNext = () => {
-                animated.style.opacity = '0';
-                animated.style.transform = 'translateY(-6px)';
-                setTimeout(() => {
-                    idx = (idx + 1) % phrases.length;
-                    animated.textContent = phrases[idx];
-                    animated.style.opacity = '1';
-                    animated.style.transform = 'translateY(0)';
-                }, 400);
-            };
-            // rotate every 3 seconds
-            setInterval(showNext, 2000);
-        }
+/* ===== GESTION DU REDIMENSIONNEMENT ===== */
+window.addEventListener('resize', function () {
+    if (window.innerWidth <= 768 && !document.body.classList.contains('reduced-motion')) {
+        document.body.classList.add('reduced-motion');
+    } else if (window.innerWidth > 768 && document.body.classList.contains('reduced-motion')) {
+        document.body.classList.remove('reduced-motion');
     }
 });
+
+/* ===== CSS POUR REDUCED MOTION ===== */
+const reducedMotionStyle = document.createElement('style');
+reducedMotionStyle.textContent = `
+    .reduced-motion *,
+    .reduced-motion *::before,
+    .reduced-motion *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+`;
+document.head.appendChild(reducedMotionStyle);
+
+/* ===== FONCTIONS GLOBALES ===== */
+window.App = {
+    showFlashMessage: function (message, type = 'success') {
+        const flash = document.createElement('div');
+        flash.className = alert alert-${type} alert-dismissible fade show;
+        flash.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(flash);
+
+        setTimeout(() => flash.remove(), 5000);
+    },
+
+    stopButtonLoading: function (button) {
+        if (button && button.classList.contains('loading')) {
+            const originalText = button.getAttribute('data-original-text') || button.textContent;
+            button.classList.remove('loading');
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    }
+};
