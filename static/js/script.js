@@ -74,7 +74,7 @@ function initializeScrollAnimations() {
                 // Animation en cascade pour les éléments enfants
                 const staggerItems = entry.target.querySelectorAll('.stagger-item');
                 staggerItems.forEach((item, index) => {
-                    item.style.animationDelay = ${index * 0.2}s;
+                    item.style.animationDelay = (index * 0.2) + 's';
                 });
             }
         });
@@ -106,7 +106,7 @@ function initializeCardAnimations() {
     const cards = document.querySelectorAll('.about-values .card, .about-team .card');
 
     cards.forEach((card, index) => {
-        card.style.animationDelay = ${index * 0.1}s;
+        card.style.animationDelay = (index * 0.1) + 's';
         card.classList.add('stagger-item');
     });
 }
@@ -175,7 +175,7 @@ document.head.appendChild(reducedMotionStyle);
 window.App = {
     showFlashMessage: function (message, type = 'success') {
         const flash = document.createElement('div');
-        flash.className = alert alert-${type} alert-dismissible fade show;
+        flash.className = `alert alert-${type} alert-dismissible fade show`;
         flash.innerHTML = `
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>

@@ -79,12 +79,37 @@
 </div>
 
 <script>
-// Script spécifique pour gérer la soumission du formulaire
-document.getElementById('loginForm').addEventListener('submit', function(e) {
-    const button = document.getElementById('loginButton');
-    if (!button.classList.contains('loading')) {
-        button.classList.add('loading');
-    }
-});
+    // Script spécifique pour gérer la soumission du formulaire et l'affichage du bouton
+    (() => {
+        const form = document.getElementById('loginForm');
+        const button = document.getElementById('loginButton');
+        const btnText = button.querySelector('.btn-text');
+
+        form.addEventListener('submit', function (e) {
+            // Désactiver le bouton pour éviter les doubles soumissions
+            button.disabled = true;
+            // Remplacer le texte par un indicateur de chargement
+            if (btnText) {
+                btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Chargement...';
+            } else {
+                button.innerText = 'Chargement...';
+            }
+        });
+
+        // Toggle show/hide password
+        const toggle = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        if (toggle && passwordInput) {
+            toggle.addEventListener('click', function () {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggle.innerHTML = '<i class="ri-eye-off-line"></i>';
+                } else {
+                    passwordInput.type = 'password';
+                    toggle.innerHTML = '<i class="ri-eye-line"></i>';
+                }
+            });
+        }
+    })();
 </script>
 {% endblock %}

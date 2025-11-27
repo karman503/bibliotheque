@@ -254,6 +254,7 @@ def catalogue():
 @app.route("/verify", methods=['GET', 'POST'])
 def verify_email():
     """Page de vérification du code"""
+    prefill = request.args.get('username') or ''
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         code = request.form.get('code', '').strip()
@@ -264,7 +265,7 @@ def verify_email():
         
         if not user:
             flash('Utilisateur non trouvé', 'danger')
-            return render_template('verify.html')
+            return render_template('verify.html', prefill_username=username)
         
         if (user.confirmation_code == code and 
             user.confirmation_expires and
@@ -279,8 +280,9 @@ def verify_email():
             return redirect(url_for('dashboard'))
         else:
             flash('Code invalide ou expiré', 'danger')
+            return render_template('verify.html', prefill_username=username)
     
-    return render_template('verify.html')
+    return render_template('verify.html', prefill_username=prefill)
 
 @app.route("/resend_code", methods=['POST'])
 def resend_code():
@@ -305,7 +307,7 @@ def resend_code():
     else:
         flash('Utilisateur non trouvé ou déjà vérifié', 'warning')
     
-    return redirect(url_for('verify_email'))
+    return redirect(url_for('verify_email', username=identifier))
 
 def _generate_confirmation_code():
     """Génère un code de confirmation à 6 chiffres"""
@@ -477,9 +479,24 @@ def login():
         if user:
             if user.check_password(password):
                 if not user.confirmed and user.role != 'admin':
-                    flash('Veuillez vérifier votre email avant de vous connecter', 'warning')
-                    return redirect(url_for('verify_email'))
-                
+                    # Générer et envoyer un code de vérification au moment de la tentative de connexion
+                    code = _generate_confirmation_code()
+                    user.confirmation_code = code
+                    user.confirmation_expires = datetime.utcnow() + timedelta(minutes=30)
+                    try:
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+
+                    sent = send_verification_email(user.email, user.username, code)
+                    if sent:
+                        flash('Un code de vérification a été envoyé à votre adresse email. Vérifiez votre boîte et entrez le code.', 'info')
+                    else:
+                        flash('Impossible d\'envoyer le code de vérification par email. Contactez un administrateur.', 'warning')
+
+                    # Rediriger vers la page de vérification en préremplissant le champ username
+                    return redirect(url_for('verify_email', username=username))
+
                 login_user(user)
                 flash('Connexion réussie!', 'success')
                 return redirect(url_for('catalogue'))
