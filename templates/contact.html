@@ -85,22 +85,21 @@
             <div class="card shadow-sm border">
                 <div class="card-body">
                     <h2 class="h5 fw-bold mb-4">Envoyez-nous un message</h2>
-                    <form>
+                    <form method="POST" action="{{ url_for('contact') }}">
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label for="name" class="form-label">Nom complet *</label>
-                                <input type="text" class="form-control" id="name" placeholder="Votre nom" required>
+                                <label for="nom_complet" class="form-label">Nom complet *</label>
+                                <input type="text" class="form-control" id="nom_complet" name="nom_complet" placeholder="Votre nom" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="email" class="form-label">Email *</label>
-                                <input type="email" class="form-control" id="email" placeholder="votre@email.com"
-                                    required>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="votre@email.com" required>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="subject" class="form-label">Sujet *</label>
-                            <select id="subject" class="form-select" required>
+                            <label for="sujet" class="form-label">Sujet *</label>
+                            <select id="sujet" name="sujet" class="form-select" required>
                                 <option value="">Sélectionnez un sujet</option>
                                 <option value="inscription">Inscription / Adhésion</option>
                                 <option value="emprunt">Questions sur les emprunts</option>
@@ -113,7 +112,7 @@
 
                         <div class="mb-3">
                             <label for="message" class="form-label">Message *</label>
-                            <textarea class="form-control" id="message" rows="6" maxlength="500"
+                            <textarea class="form-control" id="message" name="message" rows="6" maxlength="500"
                                 placeholder="Décrivez votre demande en détail..." required></textarea>
                             <div class="form-text">0/500 caractères</div>
                         </div>
@@ -164,5 +163,29 @@
     </section>
 </main>
 
+<script>
+// Compteur de caractères pour le message
+document.addEventListener('DOMContentLoaded', function() {
+    const messageTextarea = document.getElementById('message');
+    const charCounter = document.querySelector('.form-text');
+    
+    if (messageTextarea && charCounter) {
+        messageTextarea.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            charCounter.textContent = `${currentLength}/500 caractères`;
+            
+            if (currentLength > 500) {
+                charCounter.classList.add('text-danger');
+            } else {
+                charCounter.classList.remove('text-danger');
+            }
+        });
+        
+        // Initialiser le compteur
+        const initialLength = messageTextarea.value.length;
+        charCounter.textContent = `${initialLength}/500 caractères`;
+    }
+});
+</script>
 
 {% include "footer.html" %}
