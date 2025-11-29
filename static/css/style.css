@@ -471,6 +471,139 @@ body {
     margin: 0 auto 1.5rem auto !important;
 }
 
+/* ===== CORRECTION SPÉCIFIQUE POUR LES ICÔNES DES SERVICES ===== */
+.bg-primary.bg-opacity-10,
+.bg-success.bg-opacity-10,
+.bg-purple.bg-opacity-10 {
+    background-color: transparent !important;
+    opacity: 1 !important;
+}
+
+/* Forcer l'apparence des cercles pour les services */
+.bg-primary.bg-opacity-10 {
+    background: rgba(99, 102, 241, 0.15) !important;
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 1.5rem auto !important;
+}
+
+.bg-success.bg-opacity-10 {
+    background: rgba(16, 185, 129, 0.15) !important;
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 1.5rem auto !important;
+}
+
+.bg-purple.bg-opacity-10 {
+    background: rgba(139, 92, 246, 0.15) !important;
+    width: 80px !important;
+    height: 80px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 1.5rem auto !important;
+}
+
+/* ===== CORRECTION DES ICÔNES DU DASHBOARD EMPRUNT ===== */
+/* Icônes des statistiques du dashboard */
+.bg-primary.bg-opacity-10,
+.bg-success.bg-opacity-10,
+.bg-warning.bg-opacity-10,
+.bg-danger.bg-opacity-10,
+.bg-info.bg-opacity-10,
+.bg-purple.bg-opacity-10 {
+    opacity: 1 !important;
+    background-color: transparent !important;
+}
+
+/* Icône primaire - Emprunts en cours */
+.bg-primary.bg-opacity-10 {
+    background: rgba(99, 102, 241, 0.15) !important;
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Icône succès - Rendus */
+.bg-success.bg-opacity-10 {
+    background: rgba(16, 185, 129, 0.15) !important;
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Icône warning - En retard */
+.bg-warning.bg-opacity-10 {
+    background: rgba(245, 158, 11, 0.15) !important;
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Icône danger - Prolongations */
+.bg-danger.bg-opacity-10 {
+    background: rgba(239, 68, 68, 0.15) !important;
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Icône info */
+.bg-info.bg-opacity-10 {
+    background: rgba(13, 202, 240, 0.15) !important;
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Icône violet */
+.bg-purple.bg-opacity-10 {
+    background: rgba(139, 92, 246, 0.15) !important;
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Styles pour les cartes de statistiques du dashboard */
+.card .bg-primary.bg-opacity-10,
+.card .bg-success.bg-opacity-10,
+.card .bg-warning.bg-opacity-10,
+.card .bg-danger.bg-opacity-10 {
+    opacity: 1 !important;
+}
+
+/* Assurer que les icônes dans les cartes soient visibles */
+.card .rounded-circle {
+    opacity: 1 !important;
+}
+
 /* ===== BOUTONS ANIMÉS ===== */
 .btn {
     border-radius: 12px;
@@ -1291,150 +1424,4 @@ footer::before {
 .notification-history-item.unread {
     background: rgba(99, 102, 241, 0.08);
     border-left: 4px solid var(--primary);
-}
-/* ===== CORRECTION SPÉCIFIQUE POUR LES ICÔNES DES SERVICES ===== */
-.bg-primary.bg-opacity-10,
-.bg-success.bg-opacity-10,
-.bg-purple.bg-opacity-10 {
-    background-color: transparent !important;
-    opacity: 1 !important;
-}
-
-/* Forcer l'apparence des cercles pour les services */
-.bg-primary.bg-opacity-10 {
-    background: rgba(99, 102, 241, 0.15) !important;
-    width: 80px !important;
-    height: 80px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin: 0 auto 1.5rem auto !important;
-}
-
-.bg-success.bg-opacity-10 {
-    background: rgba(16, 185, 129, 0.15) !important;
-    width: 80px !important;
-    height: 80px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin: 0 auto 1.5rem auto !important;
-}
-
-.bg-purple.bg-opacity-10 {
-    background: rgba(139, 92, 246, 0.15) !important;
-    width: 80px !important;
-    height: 80px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin: 0 auto 1.5rem auto !important;
-}
-/* ===== CORRECTION DES ICÔNES DU DASHBOARD EMPRUNT ===== */
-/* Icônes des statistiques du dashboard */
-.bg-primary.bg-opacity-10,
-.bg-success.bg-opacity-10,
-.bg-warning.bg-opacity-10,
-.bg-danger.bg-opacity-10,
-.bg-info.bg-opacity-10,
-.bg-purple.bg-opacity-10 {
-    opacity: 1 !important;
-    background-color: transparent !important;
-}
-
-/* Icône primaire - Emprunts en cours */
-.bg-primary.bg-opacity-10 {
-    background: rgba(99, 102, 241, 0.15) !important;
-    width: 60px !important;
-    height: 60px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Icône succès - Rendus */
-.bg-success.bg-opacity-10 {
-    background: rgba(16, 185, 129, 0.15) !important;
-    width: 60px !important;
-    height: 60px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Icône warning - En retard */
-.bg-warning.bg-opacity-10 {
-    background: rgba(245, 158, 11, 0.15) !important;
-    width: 60px !important;
-    height: 60px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Icône danger - Prolongations */
-.bg-danger.bg-opacity-10 {
-    background: rgba(239, 68, 68, 0.15) !important;
-    width: 60px !important;
-    height: 60px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Icône info */
-.bg-info.bg-opacity-10 {
-    background: rgba(13, 202, 240, 0.15) !important;
-    width: 60px !important;
-    height: 60px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Icône violet */
-.bg-purple.bg-opacity-10 {
-    background: rgba(139, 92, 246, 0.15) !important;
-    width: 60px !important;
-    height: 60px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* Styles pour les cartes de statistiques du dashboard */
-.card .bg-primary.bg-opacity-10,
-.card .bg-success.bg-opacity-10,
-.card .bg-warning.bg-opacity-10,
-.card .bg-danger.bg-opacity-10 {
-    opacity: 1 !important;
-}
-
-/* Assurer que les icônes dans les cartes soient visibles */
-.card .rounded-circle {
-    opacity: 1 !important;
-}
-
-/* Correction spécifique pour les petites icônes */
-.d-flex > .bg-primary.bg-opacity-10,
-.d-flex > .bg-success.bg-opacity-10,
-.d-flex > .bg-warning.bg-opacity-10,
-.d-flex > .bg-danger.bg-opacity-10 {
-    opacity: 1 !important;
-    background-color: rgba(99, 102, 241, 0.15) !important;
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
 }

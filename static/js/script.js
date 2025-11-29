@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeAboutPage();
     initializeScrollAnimations();
     initializeButtonLoaders();
+    initializeServiceIcons();
+    initializeDashboardIcons();
 
     console.log('✅ Scripts initialisés avec succès');
 });
@@ -171,30 +173,6 @@ reducedMotionStyle.textContent = `
 `;
 document.head.appendChild(reducedMotionStyle);
 
-/* ===== FONCTIONS GLOBALES ===== */
-window.App = {
-    showFlashMessage: function (message, type = 'success') {
-        const flash = document.createElement('div');
-        flash.className = `alert alert-${type} alert-dismissible fade show`;
-        flash.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.body.appendChild(flash);
-
-        setTimeout(() => flash.remove(), 5000);
-    },
-
-    stopButtonLoading: function (button) {
-        if (button && button.classList.contains('loading')) {
-            const originalText = button.getAttribute('data-original-text') || button.textContent;
-            button.classList.remove('loading');
-            button.disabled = false;
-            button.innerHTML = originalText;
-        }
-    }
-};
-
 /* ===== CORRECTION DES ICÔNES DES SERVICES ===== */
 function initializeServiceIcons() {
     // Attendre que le DOM soit complètement chargé
@@ -218,22 +196,6 @@ function initializeServiceIcons() {
     }, 100);
 }
 
-// Modifiez la fonction DOMContentLoaded existante :
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('🚀 Initialisation des scripts...');
-
-    // Désactiver certaines animations sur mobile
-    if (window.innerWidth <= 768) {
-        document.body.classList.add('reduced-motion');
-    }
-
-    initializeAboutPage();
-    initializeScrollAnimations();
-    initializeButtonLoaders();
-    initializeServiceIcons(); // ← AJOUTEZ CETTE LIGNE
-
-    console.log('✅ Scripts initialisés avec succès');
-});
 /* ===== CORRECTION DES ICÔNES DU DASHBOARD ===== */
 function initializeDashboardIcons() {
     // Attendre que le DOM soit complètement chargé
@@ -266,62 +228,26 @@ function initializeDashboardIcons() {
     }, 100);
 }
 
-// Ajoutez cette ligne dans votre DOMContentLoaded existant :
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('🚀 Initialisation des scripts...');
+/* ===== FONCTIONS GLOBALES ===== */
+window.App = {
+    showFlashMessage: function (message, type = 'success') {
+        const flash = document.createElement('div');
+        flash.className = `alert alert-${type} alert-dismissible fade show`;
+        flash.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(flash);
 
-    // Désactiver certaines animations sur mobile
-    if (window.innerWidth <= 768) {
-        document.body.classList.add('reduced-motion');
+        setTimeout(() => flash.remove(), 5000);
+    },
+
+    stopButtonLoading: function (button) {
+        if (button && button.classList.contains('loading')) {
+            const originalText = button.getAttribute('data-original-text') || button.textContent;
+            button.classList.remove('loading');
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
     }
-
-    initializeAboutPage();
-    initializeScrollAnimations();
-    initializeButtonLoaders();
-    initializeServiceIcons();
-    initializeDashboardIcons(); // ← AJOUTEZ CETTE LIGNE
-
-    console.log('✅ Scripts initialisés avec succès');
-});
-/* ===== CORRECTION ALIGNEMENT STATISTIQUES ===== */
-function fixStatsAlignment() {
-    setTimeout(() => {
-        // Sélectionner toutes les cartes de statistiques
-        const statCards = document.querySelectorAll('.card.border.shadow-sm');
-        
-        statCards.forEach(card => {
-            // Forcer l'alignement au centre
-            card.style.display = 'flex';
-            card.style.flexDirection = 'column';
-            card.style.alignItems = 'center';
-            card.style.justifyContent = 'center';
-            card.style.textAlign = 'center';
-            
-            // Forcer l'alignement du body de la carte
-            const cardBody = card.querySelector('.card-body');
-            if (cardBody) {
-                cardBody.style.display = 'flex';
-                cardBody.style.flexDirection = 'column';
-                cardBody.style.alignItems = 'center';
-                cardBody.style.justifyContent = 'center';
-                cardBody.style.textAlign = 'center';
-                cardBody.style.width = '100%';
-            }
-            
-            // Forcer l'alignement des éléments flex à l'intérieur
-            const flexItems = card.querySelectorAll('.d-flex');
-            flexItems.forEach(item => {
-                item.style.justifyContent = 'center';
-                item.style.width = '100%';
-            });
-        });
-        
-        console.log('✅ Alignement des statistiques corrigé');
-    }, 150);
-}
-
-// Ajoutez dans votre DOMContentLoaded :
-document.addEventListener('DOMContentLoaded', function () {
-    // ... vos autres initialisations ...
-    fixStatsAlignment(); // ← AJOUTEZ CETTE LIGNE
-});
+};
