@@ -30,7 +30,7 @@ app.config['SECRET_KEY'] = 'votre_cle_secrete'
 app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'gestionbibliotheque70@gmail.com')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'meou huya kclk vmab')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'lgxb xbsi krgm ntes')
 app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', '1') in ('1', 'True', 'true')
 app.config['EMAIL_FROM'] = os.environ.get('EMAIL_FROM', app.config['MAIL_USERNAME'])
 

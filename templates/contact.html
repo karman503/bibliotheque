@@ -84,16 +84,38 @@
         <div class="col-lg-8">
             <div class="card shadow-sm border">
                 <div class="card-body">
+                    {# Afficher ici uniquement les messages liés au formulaire de contact (contact-*) #}
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% set contact_messages = [] %}
+                    {% for category, message in messages %}
+                    {% if category[:8] == 'contact-' %}
+                    {% set _ = contact_messages.append((category, message)) %}
+                    {% endif %}
+                    {% endfor %}
+                    {% if contact_messages %}
+                    <div class="mb-3">
+                        {% for category, message in contact_messages %}
+                        {% set visual = category.replace('contact-','') %}
+                        <div class="alert alert-{{ visual }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
                     <h2 class="h5 fw-bold mb-4">Envoyez-nous un message</h2>
                     <form method="POST" action="{{ url_for('contact') }}">
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label for="nom_complet" class="form-label">Nom complet *</label>
-                                <input type="text" class="form-control" id="nom_complet" name="nom_complet" placeholder="Votre nom" required>
+                                <input type="text" class="form-control" id="nom_complet" name="nom_complet"
+                                    placeholder="Votre nom" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="email" class="form-label">Email *</label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="votre@email.com" required>
+                                <input type="email" class="form-control" id="email" name="email"
+                                    placeholder="votre@email.com" required>
                             </div>
                         </div>
 
@@ -164,28 +186,28 @@
 </main>
 
 <script>
-// Compteur de caractères pour le message
-document.addEventListener('DOMContentLoaded', function() {
-    const messageTextarea = document.getElementById('message');
-    const charCounter = document.querySelector('.form-text');
-    
-    if (messageTextarea && charCounter) {
-        messageTextarea.addEventListener('input', function() {
-            const currentLength = this.value.length;
-            charCounter.textContent = `${currentLength}/500 caractères`;
-            
-            if (currentLength > 500) {
-                charCounter.classList.add('text-danger');
-            } else {
-                charCounter.classList.remove('text-danger');
-            }
-        });
-        
-        // Initialiser le compteur
-        const initialLength = messageTextarea.value.length;
-        charCounter.textContent = `${initialLength}/500 caractères`;
-    }
-});
+    // Compteur de caractères pour le message
+    document.addEventListener('DOMContentLoaded', function () {
+        const messageTextarea = document.getElementById('message');
+        const charCounter = document.querySelector('.form-text');
+
+        if (messageTextarea && charCounter) {
+            messageTextarea.addEventListener('input', function () {
+                const currentLength = this.value.length;
+                charCounter.textContent = `${currentLength}/500 caractères`;
+
+                if (currentLength > 500) {
+                    charCounter.classList.add('text-danger');
+                } else {
+                    charCounter.classList.remove('text-danger');
+                }
+            });
+
+            // Initialiser le compteur
+            const initialLength = messageTextarea.value.length;
+            charCounter.textContent = `${initialLength}/500 caractères`;
+        }
+    });
 </script>
 
 {% include "footer.html" %}
