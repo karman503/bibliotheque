@@ -195,3 +195,133 @@ window.App = {
     }
 };
 
+/* ===== CORRECTION DES ICÔNES DES SERVICES ===== */
+function initializeServiceIcons() {
+    // Attendre que le DOM soit complètement chargé
+    setTimeout(() => {
+        const serviceIcons = document.querySelectorAll('.bg-primary.bg-opacity-10, .bg-success.bg-opacity-10, .bg-purple.bg-opacity-10');
+        
+        serviceIcons.forEach(icon => {
+            // Forcer les styles CSS
+            icon.style.backgroundColor = getComputedStyle(icon).backgroundColor;
+            icon.style.width = '80px';
+            icon.style.height = '80px';
+            icon.style.borderRadius = '50%';
+            icon.style.display = 'flex';
+            icon.style.alignItems = 'center';
+            icon.style.justifyContent = 'center';
+            icon.style.margin = '0 auto 1.5rem auto';
+            icon.style.opacity = '1';
+        });
+        
+        console.log('✅ Icônes des services initialisées:', serviceIcons.length);
+    }, 100);
+}
+
+// Modifiez la fonction DOMContentLoaded existante :
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('🚀 Initialisation des scripts...');
+
+    // Désactiver certaines animations sur mobile
+    if (window.innerWidth <= 768) {
+        document.body.classList.add('reduced-motion');
+    }
+
+    initializeAboutPage();
+    initializeScrollAnimations();
+    initializeButtonLoaders();
+    initializeServiceIcons(); // ← AJOUTEZ CETTE LIGNE
+
+    console.log('✅ Scripts initialisés avec succès');
+});
+/* ===== CORRECTION DES ICÔNES DU DASHBOARD ===== */
+function initializeDashboardIcons() {
+    // Attendre que le DOM soit complètement chargé
+    setTimeout(() => {
+        const dashboardIcons = document.querySelectorAll('.bg-primary.bg-opacity-10, .bg-success.bg-opacity-10, .bg-warning.bg-opacity-10, .bg-danger.bg-opacity-10');
+        
+        dashboardIcons.forEach(icon => {
+            // Forcer les styles CSS pour les icônes du dashboard
+            icon.style.opacity = '1';
+            icon.style.width = '60px';
+            icon.style.height = '60px';
+            icon.style.borderRadius = '50%';
+            icon.style.display = 'flex';
+            icon.style.alignItems = 'center';
+            icon.style.justifyContent = 'center';
+            
+            // Appliquer la couleur de fond selon la classe
+            if (icon.classList.contains('bg-primary')) {
+                icon.style.backgroundColor = 'rgba(99, 102, 241, 0.15)';
+            } else if (icon.classList.contains('bg-success')) {
+                icon.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+            } else if (icon.classList.contains('bg-warning')) {
+                icon.style.backgroundColor = 'rgba(245, 158, 11, 0.15)';
+            } else if (icon.classList.contains('bg-danger')) {
+                icon.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+            }
+        });
+        
+        console.log('✅ Icônes du dashboard initialisées:', dashboardIcons.length);
+    }, 100);
+}
+
+// Ajoutez cette ligne dans votre DOMContentLoaded existant :
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('🚀 Initialisation des scripts...');
+
+    // Désactiver certaines animations sur mobile
+    if (window.innerWidth <= 768) {
+        document.body.classList.add('reduced-motion');
+    }
+
+    initializeAboutPage();
+    initializeScrollAnimations();
+    initializeButtonLoaders();
+    initializeServiceIcons();
+    initializeDashboardIcons(); // ← AJOUTEZ CETTE LIGNE
+
+    console.log('✅ Scripts initialisés avec succès');
+});
+/* ===== CORRECTION ALIGNEMENT STATISTIQUES ===== */
+function fixStatsAlignment() {
+    setTimeout(() => {
+        // Sélectionner toutes les cartes de statistiques
+        const statCards = document.querySelectorAll('.card.border.shadow-sm');
+        
+        statCards.forEach(card => {
+            // Forcer l'alignement au centre
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.alignItems = 'center';
+            card.style.justifyContent = 'center';
+            card.style.textAlign = 'center';
+            
+            // Forcer l'alignement du body de la carte
+            const cardBody = card.querySelector('.card-body');
+            if (cardBody) {
+                cardBody.style.display = 'flex';
+                cardBody.style.flexDirection = 'column';
+                cardBody.style.alignItems = 'center';
+                cardBody.style.justifyContent = 'center';
+                cardBody.style.textAlign = 'center';
+                cardBody.style.width = '100%';
+            }
+            
+            // Forcer l'alignement des éléments flex à l'intérieur
+            const flexItems = card.querySelectorAll('.d-flex');
+            flexItems.forEach(item => {
+                item.style.justifyContent = 'center';
+                item.style.width = '100%';
+            });
+        });
+        
+        console.log('✅ Alignement des statistiques corrigé');
+    }, 150);
+}
+
+// Ajoutez dans votre DOMContentLoaded :
+document.addEventListener('DOMContentLoaded', function () {
+    // ... vos autres initialisations ...
+    fixStatsAlignment(); // ← AJOUTEZ CETTE LIGNE
+});
