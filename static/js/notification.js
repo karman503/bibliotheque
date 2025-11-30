@@ -10,7 +10,8 @@ class NotificationManager {
         this.updateNotificationCount();
         this.renderNotifications();
         this.setupEventListeners();
-        
+        this.setupDropdownPosition();
+
         // Charger les notifications depuis l'API si l'utilisateur est connecté
         if (this.currentUser) {
             this.loadNotificationsFromAPI();
@@ -39,7 +40,7 @@ class NotificationManager {
         if (stored) {
             return JSON.parse(stored);
         }
-        
+
         // Notifications par défaut selon le rôle
         if (this.currentUser?.role === 'admin') {
             return this.getDefaultAdminNotifications();
@@ -135,7 +136,7 @@ class NotificationManager {
         this.updateNotificationCount();
         this.renderNotifications();
         this.animateNotification();
-        
+
         return newNotification.id;
     }
 
@@ -202,7 +203,7 @@ class NotificationManager {
             this.saveNotifications();
             this.updateNotificationCount();
             this.renderNotifications();
-            
+
             // Mettre à jour via API si nécessaire
             this.markAsReadAPI(notificationId);
         }
@@ -220,15 +221,23 @@ class NotificationManager {
     }
 
     markAllAsRead() {
+        let hasUnread = false;
+
         this.notifications.forEach(notification => {
-            notification.read = true;
+            if (!notification.read) {
+                notification.read = true;
+                hasUnread = true;
+            }
         });
-        this.saveNotifications();
-        this.updateNotificationCount();
-        this.renderNotifications();
-        
-        // Mettre à jour via API
-        this.markAllAsReadAPI();
+
+        if (hasUnread) {
+            this.saveNotifications();
+            this.updateNotificationCount();
+            this.renderNotifications();
+
+            // Mettre à jour via API
+            this.markAllAsReadAPI();
+        }
     }
 
     async markAllAsReadAPI() {
@@ -252,10 +261,16 @@ class NotificationManager {
     updateNotificationCount() {
         const unreadCount = this.notifications.filter(n => !n.read).length;
         const countElement = document.getElementById('notificationCount');
-        
+
         if (countElement) {
             countElement.textContent = unreadCount > 99 ? '99+' : unreadCount;
-            countElement.style.display = unreadCount > 0 ? 'flex' : 'none';
+
+            // CORRECTION IMPORTANTE : Toujours mettre à jour l'affichage
+            if (unreadCount > 0) {
+                countElement.style.display = 'flex';
+            } else {
+                countElement.style.display = 'none';
+            }
         }
     }
 
@@ -335,11 +350,12 @@ class NotificationManager {
     }
 
     setupEventListeners() {
-        // Marquer toutes comme lues
+        // Marquer toutes comme lues - CORRECTION IMPORTANTE
         const markAllBtn = document.getElementById('markAllAsRead');
         if (markAllBtn) {
             markAllBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 this.markAllAsRead();
             });
         }
@@ -353,17 +369,47 @@ class NotificationManager {
             }
         });
 
+        // Fermer le dropdown quand on clique ailleurs
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.notification-dropdown') && !e.target.closest('#notificationDropdown')) {
+                this.closeDropdown();
+            }
+        });
+
         // Actualiser les notifications périodiquement (toutes les 2 minutes)
         setInterval(() => {
             this.loadNotificationsFromAPI();
         }, 120000);
     }
 
+    setupDropdownPosition() {
+        // Correction du positionnement du dropdown
+        const dropdownElement = document.querySelector('.notification-dropdown');
+        const triggerElement = document.getElementById('notificationDropdown');
+
+        if (dropdownElement && triggerElement) {
+            // Forcer le repositionnement
+            $(dropdownElement).on('shown.bs.dropdown', function () {
+                const $this = $(this);
+                setTimeout(function () {
+                    $this.css('z-index', '99999');
+                }, 10);
+            });
+
+            // S'assurer que le dropdown reste au-dessus
+            dropdownElement.style.zIndex = '99999';
+            dropdownElement.style.position = 'absolute';
+        }
+    }
+
     handleNotificationClick(notificationId) {
         const notification = this.notifications.find(n => n.id === notificationId);
         if (notification) {
-            this.markAsRead(notificationId);
-            
+            // Marquer comme lu seulement si ce n'est pas déjà lu
+            if (!notification.read) {
+                this.markAsRead(notificationId);
+            }
+
             // Rediriger selon l'action
             if (notification.action) {
                 switch (notification.action.type) {
@@ -381,6 +427,13 @@ class NotificationManager {
         }
     }
 
+    closeDropdown() {
+        const dropdown = document.querySelector('.notification-dropdown');
+        if (dropdown) {
+            $(dropdown).removeClass('show');
+        }
+    }
+
     // Méthode pour vider les notifications (démo)
     clearAll() {
         this.notifications = [];
@@ -393,12 +446,12 @@ class NotificationManager {
 // Initialiser le gestionnaire de notifications
 let notificationManager;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     notificationManager = new NotificationManager();
-    
+
     // Exposer globalement pour le débogage
     window.notificationManager = notificationManager;
-    
+
     // Simuler quelques notifications de démonstration
     setTimeout(() => {
         if (notificationManager.currentUser) {

@@ -1320,7 +1320,7 @@ def update_profil():
             except Exception:
                 current_app.logger.exception('Impossible de mettre à jour le téléphone de l\'adhérent')
         db.session.commit()
-        flash("Informations mises à jour ✅", "success")
+        flash("Informations mises à jour", "success")
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Erreur lors de la mise à jour du profil")
@@ -1364,7 +1364,7 @@ def upload_image():
 
         current_user.image = unique_name
         db.session.commit()
-        flash("Photo de profil mise à jour ✅", "success")
+        flash("Photo de profil mise à jour", "success")
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Erreur lors de l'upload de la photo de profil")

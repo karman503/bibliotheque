@@ -96,48 +96,59 @@
 
     <!-- Graphiques répartition par catégorie et adhérents actifs -->
     <div class="row g-4 mb-4">
-        <!-- Colonne gauche : Répartition par catégorie (admin) ou répartition utilisateur -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
+        <!-- Colonne gauche : Répartition par catégorie (remplacée par carte détaillée) -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-light shadow-sm">
                 <div class="card-body">
-                    <h5 class="fw-semibold mb-4">Répartition des emprunts par catégorie</h5>
-                    {% if is_admin %}
+                    <h3 class="h5 mb-4">Répartition par catégorie</h3>
+
+                    {# Palette par défaut si stat.couleur non fournie #}
+                    {% set palette = ['var(--primary)', 'var(--success)', 'var(--warning)', 'var(--purple)',
+                    'var(--danger)', 'var(--gray)'] %}
+
                     {% if stats_categories %}
                     {% for stat in stats_categories %}
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>{{ stat.categorie }}</span>
-                            <span>{{ stat.count }} ({{ stat.pourcentage }}%)</span>
+                    {% set color = stat.couleur if stat.couleur is defined and stat.couleur else (palette[loop.index0 %
+                    (palette|length)]) %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle"
+                                    style="width: 16px; height: 16px; background-color: {{ color }};"></div>
+                                <span class="small text-secondary mb-0">{{ stat.categorie }}</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-medium">{{ stat.count }}</span>
+                                <span class="small text-muted ms-2">({{ stat.pourcentage }}%)</span>
+                            </div>
                         </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-primary category-progress"
-                                data-percentage="{{ stat.pourcentage }}" role="progressbar" aria-valuenow="0"
-                                aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar"
+                                style="width: {{ stat.pourcentage }}%; background-color: {{ color }};"></div>
                         </div>
                     </div>
                     {% endfor %}
                     {% else %}
-                    <p class="text-muted">Aucune donnée disponible.</p>
-                    {% endif %}
-                    {% else %}
-                    {% if stats_categories %}
-                    {% for stat in stats_categories %}
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>{{ stat.categorie }}</span>
-                            <span>{{ stat.count }} ({{ stat.pourcentage }}%)</span>
+                    <!-- Fallback statique si aucune donnée -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle"
+                                    style="width: 16px; height: 16px; background-color: var(--primary);"></div>
+                                <span class="small text-secondary mb-0">Littérature</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-medium">245</span>
+                                <span class="small text-muted ms-2">(34%)</span>
+                            </div>
                         </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-primary category-progress"
-                                data-percentage="{{ stat.pourcentage }}" role="progressbar" aria-valuenow="0"
-                                aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar"
+                                style="width: 34%; background-color: var(--primary);"></div>
                         </div>
                     </div>
-                    {% endfor %}
-                    {% else %}
-                    <p class="text-muted">Aucun emprunt pour le moment.</p>
                     {% endif %}
-                    {% endif %}
+
                 </div>
             </div>
         </div>
@@ -189,14 +200,31 @@
         </div>
     </div>
 
-    <!-- Graphique des emprunts par semaine -->
+    <!-- Graphique des emprunts par jour -->
     <div class="row g-4 mb-4">
         <div class="col-lg-6">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h5 class="fw-semibold mb-4">Emprunts par semaine</h5>
+                    <h5 class="fw-semibold mb-4">Emprunts par jour</h5>
+
+                    {% if stats_days %}
+                    {% for d in stats_days %}
                     <div class="mb-2 d-flex justify-content-between align-items-center">
-                        <span>Sem 1</span>
+                        <span>{{ d.label }}</span>
+                        <div class="flex-grow-1 mx-2">
+                            {% for bar in d.bars %}
+                            <div class="progress {% if not loop.first %}mt-1{% endif %}">
+                                <div class="progress-bar" role="progressbar"
+                                    style="width: {{ bar.width }}%; background-color: {{ bar.color if bar.color is defined else 'var(--primary)' }}">
+                                    {{ bar.count }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <span>Jour 1</span>
                         <div class="flex-grow-1 mx-2">
                             <div class="progress mb-1">
                                 <div class="progress-bar bg-primary" style="width:57.5%">23</div>
@@ -207,7 +235,7 @@
                         </div>
                     </div>
                     <div class="mb-2 d-flex justify-content-between align-items-center">
-                        <span>Sem 2</span>
+                        <span>Jour 2</span>
                         <div class="flex-grow-1 mx-2">
                             <div class="progress mb-1">
                                 <div class="progress-bar bg-primary" style="width:77.5%">31</div>
@@ -217,6 +245,130 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nouvelle ligne : État de la collection & Livres les plus empruntés -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card border-light shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 mb-4">État de la collection</h3>
+
+                    {% set dispon = livres_disponibles if livres_disponibles is defined else 0 %}
+                    {% set empruntes = livres_empruntes if livres_empruntes is defined else (total_livres - dispon if
+                    total_livres is defined else 0) %}
+                    {% set reserves = livres_reserves if livres_reserves is defined else 0 %}
+                    {% set total = total_livres if total_livres is defined and total_livres > 0 else (dispon + empruntes
+                    + reserves) %}
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle"
+                                style="width: 16px; height: 16px; background-color: var(--success);"></div>
+                            <span class="text-secondary mb-0">Disponibles</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold">{{ dispon }}</span>
+                            <span class="small text-muted ms-2">({{ ((dispon / total * 100) | round(1)) if total > 0
+                                else 0 }}%)</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle"
+                                style="width: 16px; height: 16px; background-color: var(--primary);"></div>
+                            <span class="text-secondary mb-0">Empruntés</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold">{{ empruntes }}</span>
+                            <span class="small text-muted ms-2">({{ ((empruntes / total * 100) | round(1)) if total > 0
+                                else 0 }}%)</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle"
+                                style="width: 16px; height: 16px; background-color: var(--warning);"></div>
+                            <span class="text-secondary mb-0">Réservés</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold">{{ reserves }}</span>
+                            <span class="small text-muted ms-2">({{ ((reserves / total * 100) | round(1)) if total > 0
+                                else 0 }}%)</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="progress" style="height: 16px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                style="width: {{ ((dispon / total * 100) | round(4)) if total > 0 else 0 }}%"></div>
+                            <div class="progress-bar bg-primary" role="progressbar"
+                                style="width: {{ ((empruntes / total * 100) | round(4)) if total > 0 else 0 }}%"></div>
+                            <div class="progress-bar bg-warning" role="progressbar"
+                                style="width: {{ ((reserves / total * 100) | round(4)) if total > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-light shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5 mb-4">Livres les plus empruntés</h3>
+
+                    {% set books = top_books if top_books is defined else (most_borrowed_books if most_borrowed_books is
+                    defined else []) %}
+
+                    {% if books and books|length > 0 %}
+                    {% for book in books[:5] %}
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-2 hover-overlay">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 32px; height: 32px;">
+                                <span class="fw-bold small">#{{ loop.index }}</span>
+                            </div>
+                            <div>
+                                <p class="mb-0 fw-medium text-dark">{{ book.titre }}</p>
+                                <p class="mb-0 small text-secondary">{{ book.auteur if book.auteur is defined else
+                                    (book.author if book.author is defined else '') }}</p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-0 fw-bold text-dark">{{ book.count if book.count is defined else (book.emprunts
+                                if book.emprunts is defined else 0) }}</p>
+                            <p class="mb-0 small text-muted">emprunts</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <!-- Fallback statique -->
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-2 hover-overlay">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                style="width: 32px; height: 32px;">
+                                <span class="fw-bold small">#1</span>
+                            </div>
+                            <div>
+                                <p class="mb-0 fw-medium text-dark">Le Petit Prince</p>
+                                <p class="mb-0 small text-secondary">Saint-Exupéry</p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-0 fw-bold text-dark">15</p>
+                            <p class="mb-0 small text-muted">emprunts</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
         </div>
@@ -259,4 +411,17 @@
         });
     });
 </script>
+<script>
+    // Inject server-side stats (may be null)
+    window.SERVER_STATS = {
+        categories: {{ stats_categories | tojson if stats_categories is defined else 'null' }},
+    days: { { stats_days | tojson if stats_days is defined else 'null' } },
+    top_books: { { top_books | tojson if top_books is defined else 'null' } },
+    livres_disponibles: { { livres_disponibles if livres_disponibles is defined else 'null' } },
+    livres_empruntes: { { livres_empruntes if livres_empruntes is defined else 'null' } },
+    livres_reserves: { { livres_reserves if livres_reserves is defined else 'null' } },
+    total_livres: { { total_livres if total_livres is defined else 'null' } }
+    };
+</script>
+<script src="/static/js/stats.js"></script>
 {% endblock %}
