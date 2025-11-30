@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
 </head>
 
 {% include "header.html" %}
+
 <body class="
 {% if current_user.is_authenticated %}
     has-sidebar
@@ -51,8 +53,8 @@
                     <i class="ri-dashboard-line"></i> Tableau de bord
                 </a>
 
-                <!-- SECTION ADMIN SEULEMENT -->
-                {% if current_user.role == 'admin' %}
+                <!-- SECTION ADMIN / BIBLIOTHECAIRE -->
+                {% if current_user.role in ['admin','bibliothecaire'] %}
                 <a href="/dashboard/adherents" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2 
                 {% if title == 'Adhérents' %}bg-primary text-white{% else %}bg-light text-dark{% endif %}">
                     <i class="ri-user-line"></i> Adhérents
@@ -82,7 +84,7 @@
                 </a>
 
                 {# Lien vers les réservations pour les utilisateurs normaux #}
-                {% if current_user.role != 'admin' %}
+                {% if current_user.role == 'user' %}
                 <a href="{{ url_for('mes_reservations') }}" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2 
                 {% if title == 'Mes Réservations' %}bg-primary text-white{% else %}bg-light text-dark{% endif %}">
                     <i class="ri-calendar-line"></i> Mes Réservations
@@ -118,4 +120,5 @@
     {% include "footer.html" %}
     <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
 </body>
+
 </html>

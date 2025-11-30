@@ -57,7 +57,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <p id="bookCount" class="text-muted mb-0">{{ livres|length }} livre(s) trouvé(s)</p>
 
-        {% if current_user.role == 'admin' %}
+        {% if current_user.role in ['admin','bibliothecaire'] %}
         <a href="{{ url_for('livres') }}" class="btn btn-primary">
             <i class="ri-book-add-line me-1"></i> Ajouter un livre
         </a>
@@ -223,50 +223,50 @@
     });
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function () {
 
-    // Sélectionne tous les boutons avec l'œil
-    const detailButtons = document.querySelectorAll('.view-details-btn');
+        // Sélectionne tous les boutons avec l'œil
+        const detailButtons = document.querySelectorAll('.view-details-btn');
 
-    detailButtons.forEach(button => {
-        button.addEventListener('click', () => {
+        detailButtons.forEach(button => {
+            button.addEventListener('click', () => {
 
-            // Récupération des données
-            const titre = button.dataset.livreTitre;
-            const auteur = button.dataset.livreAuteur;
-            const isbn = button.dataset.livreIsbn || "N/A";
-            const categorie = button.dataset.livreCategorie || "Non catégorisé";
-            const annee = button.dataset.livreAnnee || "N/A";
-            const resume = button.dataset.livreResume || "Aucun résumé disponible.";
-            const disponible = button.dataset.livreDisponible === "True";
-            const image = button.dataset.livreImage;
-            const livreId = button.dataset.livreId;
+                // Récupération des données
+                const titre = button.dataset.livreTitre;
+                const auteur = button.dataset.livreAuteur;
+                const isbn = button.dataset.livreIsbn || "N/A";
+                const categorie = button.dataset.livreCategorie || "Non catégorisé";
+                const annee = button.dataset.livreAnnee || "N/A";
+                const resume = button.dataset.livreResume || "Aucun résumé disponible.";
+                const disponible = button.dataset.livreDisponible === "True";
+                const image = button.dataset.livreImage;
+                const livreId = button.dataset.livreId;
 
-            // Injection des données dans le modal
-            document.getElementById('modalBookTitle').textContent = titre;
-            document.getElementById('modalBookAuthor').textContent = auteur;
-            document.getElementById('modalBookIsbn').textContent = "ISBN : " + isbn;
-            document.getElementById('modalBookCategory').textContent = categorie;
-            document.getElementById('modalBookYear').textContent = annee;
-            document.getElementById('modalBookSummary').textContent = resume;
-            document.getElementById('modalBookImage').src = image;
+                // Injection des données dans le modal
+                document.getElementById('modalBookTitle').textContent = titre;
+                document.getElementById('modalBookAuthor').textContent = auteur;
+                document.getElementById('modalBookIsbn').textContent = "ISBN : " + isbn;
+                document.getElementById('modalBookCategory').textContent = categorie;
+                document.getElementById('modalBookYear').textContent = annee;
+                document.getElementById('modalBookSummary').textContent = resume;
+                document.getElementById('modalBookImage').src = image;
 
-            // Badge disponibilité
-            const statusBadge = document.getElementById('modalBookStatus');
-            statusBadge.textContent = disponible ? "Disponible" : "Emprunté";
-            statusBadge.className = "badge " + (disponible ? "bg-success" : "bg-danger");
+                // Badge disponibilité
+                const statusBadge = document.getElementById('modalBookStatus');
+                statusBadge.textContent = disponible ? "Disponible" : "Emprunté";
+                statusBadge.className = "badge " + (disponible ? "bg-success" : "bg-danger");
 
-            // Mettre à jour le bouton emprunter
-            const borrowForm = document.getElementById('modalBorrowForm');
-            borrowForm.action = `/emprunter/${livreId}`;
+                // Mettre à jour le bouton emprunter
+                const borrowForm = document.getElementById('modalBorrowForm');
+                borrowForm.action = `/emprunter/${livreId}`;
 
-            const borrowBtn = document.getElementById('modalBorrowBtn');
-            borrowBtn.disabled = !disponible;
-            borrowBtn.textContent = disponible ? "Emprunter" : "Indisponible";
+                const borrowBtn = document.getElementById('modalBorrowBtn');
+                borrowBtn.disabled = !disponible;
+                borrowBtn.textContent = disponible ? "Emprunter" : "Indisponible";
+            });
         });
-    });
 
-});
+    });
 </script>
 
 {% include "footer.html" %}

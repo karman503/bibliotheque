@@ -76,6 +76,18 @@
                             </div>
                         </div>
                     </div>
+                    <div id="userRoleField" class="col-12 mt-2">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Rôle utilisateur</label>
+                                <select name="role" class="form-select">
+                                    <option value="user" selected>Utilisateur (par défaut)</option>
+                                    <option value="bibliothecaire">Bibliothécaire</option>
+                                    <option value="admin">Administrateur</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="col-12 text-end mt-3">
                         <a href="{{ url_for('adherents') }}" class="btn btn-outline-secondary">Annuler</a>
@@ -95,6 +107,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         var createUserCheckbox = document.getElementById('createUser');
         var userAccountFields = document.getElementById('userAccountFields');
+        var userRoleField = document.getElementById('userRoleField');
         var emailInput = document.querySelector('input[name="email"]');
         var usernameInput = document.querySelector('input[name="username"]');
 
@@ -102,8 +115,10 @@
             if (!createUserCheckbox) return;
             if (createUserCheckbox.checked) {
                 userAccountFields.style.display = '';
+                if (userRoleField) userRoleField.style.display = '';
             } else {
                 userAccountFields.style.display = 'none';
+                if (userRoleField) userRoleField.style.display = 'none';
             }
         }
 

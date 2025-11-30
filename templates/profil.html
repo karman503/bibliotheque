@@ -22,6 +22,10 @@
                         <div id="currentProfileImg"
                             class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
                             style="width:130px;height:130px;font-size:2.5rem;">A</div>
+                        {% elif current_user.role == 'bibliothecaire' %}
+                        <div id="currentProfileImg"
+                            class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center"
+                            style="width:130px;height:130px;font-size:2.5rem;">B</div>
                         {% else %}
                         <div id="currentProfileImg"
                             class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
@@ -47,7 +51,7 @@
                         <div class="p-3 bg-light rounded">
                             <small class="text-muted d-block">Rôle</small>
                             <span
-                                class="badge {% if current_user.role == 'admin' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                                class="badge {% if current_user.role == 'admin' %}bg-primary{% elif current_user.role == 'bibliothecaire' %}bg-info text-white{% else %}bg-warning text-dark{% endif %}">
                                 {{ current_user.role }}
                             </span>
                         </div>

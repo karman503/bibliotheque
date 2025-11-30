@@ -104,6 +104,9 @@
                                 {% if current_user.role == 'admin' %}
                                 <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
                                     style="width:36px; height:36px; font-size:1rem;">A</div>
+                                {% elif current_user.role == 'bibliothecaire' %}
+                                <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center"
+                                    style="width:36px; height:36px; font-size:1rem;">B</div>
                                 {% else %}
                                 <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
                                     style="width:36px; height:36px; font-size:1rem;">U</div>

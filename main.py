@@ -13,6 +13,7 @@ import logging
 import random
 import smtplib
 from email.message import EmailMessage
+import re
 
 logging.basicConfig(level=logging.INFO)
 
@@ -56,6 +57,22 @@ migrate = Migrate(app, db)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+def has_roles(*roles):
+    """Return True if current_user.role is one of the provided roles."""
+    try:
+        return getattr(current_user, 'role', None) in roles
+    except Exception:
+        return False
+
+
+def is_valid_email(email: str) -> bool:
+    """Very small email validation to ensure a basic pattern (local@domain.tld)."""
+    if not email or not isinstance(email, str):
+        return False
+    # simple regex: not perfect but prevents obvious invalids
+    return re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email) is not None
 
 # Modèles
 class User(UserMixin, db.Model):
@@ -571,7 +588,7 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    if getattr(current_user, 'role', None) == 'admin':
+    if has_roles('admin', 'bibliothecaire'):
         total_livres = Livre.query.count()
         livres_disponibles = Livre.query.filter_by(disponible=True).count()
         total_adherents = Adherent.query.count()
@@ -614,7 +631,7 @@ def dashboard():
 @app.route("/dashboard/adherents", methods=['GET', 'POST'])
 @login_required
 def adherents():
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
 
@@ -652,6 +669,10 @@ def adherents():
                 username = (request.form.get('username') or '').strip()
                 password = request.form.get('password') or ''
                 confirm_password = request.form.get('confirm_password') or ''
+                # Allow admin to choose role for the created user (default to 'user')
+                role_selected = (request.form.get('role') or 'user').strip()
+                if role_selected not in ('user', 'bibliothecaire', 'admin'):
+                    role_selected = 'user'
 
                 if not username:
                     username = (nouveau_adherent.email.split('@')[0] if nouveau_adherent.email else f'user{nouveau_adherent.id}').strip()
@@ -669,13 +690,40 @@ def adherents():
                     flash('Un utilisateur avec ce nom d\'utilisateur ou cet email existe déjà. Opération annulée.', 'danger')
                     return redirect(url_for('adherents'))
 
+                # Validate email format before creating user
+                if not is_valid_email(nouveau_adherent.email):
+                    try:
+                        db.session.delete(nouveau_adherent)
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                    flash('Adresse email invalide. Veuillez saisir une adresse email valide.', 'danger')
+                    return redirect(url_for('adherents'))
+
                 try:
-                    user = User(username=username, email=nouveau_adherent.email, role='user', confirmed=True)
+                    # Admin accounts are auto-confirmed; others receive a verification code
+                    confirmed_flag = True if role_selected == 'admin' else False
+                    user = User(username=username, email=nouveau_adherent.email, role=role_selected, confirmed=confirmed_flag)
+                    # If not admin, prepare confirmation code
+                    if not confirmed_flag:
+                        code = _generate_confirmation_code()
+                        user.confirmation_code = code
+                        user.confirmation_expires = datetime.utcnow() + timedelta(minutes=30)
+
                     user.set_password(password if password else uuid.uuid4().hex)
                     user.adherent = nouveau_adherent
                     db.session.add(user)
                     db.session.commit()
-                    flash('Adhérent et compte utilisateur créés avec succès', 'success')
+
+                    # Send verification email to non-admin users
+                    if not confirmed_flag:
+                        sent = send_verification_email(user.email, user.username, user.confirmation_code)
+                        if sent:
+                            flash('Adhérent et compte créés. Un code de vérification a été envoyé au nouvel utilisateur.', 'success')
+                        else:
+                            flash('Adhérent créé, mais impossible d\'envoyer le code de vérification par email.', 'warning')
+                    else:
+                        flash('Adhérent et compte utilisateur créés avec succès', 'success')
                 except IntegrityError:
                     db.session.rollback()
                     try:
@@ -743,7 +791,7 @@ def adherents():
 @app.route('/dashboard/adherents/new', methods=['GET', 'POST'])
 @login_required
 def new_adherent():
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('adherents'))
 
@@ -791,20 +839,49 @@ def new_adherent():
                     flash('Les mots de passe ne correspondent pas. Opération annulée.', 'danger')
                     return redirect(url_for('new_adherent'))
 
+                # Allow admin to choose role for the created user (default 'user')
+                role_selected = (request.form.get('role') or 'user').strip()
+                if role_selected not in ('user', 'bibliothecaire', 'admin'):
+                    role_selected = 'user'
+
                 existing_user = User.query.filter((User.username == username) | (User.email == nouveau_adherent.email)).first()
                 if existing_user:
                     db.session.delete(nouveau_adherent)
                     db.session.commit()
-                    flash('Un utilisateur avec ce nom d\'utilisateur ou cet email existe déjà. Opération annulée.', 'danger')
+                    flash('Un utilisateur avec ce nom d\'utilisateur ou cet email existe d\'j\u00e0. Opération annul\u00e9e.', 'danger')
+                    return redirect(url_for('new_adherent'))
+
+                # Validate email format before creating user
+                if not is_valid_email(nouveau_adherent.email):
+                    try:
+                        db.session.delete(nouveau_adherent)
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                    flash('Adresse email invalide. Veuillez saisir une adresse email valide.', 'danger')
                     return redirect(url_for('new_adherent'))
 
                 try:
-                    user = User(username=username, email=nouveau_adherent.email, role='user', confirmed=True)
+                    confirmed_flag = True if role_selected == 'admin' else False
+                    user = User(username=username, email=nouveau_adherent.email, role=role_selected, confirmed=confirmed_flag)
+                    if not confirmed_flag:
+                        code = _generate_confirmation_code()
+                        user.confirmation_code = code
+                        user.confirmation_expires = datetime.utcnow() + timedelta(minutes=30)
+
                     user.set_password(password if password else uuid.uuid4().hex)
                     user.adherent = nouveau_adherent
                     db.session.add(user)
                     db.session.commit()
-                    flash('Adhérent et compte utilisateur créés avec succès', 'success')
+
+                    if not confirmed_flag:
+                        sent = send_verification_email(user.email, user.username, user.confirmation_code)
+                        if sent:
+                            flash('Adhérent et compte créés. Un code de vérification a été envoyé au nouvel utilisateur.', 'success')
+                        else:
+                            flash('Adhérent créé, mais impossible d\'envoyer le code de vérification par email.', 'warning')
+                    else:
+                        flash('Adhérent et compte utilisateur créés avec succès', 'success')
                 except IntegrityError:
                     db.session.rollback()
                     try:
@@ -872,7 +949,7 @@ def adherent_emprunts(adherent_id):
 @app.route("/dashboard/emprunts", methods=['GET', 'POST'])
 @login_required
 def emprunts():
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
 
@@ -963,7 +1040,7 @@ def create_reservation():
 @app.route('/dashboard/reservations')
 @login_required
 def reservations_list():
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
     res = Reservation.query.order_by(Reservation.date_reservation.desc()).all()
@@ -985,7 +1062,7 @@ def mes_reservations():
 def user_cancel_reservation(res_id):
     r = Reservation.query.get_or_404(res_id)
     owner_adherent_id = getattr(current_user, 'adherent_id', None) or (getattr(current_user, 'adherent', None) and current_user.adherent.id)
-    if getattr(current_user, 'role', None) != 'admin' and r.adherent_id != owner_adherent_id:
+    if not has_roles('admin', 'bibliothecaire') and r.adherent_id != owner_adherent_id:
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('mes_reservations'))
 
@@ -1001,14 +1078,14 @@ def user_cancel_reservation(res_id):
         db.session.rollback()
         flash('Erreur lors de l\'annulation de la réservation', 'danger')
     
-    if getattr(current_user, 'role', None) == 'admin':
+    if has_roles('admin', 'bibliothecaire'):
         return redirect(url_for('reservations_list'))
     return redirect(url_for('mes_reservations'))
 
 @app.route('/dashboard/reservations/fulfill/<int:res_id>', methods=['POST'])
 @login_required
 def fulfill_reservation(res_id):
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
     r = Reservation.query.get_or_404(res_id)
@@ -1035,7 +1112,7 @@ def fulfill_reservation(res_id):
 @app.route('/dashboard/reservations/cancel/<int:res_id>', methods=['POST'])
 @login_required
 def cancel_reservation(res_id):
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
     r = Reservation.query.get_or_404(res_id)
@@ -1055,7 +1132,7 @@ def cancel_reservation(res_id):
 @app.route("/dashboard/livres", methods=['GET', 'POST'])
 @login_required
 def livres():
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash("Accès non autorisé", "danger")
         return redirect(url_for("dashboard"))
 
@@ -1118,7 +1195,7 @@ def livres():
 @app.route("/dashboard/emprunts/retour/<int:emprunt_id>")
 @login_required
 def retourner_livre(emprunt_id):
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
         
@@ -1139,7 +1216,7 @@ def retourner_livre(emprunt_id):
 @app.route('/dashboard/emprunts/prolong/<int:emprunt_id>', methods=['POST'])
 @login_required
 def prolonger_emprunt(emprunt_id):
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
         
@@ -1163,7 +1240,7 @@ def prolonger_emprunt(emprunt_id):
 @app.route('/dashboard/emprunts/<int:emprunt_id>')
 @login_required
 def view_emprunt(emprunt_id):
-    if getattr(current_user, 'role', None) != 'admin':
+    if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
         
@@ -1174,7 +1251,7 @@ def view_emprunt(emprunt_id):
 @app.route("/dashboard/statistiques")
 @login_required
 def statistiques():
-    if getattr(current_user, 'role', None) == 'admin':
+    if has_roles('admin', 'bibliothecaire'):
         period = request.args.get('period', 'month')
         now_dt = datetime.utcnow()
         if period == 'week':
