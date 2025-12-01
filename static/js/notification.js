@@ -1,81 +1,60 @@
-// notification.js - Gestionnaire de notifications professionnel
+// notification.js - Système de notifications dynamique et persistant
 class NotificationManager {
-    constructor() {
-        this.notifications = this.loadNotifications();
-        this.currentUser = this.getCurrentUser();
+    constructor(userData = null) {
+        this.currentUser = userData;
+        this.notifications = [];
+        this.isInitialized = false;
         this.init();
     }
 
-    init() {
+    async init() {
+        if (!this.currentUser) {
+            console.log('NotificationManager: Aucun utilisateur connecté');
+            return;
+        }
+
+        console.log('NotificationManager: Initialisation pour', this.currentUser.name);
+
+        // Charger les notifications
+        await this.loadNotifications();
+
+        // Mettre à jour l'interface
         this.updateNotificationCount();
         this.renderNotifications();
+
+        // Configurer les événements
         this.setupEventListeners();
-        this.setupDropdownPosition();
 
-        // Charger les notifications depuis l'API si l'utilisateur est connecté
-        if (this.currentUser) {
-            this.loadNotificationsFromAPI();
-        }
+        // Charger les notifications API
+        await this.loadNotificationsFromAPI();
+
+        this.isInitialized = true;
+        console.log('NotificationManager: Initialisation terminée');
     }
 
-    getCurrentUser() {
-        // Récupérer les infos utilisateur depuis le template Flask
+    async loadNotifications() {
         try {
-            const userElement = document.querySelector('[data-user-id]');
-            if (userElement) {
-                return {
-                    id: userElement.dataset.userId,
-                    role: userElement.dataset.userRole,
-                    name: userElement.dataset.userName
-                };
+            const stored = localStorage.getItem(`notifications_${this.currentUser.id}`);
+            if (stored) {
+                this.notifications = JSON.parse(stored).map(n => ({
+                    ...n,
+                    time: new Date(n.time)
+                }));
+                console.log('Notifications chargées:', this.notifications.length);
+            } else {
+                // Créer des notifications par défaut
+                this.createDefaultNotifications();
             }
-        } catch (e) {
-            console.log('Utilisateur non connecté ou erreur de récupération');
-        }
-        return null;
-    }
-
-    loadNotifications() {
-        const stored = localStorage.getItem(`notifications_${this.currentUser?.id}`);
-        if (stored) {
-            return JSON.parse(stored);
-        }
-
-        // Notifications par défaut selon le rôle
-        if (this.currentUser?.role === 'admin') {
-            return this.getDefaultAdminNotifications();
-        } else {
-            return this.getDefaultUserNotifications();
+        } catch (error) {
+            console.error('Erreur chargement notifications:', error);
+            this.createDefaultNotifications();
         }
     }
 
-    getDefaultAdminNotifications() {
-        return [
+    createDefaultNotifications() {
+        this.notifications = [
             {
-                id: 1,
-                type: 'system',
-                title: 'Bienvenue Administrateur',
-                message: 'Vous avez accès au panel d\'administration',
-                time: new Date(),
-                read: false,
-                category: 'system'
-            },
-            {
-                id: 2,
-                type: 'info',
-                title: 'Rapport quotidien',
-                message: '5 nouveaux livres ajoutés aujourd\'hui',
-                time: new Date(Date.now() - 2 * 60 * 60 * 1000),
-                read: false,
-                category: 'reports'
-            }
-        ];
-    }
-
-    getDefaultUserNotifications() {
-        return [
-            {
-                id: 1,
+                id: Date.now(),
                 type: 'success',
                 title: 'Bienvenue sur BibliosDjib',
                 message: 'Votre compte a été créé avec succès',
@@ -84,129 +63,111 @@ class NotificationManager {
                 category: 'welcome'
             }
         ];
+
+        if (this.currentUser.role === 'admin') {
+            this.notifications.push({
+                id: Date.now() + 1,
+                type: 'system',
+                title: 'Accès Administrateur',
+                message: 'Vous avez accès au panel d\'administration',
+                time: new Date(),
+                read: false,
+                category: 'system'
+            });
+        }
+
+        this.saveNotifications();
     }
 
     saveNotifications() {
-        if (this.currentUser) {
-            localStorage.setItem(`notifications_${this.currentUser.id}`, JSON.stringify(this.notifications));
-        }
+        if (!this.currentUser) return;
+        localStorage.setItem(`notifications_${this.currentUser.id}`, JSON.stringify(this.notifications));
     }
 
     async loadNotificationsFromAPI() {
         try {
-            // Simulation d'appel API - À remplacer par votre véritable endpoint
             const response = await fetch('/api/notifications');
             if (response.ok) {
                 const apiNotifications = await response.json();
-                this.mergeNotifications(apiNotifications);
+                this.mergeAPINotifications(apiNotifications);
             }
         } catch (error) {
-            console.log('Erreur chargement API notifications:', error);
+            console.log('Notifications API non disponible:', error);
         }
     }
 
-    mergeNotifications(apiNotifications) {
-        // Fusionner les notifications API avec les locales
+    mergeAPINotifications(apiNotifications) {
+        let newNotifications = 0;
+
         apiNotifications.forEach(apiNotif => {
             const exists = this.notifications.find(n => n.id === apiNotif.id);
             if (!exists) {
-                this.notifications.unshift(apiNotif);
+                this.notifications.unshift({
+                    ...apiNotif,
+                    time: new Date(apiNotif.time)
+                });
+                newNotifications++;
             }
         });
-        this.saveNotifications();
-        this.updateNotificationCount();
-        this.renderNotifications();
+
+        if (newNotifications > 0) {
+            this.saveNotifications();
+            this.updateNotificationCount();
+            this.renderNotifications();
+            this.animateNewNotifications(newNotifications);
+        }
     }
 
-    addNotification(notification) {
+    addNotification(notificationData) {
         const newNotification = {
             id: Date.now(),
-            type: notification.type || 'info',
-            title: notification.title,
-            message: notification.message,
+            type: notificationData.type || 'info',
+            title: notificationData.title,
+            message: notificationData.message,
             time: new Date(),
             read: false,
-            category: notification.category || 'general',
-            action: notification.action || null,
-            priority: notification.priority || 'normal'
+            category: notificationData.category || 'general',
+            action: notificationData.action || null,
+            priority: notificationData.priority || 'normal'
         };
 
         this.notifications.unshift(newNotification);
         this.saveNotifications();
         this.updateNotificationCount();
         this.renderNotifications();
-        this.animateNotification();
+        this.animateNewNotification();
 
         return newNotification.id;
     }
 
-    // Méthodes spécifiques pour différents types de notifications
-    addBookReturnReminder(bookTitle, daysLeft, bookId = null) {
-        return this.addNotification({
-            type: 'warning',
-            title: 'Livre à rendre',
-            message: `Le livre "${bookTitle}" doit être rendu dans ${daysLeft} jour(s)`,
-            category: 'reminders',
-            action: bookId ? { type: 'book', id: bookId } : null,
-            priority: 'high'
-        });
-    }
-
-    addReservationConfirmed(bookTitle, reservationId = null) {
-        return this.addNotification({
-            type: 'success',
-            title: 'Réservation confirmée',
-            message: `Votre réservation pour "${bookTitle}" a été confirmée`,
-            category: 'reservations',
-            action: reservationId ? { type: 'reservation', id: reservationId } : null
-        });
-    }
-
-    addNewBookAvailable(bookTitle, bookId = null) {
-        return this.addNotification({
-            type: 'info',
-            title: 'Nouveau livre disponible',
-            message: `Le livre "${bookTitle}" est maintenant disponible`,
-            category: 'new_books',
-            action: bookId ? { type: 'book', id: bookId } : null
-        });
-    }
-
-    // Notifications spécifiques aux administrateurs
-    addAdminAlert(message, priority = 'normal') {
-        if (this.currentUser?.role === 'admin') {
-            return this.addNotification({
-                type: 'danger',
-                title: 'Alerte Administration',
-                message: message,
-                category: 'admin_alerts',
-                priority: priority
-            });
-        }
-    }
-
-    addSystemReport(message) {
-        if (this.currentUser?.role === 'admin') {
-            return this.addNotification({
-                type: 'system',
-                title: 'Rapport Système',
-                message: message,
-                category: 'system_reports'
-            });
-        }
-    }
-
     markAsRead(notificationId) {
-        const notification = this.notifications.find(n => n.id === notificationId);
+        const notification = this.notifications.find(n => n.id == notificationId);
         if (notification && !notification.read) {
             notification.read = true;
             this.saveNotifications();
             this.updateNotificationCount();
-            this.renderNotifications();
 
-            // Mettre à jour via API si nécessaire
+            // Mettre à jour l'élément visuellement
+            const item = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+            if (item) {
+                item.classList.remove('unread');
+                item.querySelector('.notification-actions')?.remove();
+
+                // Animation de lecture
+                item.style.opacity = '0.7';
+                item.style.transform = 'translateX(-10px)';
+                setTimeout(() => {
+                    item.style.opacity = '';
+                    item.style.transform = '';
+                }, 300);
+            }
+
+            // Envoyer à l'API
             this.markAsReadAPI(notificationId);
+
+            return true;
         }
+        return false;
     }
 
     async markAsReadAPI(notificationId) {
@@ -216,7 +177,7 @@ class NotificationManager {
                 headers: { 'Content-Type': 'application/json' }
             });
         } catch (error) {
-            console.log('Erreur marquage comme lu API:', error);
+            console.log('Erreur API marquage comme lu:', error);
         }
     }
 
@@ -235,9 +196,12 @@ class NotificationManager {
             this.updateNotificationCount();
             this.renderNotifications();
 
-            // Mettre à jour via API
+            // Envoyer à l'API
             this.markAllAsReadAPI();
+
+            return true;
         }
+        return false;
     }
 
     async markAllAsReadAPI() {
@@ -247,15 +211,36 @@ class NotificationManager {
                 headers: { 'Content-Type': 'application/json' }
             });
         } catch (error) {
-            console.log('Erreur marquage tous comme lu API:', error);
+            console.log('Erreur API marquage tous comme lu:', error);
         }
     }
 
     deleteNotification(notificationId) {
-        this.notifications = this.notifications.filter(n => n.id !== notificationId);
-        this.saveNotifications();
-        this.updateNotificationCount();
-        this.renderNotifications();
+        const index = this.notifications.findIndex(n => n.id == notificationId);
+        if (index !== -1) {
+            // Animation de suppression
+            const item = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+            if (item) {
+                item.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(100px) scale(0.8)';
+
+                setTimeout(() => {
+                    this.notifications.splice(index, 1);
+                    this.saveNotifications();
+                    this.updateNotificationCount();
+                    this.renderNotifications();
+                }, 400);
+            } else {
+                this.notifications.splice(index, 1);
+                this.saveNotifications();
+                this.updateNotificationCount();
+                this.renderNotifications();
+            }
+
+            return true;
+        }
+        return false;
     }
 
     updateNotificationCount() {
@@ -263,11 +248,17 @@ class NotificationManager {
         const countElement = document.getElementById('notificationCount');
 
         if (countElement) {
-            countElement.textContent = unreadCount > 99 ? '99+' : unreadCount;
-
-            // CORRECTION IMPORTANTE : Toujours mettre à jour l'affichage
             if (unreadCount > 0) {
+                countElement.textContent = unreadCount > 99 ? '99+' : unreadCount;
                 countElement.style.display = 'flex';
+
+                // Animation
+                if (!countElement.classList.contains('notification-pulse')) {
+                    countElement.classList.add('notification-pulse');
+                    setTimeout(() => {
+                        countElement.classList.remove('notification-pulse');
+                    }, 600);
+                }
             } else {
                 countElement.style.display = 'none';
             }
@@ -276,35 +267,44 @@ class NotificationManager {
 
     renderNotifications() {
         const listElement = document.getElementById('notificationList');
-        if (!listElement) return;
+        if (!listElement) {
+            console.log('Element notificationList non trouvé');
+            return;
+        }
 
         if (this.notifications.length === 0) {
             listElement.innerHTML = `
                 <div class="notification-empty">
-                    <i class="ri-inbox-line"></i>
+                    <i class="ri-inbox-line fs-1 text-muted mb-2"></i>
                     <p class="text-muted text-center mb-0">Aucune notification</p>
                 </div>
             `;
             return;
         }
 
-        listElement.innerHTML = this.notifications.slice(0, 10).map(notification => `
+        const notificationsToShow = this.notifications.slice(0, 8);
+
+        listElement.innerHTML = notificationsToShow.map(notification => `
             <div class="notification-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}">
                 <div class="notification-content">
                     <div class="notification-icon ${notification.type}">
                         <i class="ri-${this.getNotificationIcon(notification.type)}"></i>
                     </div>
                     <div class="notification-text">
-                        <div class="notification-title">${notification.title}</div>
-                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-title">${this.escapeHtml(notification.title)}</div>
+                        <div class="notification-message">${this.escapeHtml(notification.message)}</div>
                         <div class="notification-time">${this.formatTime(notification.time)}</div>
                         ${!notification.read ? `
                             <div class="notification-actions">
-                                <button class="notification-action read" onclick="notificationManager.markAsRead(${notification.id})">
-                                    Marquer comme lu
+                                <button class="btn btn-sm btn-outline-success notification-action read" 
+                                        onclick="window.notificationManager.markAsRead(${notification.id})"
+                                        data-bs-toggle="tooltip" title="Marquer comme lu">
+                                    <i class="ri-check-line me-1"></i>Lu
                                 </button>
-                                <button class="notification-action delete" onclick="notificationManager.deleteNotification(${notification.id})">
-                                    Supprimer
+                                <button class="btn btn-sm btn-outline-danger notification-action delete" 
+                                        onclick="window.notificationManager.deleteNotification(${notification.id})"
+                                        data-bs-toggle="tooltip" title="Supprimer">
+                                    <i class="ri-delete-bin-line me-1"></i>Supprimer
                                 </button>
                             </div>
                         ` : ''}
@@ -312,6 +312,11 @@ class NotificationManager {
                 </div>
             </div>
         `).join('');
+
+        // Initialiser les tooltips Bootstrap
+        if (typeof $ !== 'undefined') {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        }
     }
 
     getNotificationIcon(type) {
@@ -326,8 +331,9 @@ class NotificationManager {
     }
 
     formatTime(date) {
+        if (!(date instanceof Date)) date = new Date(date);
         const now = new Date();
-        const diff = now - new Date(date);
+        const diff = now - date;
         const minutes = Math.floor(diff / 60000);
         const hours = Math.floor(diff / 3600000);
         const days = Math.floor(diff / 86400000);
@@ -336,130 +342,223 @@ class NotificationManager {
         if (minutes < 60) return `Il y a ${minutes} min`;
         if (hours < 24) return `Il y a ${hours} h`;
         if (days < 7) return `Il y a ${days} j`;
-        return new Date(date).toLocaleDateString('fr-FR');
+        return date.toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'short'
+        });
     }
 
-    animateNotification() {
-        const countElement = document.getElementById('notificationCount');
-        if (countElement) {
-            countElement.classList.add('notification-pulse');
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    animateNewNotification() {
+        // Animation de la cloche
+        const bell = document.querySelector('#notificationDropdown i');
+        if (bell) {
+            bell.style.transition = 'all 0.3s ease';
+            bell.style.color = 'var(--primary)';
+            bell.style.transform = 'scale(1.2) rotate(15deg)';
+
             setTimeout(() => {
-                countElement.classList.remove('notification-pulse');
-            }, 600);
+                bell.style.color = '';
+                bell.style.transform = '';
+            }, 300);
+        }
+
+        // Animation du badge
+        const badge = document.getElementById('notificationCount');
+        if (badge) {
+            badge.classList.add('notification-pulse');
         }
     }
 
-    setupEventListeners() {
-        // Marquer toutes comme lues - CORRECTION IMPORTANTE
-        const markAllBtn = document.getElementById('markAllAsRead');
-        if (markAllBtn) {
-            markAllBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.markAllAsRead();
-            });
-        }
-
-        // Clic sur une notification
-        document.addEventListener('click', (e) => {
-            const notificationItem = e.target.closest('.notification-item');
-            if (notificationItem && !e.target.closest('.notification-action')) {
-                const notificationId = parseInt(notificationItem.dataset.id);
-                this.handleNotificationClick(notificationId);
-            }
-        });
-
-        // Fermer le dropdown quand on clique ailleurs
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.notification-dropdown') && !e.target.closest('#notificationDropdown')) {
-                this.closeDropdown();
-            }
-        });
-
-        // Actualiser les notifications périodiquement (toutes les 2 minutes)
-        setInterval(() => {
-            this.loadNotificationsFromAPI();
-        }, 120000);
-    }
-
-    setupDropdownPosition() {
-        // Correction du positionnement du dropdown
-        const dropdownElement = document.querySelector('.notification-dropdown');
-        const triggerElement = document.getElementById('notificationDropdown');
-
-        if (dropdownElement && triggerElement) {
-            // Forcer le repositionnement
-            $(dropdownElement).on('shown.bs.dropdown', function () {
-                const $this = $(this);
-                setTimeout(function () {
-                    $this.css('z-index', '99999');
-                }, 10);
-            });
-
-            // S'assurer que le dropdown reste au-dessus
-            dropdownElement.style.zIndex = '99999';
-            dropdownElement.style.position = 'absolute';
-        }
-    }
-
-    handleNotificationClick(notificationId) {
-        const notification = this.notifications.find(n => n.id === notificationId);
-        if (notification) {
-            // Marquer comme lu seulement si ce n'est pas déjà lu
-            if (!notification.read) {
-                this.markAsRead(notificationId);
-            }
-
-            // Rediriger selon l'action
-            if (notification.action) {
-                switch (notification.action.type) {
-                    case 'book':
-                        window.location.href = `/livre/${notification.action.id}`;
-                        break;
-                    case 'reservation':
-                        window.location.href = '/mes-reservations';
-                        break;
-                    case 'admin':
-                        window.location.href = '/admin';
-                        break;
+    animateNewNotifications(count) {
+        if (count > 0) {
+            // Animation plus prononcée pour plusieurs notifications
+            const bell = document.querySelector('#notificationDropdown i');
+            if (bell) {
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        bell.style.color = 'var(--primary)';
+                        bell.style.transform = 'scale(1.3)';
+                        setTimeout(() => {
+                            bell.style.color = '';
+                            bell.style.transform = '';
+                        }, 150);
+                    }, i * 200);
                 }
             }
         }
     }
 
-    closeDropdown() {
-        const dropdown = document.querySelector('.notification-dropdown');
-        if (dropdown) {
-            $(dropdown).removeClass('show');
+    setupEventListeners() {
+        // Bouton "Marquer tout comme lu"
+        const markAllBtn = document.getElementById('markAllAsRead');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (this.markAllAsRead()) {
+                    // Feedback visuel
+                    markAllBtn.innerHTML = '<i class="ri-check-double-line me-1"></i> Tout marqué !';
+                    markAllBtn.classList.add('text-success');
+
+                    setTimeout(() => {
+                        markAllBtn.innerHTML = 'Tout marquer comme lu';
+                        markAllBtn.classList.remove('text-success');
+                    }, 2000);
+                }
+            });
+        }
+
+        // Clic sur les notifications (pour les marquer comme lues)
+        document.addEventListener('click', (e) => {
+            const notificationItem = e.target.closest('.notification-item');
+            if (notificationItem && !e.target.closest('.notification-action')) {
+                const notificationId = parseInt(notificationItem.dataset.id);
+                this.markAsRead(notificationId);
+            }
+        });
+
+        // Rafraîchissement automatique
+        setInterval(() => {
+            this.loadNotificationsFromAPI();
+        }, 60000); // Toutes les minutes
+    }
+
+    // Méthodes utilitaires pour les démos
+    addDemoNotifications() {
+        if (!this.currentUser) return;
+
+        // Notification de nouveau livre
+        setTimeout(() => {
+            this.addNotification({
+                type: 'info',
+                title: 'Nouveautés livresques',
+                message: 'Découvrez notre nouvelle collection de romans français',
+                category: 'news'
+            });
+        }, 2000);
+
+        // Notification de rappel (pour non-admin)
+        if (this.currentUser.role === 'user') {
+            setTimeout(() => {
+                this.addNotification({
+                    type: 'warning',
+                    title: 'Rappel important',
+                    message: 'Votre livre "Le Petit Prince" doit être rendu demain',
+                    category: 'reminder',
+                    priority: 'high'
+                });
+            }, 4000);
+        }
+
+        // Notification système (pour admin)
+        if (this.currentUser.role === 'admin') {
+            setTimeout(() => {
+                this.addNotification({
+                    type: 'system',
+                    title: 'Maintenance prévue',
+                    message: 'Maintenance système prévue samedi de 2h à 4h',
+                    category: 'system'
+                });
+            }, 6000);
         }
     }
 
-    // Méthode pour vider les notifications (démo)
-    clearAll() {
-        this.notifications = [];
-        this.saveNotifications();
-        this.updateNotificationCount();
-        this.renderNotifications();
+    // Méthode pour tester le système
+    testNotificationSystem() {
+        console.log('=== Test du système de notifications ===');
+        console.log('Utilisateur:', this.currentUser);
+        console.log('Notifications chargées:', this.notifications.length);
+        console.log('Non lues:', this.notifications.filter(n => !n.read).length);
+
+        // Ajouter une notification de test
+        const testId = this.addNotification({
+            type: 'success',
+            title: 'Test de notification',
+            message: 'Ceci est une notification de test du système',
+            category: 'test'
+        });
+
+        console.log('Notification de test ajoutée avec ID:', testId);
+
+        // Marquer comme lu après 2 secondes
+        setTimeout(() => {
+            this.markAsRead(testId);
+            console.log('Notification marquée comme lue');
+        }, 2000);
+
+        // Supprimer après 4 secondes
+        setTimeout(() => {
+            this.deleteNotification(testId);
+            console.log('Notification supprimée');
+        }, 4000);
     }
 }
 
-// Initialiser le gestionnaire de notifications
-let notificationManager;
+// Exposer globalement pour le débogage
+window.NotificationManager = NotificationManager;
 
+// Initialisation automatique si l'utilisateur est connecté
 document.addEventListener('DOMContentLoaded', function () {
-    notificationManager = new NotificationManager();
+    // Vérifier si l'utilisateur est connecté via les données du template
+    const isAuthenticated = document.body.classList.contains('has-sidebar');
 
-    // Exposer globalement pour le débogage
-    window.notificationManager = notificationManager;
-
-    // Simuler quelques notifications de démonstration
-    setTimeout(() => {
-        if (notificationManager.currentUser) {
-            if (notificationManager.currentUser.role === 'admin') {
-                notificationManager.addSystemReport('Système fonctionnel - Tous les services opérationnels');
-            } else {
-                notificationManager.addNewBookAvailable('Le Petit Prince');
-            }
+    if (isAuthenticated) {
+        // Récupérer les données utilisateur du DOM
+        const userRoleElement = document.querySelector('.sidebar small.text-white-50');
+        let userRole = 'user';
+        if (userRoleElement) {
+            if (userRoleElement.textContent.includes('Administrateur')) userRole = 'admin';
+            else if (userRoleElement.textContent.includes('Bibliothécaire')) userRole = 'bibliothecaire';
         }
-    }, 3000);
+
+        const usernameElement = document.querySelector('.sidebar h6.fw-bold');
+        const username = usernameElement ? usernameElement.textContent.trim() : 'Utilisateur';
+
+        const userData = {
+            id: Math.floor(Math.random() * 1000000), // ID temporaire
+            role: userRole,
+            name: username
+        };
+
+        // Initialiser le gestionnaire après un délai
+        setTimeout(() => {
+            window.notificationManager = new NotificationManager(userData);
+
+            // Ajouter quelques notifications de démonstration
+            if (window.notificationManager) {
+                setTimeout(() => {
+                    window.notificationManager.addDemoNotifications();
+                }, 1500);
+            }
+        }, 1000);
+    }
 });
+
+// Fonctions utilitaires globales
+window.markNotificationAsRead = function (notificationId) {
+    if (window.notificationManager) {
+        return window.notificationManager.markAsRead(notificationId);
+    }
+    return false;
+};
+
+window.deleteNotification = function (notificationId) {
+    if (window.notificationManager) {
+        return window.notificationManager.deleteNotification(notificationId);
+    }
+    return false;
+};
+
+window.markAllNotificationsAsRead = function () {
+    if (window.notificationManager) {
+        return window.notificationManager.markAllAsRead();
+    }
+    return false;
+};

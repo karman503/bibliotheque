@@ -3,44 +3,148 @@
 {% block content %}
 <div class="container mt-5">
   <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card p-4">
-        <h3 class="mb-3">Vérification d'email</h3>
-        <p>Entrez votre nom d'utilisateur ou votre email, puis le code reçu par email.</p>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white py-3">
+          <h3 class="mb-0 text-center">
+            <i class="ri-mail-check-line me-2"></i>
+            Vérification d'email
+          </h3>
+        </div>
+        <div class="card-body p-4">
+          <p class="text-muted mb-4">
+            Entrez votre nom d'utilisateur ou votre email, puis le code à 6 chiffres reçu par email.
+          </p>
 
-        <form method="POST">
-          <div class="mb-3">
-            <label for="username" class="form-label">Nom d'utilisateur ou email</label>
-            <input type="text" class="form-control" id="username" name="username" required
-              value="{{ prefill_username or '' }}">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
-          <div class="mb-3">
-            <label for="code" class="form-label">Code de vérification</label>
-            <input type="text" class="form-control" id="code" name="code" required>
-          </div>
-          <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">Vérifier</button>
-          </div>
-        </form>
+          {% endfor %}
+          {% endif %}
+          {% endwith %}
 
-        <hr>
-        <p class="small text-muted">Vous n'avez pas reçu le code ?</p>
-        <form method="POST" action="{{ url_for('resend_code') }}">
-          <div class="input-group mb-3">
-            <input type="text" class="form-control" name="identifier" placeholder="Nom d'utilisateur ou email" required>
-            <button class="btn btn-outline-secondary" type="submit">Renvoyer le code</button>
-          </div>
-        </form>
+          <form method="POST">
+            <div class="mb-3">
+              <label for="username" class="form-label">Nom d'utilisateur ou email</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="ri-user-line"></i></span>
+                <input type="text" class="form-control" id="username" name="username" required
+                  value="{{ prefill_username or '' }}" placeholder="Votre identifiant">
+              </div>
+            </div>
 
+            <div class="mb-4">
+              <label for="code" class="form-label">Code de vérification</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="ri-key-line"></i></span>
+                <input type="text" class="form-control" id="code" name="code" required placeholder="XXXXXX"
+                  maxlength="6" pattern="[0-9]{6}">
+              </div>
+              <small class="text-muted">Entrez les 6 chiffres reçus par email</small>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="ri-check-line me-2"></i>Vérifier et continuer
+              </button>
+            </div>
+          </form>
+
+          <hr class="my-4">
+
+          <div class="text-center">
+            <p class="small text-muted mb-3">Vous n'avez pas reçu le code ?</p>
+            <form method="POST" action="{{ url_for('resend_code') }}" id="resendForm">
+              <div class="input-group mb-3">
+                <input type="text" class="form-control" name="identifier" placeholder="Votre identifiant" required
+                  value="{{ prefill_username or '' }}">
+                <button class="btn btn-outline-secondary" type="submit" id="resendBtn">
+                  <span class="resend-text">Renvoyer le code</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="mt-3">
+              <p class="mb-0">
+                <a href="{{ url_for('login') }}" class="text-decoration-none">
+                  <i class="ri-arrow-left-line me-1"></i>Retour à la connexion
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Auto-focus sur le champ code si username est pré-rempli
+    const username = document.getElementById('username').value;
+    const codeInput = document.getElementById('code');
+    if (username && codeInput) {
+      codeInput.focus();
+    }
+
+    // Formater automatiquement le code (6 chiffres)
+    codeInput.addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    });
+
+    // Gestion du bouton renvoyer
+    const resendBtn = document.getElementById('resendBtn');
+    const resendForm = document.getElementById('resendForm');
+
+    if (resendBtn && resendForm) {
+      let countdown = 60;
+      let timer = null;
+
+      function updateResendButton() {
+        if (countdown > 0) {
+          resendBtn.disabled = true;
+          resendBtn.querySelector('.resend-text').textContent = `Renvoyer (${countdown}s)`;
+          countdown--;
+          timer = setTimeout(updateResendButton, 1000);
+        } else {
+          resendBtn.disabled = false;
+          resendBtn.querySelector('.resend-text').textContent = 'Renvoyer le code';
+          clearTimeout(timer);
+        }
+      }
+
+      resendForm.addEventListener('submit', function (e) {
+        if (resendBtn.disabled) {
+          e.preventDefault();
+          return;
+        }
+
+        // Démarrer le compte à rebours
+        countdown = 60;
+        updateResendButton();
+
+        // Afficher un message temporaire
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-info alert-dismissible fade show mt-3';
+        alertDiv.innerHTML = `
+        <i class="ri-information-line me-2"></i>
+        Nouveau code envoyé ! Vérifiez votre boîte email.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+        resendForm.parentNode.insertBefore(alertDiv, resendForm.nextSibling);
+
+        // Auto-remove après 5 secondes
+        setTimeout(() => {
+          if (alertDiv.parentNode) {
+            alertDiv.remove();
+          }
+        }, 5000);
+      });
+    }
+  });
+</script>
 {% endblock %}

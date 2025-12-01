@@ -200,6 +200,41 @@
         </div>
     </div>
 
+    <!-- Série temporelle : répartition par catégorie (par semaine / par mois) -->
+    {% if category_buckets and category_series %}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h3 class="h5 mb-3">Répartition par catégorie — série temporelle</h3>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Catégorie</th>
+                            {% for label in category_buckets %}
+                            <th class="text-center">{{ label }}</th>
+                            {% endfor %}
+                            <th class="text-center">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for series in category_series %}
+                        <tr>
+                            <td>{{ series.categorie }}</td>
+                            {% set s = 0 %}
+                            {% for c in series.counts %}
+                            <td class="text-center">{{ c }}</td>
+                            {% set s = s + c %}
+                            {% endfor %}
+                            <td class="text-center"><strong>{{ s }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Graphique des emprunts par jour -->
     <div class="row g-4 mb-4">
         <div class="col-lg-6">

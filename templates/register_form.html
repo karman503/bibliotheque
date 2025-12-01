@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow border-0">
+                <div class="card-header 
+                    {% if user_type == 'adherent' %}bg-warning text-white
+                    {% elif user_type == 'bibliothecaire' %}bg-info text-white
+                    {% else %}bg-danger text-white
+                    {% endif %} py-3">
+                    <div class="text-center">
+                        <h4 class="mb-0">
+                            <i class="
+                                {% if user_type == 'adherent' %}ri-user-line
+                                {% elif user_type == 'bibliothecaire' %}ri-user-star-line
+                                {% else %}ri-shield-user-line
+                                {% endif %} me-2"></i>
+                            Inscription - {{ user_type|capitalize }}
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('register_with_type', user_type=user_type) }}">
+                        <input type="hidden" name="user_type" value="{{ user_type }}">
+
+                        <!-- Informations personnelles (pour adherent et bibliothecaire) -->
+                        {% if user_type in ['adherent', 'bibliothecaire'] %}
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="nom" class="form-label">Nom *</label>
+                                <input type="text" class="form-control" id="nom" name="nom" placeholder="Votre nom"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="prenom" class="form-label">Prénom *</label>
+                                <input type="text" class="form-control" id="prenom" name="prenom"
+                                    placeholder="Votre prénom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telephone" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="telephone" name="telephone"
+                                    placeholder="Votre numéro de téléphone">
+                            </div>
+                            {% if user_type == 'adherent' %}
+                            <div class="col-md-6">
+                                <label for="classe" class="form-label">Classe/Groupe</label>
+                                <input type="text" class="form-control" id="classe" name="classe"
+                                    placeholder="Votre classe ou groupe">
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Informations de compte -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nom d'utilisateur *</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ri-user-line"></i></span>
+                                <input type="text" class="form-control" id="username" name="username"
+                                    placeholder="Choisissez un nom d'utilisateur" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Adresse email *</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ri-mail-line"></i></span>
+                                <input type="email" class="form-control" id="email" name="email"
+                                    placeholder="votre@email.com" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">Mot de passe *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="ri-lock-line"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password"
+                                        placeholder="Créez un mot de passe" required>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                        <i class="ri-eye-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirm_password" class="form-label">Confirmer *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="ri-lock-line"></i></span>
+                                    <input type="password" class="form-control" id="confirm_password"
+                                        name="confirm_password" placeholder="Confirmez le mot de passe" required>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                        <i class="ri-eye-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if user_type == 'admin' %}
+                        <div class="alert alert-warning mt-3">
+                            <i class="ri-alert-line me-2"></i>
+                            <strong>Important :</strong> Vous créez un compte administrateur avec des privilèges
+                            complets sur le système.
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn 
+                                {% if user_type == 'adherent' %}btn-warning
+                                {% elif user_type == 'bibliothecaire' %}btn-info
+                                {% else %}btn-danger
+                                {% endif %}">
+                                <i class="ri-user-add-line me-2"></i>
+                                Créer mon compte {{ user_type|capitalize }}
+                            </button>
+                            <a href="{{ url_for('register_choice') }}" class="btn btn-outline-secondary">
+                                <i class="ri-arrow-left-line me-2"></i>Retour au choix
+                            </a>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="text-muted mb-0">
+                            Déjà inscrit ?
+                            <a href="{{ url_for('login') }}" class="text-primary fw-semibold">Connectez-vous</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function () {
+                const input = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'ri-eye-off-line';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'ri-eye-line';
+                }
+            });
+        });
+
+        // Form submission handling
+        const form = document.querySelector('form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        form.addEventListener('submit', function (e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Les mots de passe ne correspondent pas.');
+                return;
+            }
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Création en cours...';
+        });
+    });
+</script>
+{% endblock %}

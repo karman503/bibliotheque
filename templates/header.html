@@ -16,7 +16,7 @@
         <div class="container py-2">
             <nav class="navbar navbar-expand-md navbar-light">
                 <!-- Logo -->
-                <a class="navbar-brand d-flex align-items-center" href="#">
+                <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
                     <div class="bg-primary d-flex align-items-center justify-content-center rounded me-2"
                         style="width: 32px; height: 32px;">
                         <i class="ri-bank-line text-white fs-5"></i>
@@ -35,25 +35,25 @@
                     <ul class="navbar-nav mb-2 mb-md-0 align-items-center">
                         <li class="nav-item">
                             <a class="nav-link {% if title=='Accueil' %}active text-primary bg-primary-subtle{% else %}text-secondary{% endif %} px-3 py-2"
-                                href="/">
+                                href="{{ url_for('index') }}">
                                 <i class="ri-home-line me-1"></i> Accueil
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if title=='Catalogue' %}active text-primary bg-primary-subtle{% else %}text-secondary{% endif %} px-3 py-2"
-                                href="/catalogue">
+                                href="{{ url_for('catalogue') }}">
                                 <i class="ri-book-line me-1"></i> Catalogue
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if title=='À propos' %}active text-primary bg-primary-subtle{% else %}text-secondary{% endif %} px-3 py-2"
-                                href="/propos">
+                                href="{{ url_for('propos') }}">
                                 <i class="ri-information-line me-1"></i> À propos
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if title=='Contact' %}active text-primary bg-primary-subtle{% else %}text-secondary{% endif %} px-3 py-2"
-                                href="/contact">
+                                href="{{ url_for('contact') }}">
                                 <i class="ri-mail-line me-1"></i> Contact
                             </a>
                         </li>
@@ -117,7 +117,7 @@
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3"
                                 aria-labelledby="navbarProfile" style="z-index: 99999;">
                                 <li>
-                                    <a class="dropdown-item" href="{{ url_for('parametres') }}">
+                                    <a class="dropdown-item" href="{{ url_for('profil') }}">
                                         <i class="ri-user-line me-2 text-primary"></i> Mon profil
                                     </a>
                                 </li>
@@ -137,12 +137,38 @@
                             </ul>
                         </li>
                         {% else %}
-                        <!-- Bouton connexion si non connecté -->
-                        <a href="{{ url_for('login') }}" class="btn btn-primary ms-md-3">
-                            <i class="ri-login-box-line me-1"></i> Connexion
-                        </a>
+                        <!-- Boutons connexion/inscription si non connecté -->
+                        <div class="d-flex gap-2 ms-md-3">
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-primary">
+                                <i class="ri-login-box-line me-1"></i> Connexion
+                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="ri-user-add-line me-1"></i> S'inscrire
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                    <li><a class="dropdown-item"
+                                            href="{{ url_for('register_with_type', user_type='adherent') }}">
+                                            <i class="ri-user-line me-2"></i> Adhérent
+                                        </a></li>
+                                    <li><a class="dropdown-item"
+                                            href="{{ url_for('register_with_type', user_type='bibliothecaire') }}">
+                                            <i class="ri-user-star-line me-2"></i> Bibliothécaire
+                                        </a></li>
+                                    {% if not admin_exists %}
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item"
+                                            href="{{ url_for('register_with_type', user_type='admin') }}">
+                                            <i class="ri-shield-user-line me-2"></i> Administrateur
+                                        </a></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
                         {% endif %}
-
                     </ul>
                 </div>
             </nav>

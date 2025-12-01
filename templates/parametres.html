@@ -96,7 +96,7 @@
         </div>
 
         <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
-            
+
             <!-- Section Envoi de notifications (Admin seulement) -->
             {% if current_user.role == 'admin' %}
             <div class="card mb-4 shadow-sm border-primary">
@@ -130,13 +130,13 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Titre</label>
-                                <input type="text" class="form-control" id="notificationTitle" 
-                                       placeholder="Titre de la notification" required>
+                                <input type="text" class="form-control" id="notificationTitle"
+                                    placeholder="Titre de la notification" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Message</label>
-                                <textarea class="form-control" id="notificationMessage" 
-                                          rows="4" placeholder="Rédigez votre message ici..." required></textarea>
+                                <textarea class="form-control" id="notificationMessage" rows="4"
+                                    placeholder="Rédigez votre message ici..." required></textarea>
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
@@ -172,7 +172,8 @@
                                     <i class="ri-computer-line me-3 text-primary"></i>
                                     <div class="d-inline-block">
                                         <p class="fw-semibold mb-1">Notifications Web</p>
-                                        <p class="text-muted small mb-0">Recevez les notifications directement sur le site</p>
+                                        <p class="text-muted small mb-0">Recevez les notifications directement sur le
+                                            site</p>
                                     </div>
                                 </div>
                                 <div class="form-check form-switch">
@@ -187,7 +188,8 @@
                                     <i class="ri-mail-line me-3 text-success"></i>
                                     <div class="d-inline-block">
                                         <p class="fw-semibold mb-1">Notifications par email</p>
-                                        <p class="text-muted small mb-0">Recevez les notifications importantes par email</p>
+                                        <p class="text-muted small mb-0">Recevez les notifications importantes par email
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="form-check form-switch">
@@ -217,7 +219,8 @@
                     <hr>
 
                     <div class="mb-4">
-                        <h4 class="mb-3 text-primary"><i class="ri-alarm-warning-line me-2"></i>Types de notifications</h4>
+                        <h4 class="mb-3 text-primary"><i class="ri-alarm-warning-line me-2"></i>Types de notifications
+                        </h4>
 
                         <div class="notification-setting-item">
                             <div class="d-flex justify-content-between align-items-center">
@@ -240,7 +243,8 @@
                                     <i class="ri-book-mark-line me-3 text-info"></i>
                                     <div class="d-inline-block">
                                         <p class="fw-semibold mb-1">Nouveaux livres</p>
-                                        <p class="text-muted small mb-0">Notifications lors de l'ajout de nouveaux livres</p>
+                                        <p class="text-muted small mb-0">Notifications lors de l'ajout de nouveaux
+                                            livres</p>
                                     </div>
                                 </div>
                                 <div class="form-check form-switch">
@@ -266,7 +270,8 @@
 
                         {% if current_user.role == 'admin' %}
                         <div class="mt-4">
-                            <h5 class="mb-3 text-primary"><i class="ri-shield-keyhole-line me-2"></i>Options administrateur</h5>
+                            <h5 class="mb-3 text-primary"><i class="ri-shield-keyhole-line me-2"></i>Options
+                                administrateur</h5>
 
                             <div class="notification-setting-item">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -304,7 +309,8 @@
                                         <i class="ri-alarm-line me-3 text-warning"></i>
                                         <div class="d-inline-block">
                                             <p class="fw-semibold mb-1">Alertes importantes</p>
-                                            <p class="text-muted small mb-0">Alertes critiques nécessitant une action</p>
+                                            <p class="text-muted small mb-0">Alertes critiques nécessitant une action
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="form-check form-switch">
@@ -336,7 +342,8 @@
                             <span class="badge bg-warning ms-2" id="unreadNotifications">0 non lues</span>
                         </div>
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-primary active" data-filter="all">Toutes</button>
+                            <button type="button" class="btn btn-outline-primary active"
+                                data-filter="all">Toutes</button>
                             <button type="button" class="btn btn-outline-primary" data-filter="unread">Non lues</button>
                             <button type="button" class="btn btn-outline-primary" data-filter="read">Lues</button>
                         </div>
@@ -359,15 +366,103 @@
         </div>
 
         <div class="tab-pane fade" id="securite" role="tabpanel" aria-labelledby="securite-tab">
-            <div class="card mb-4 shadow-sm">
-                <div class="card-body">
-                    <h5 class="fw-semibold mb-4">Sécurité</h5>
-                    <p class="text-muted">Actions sensibles du compte</p>
-                    <div class="mt-3">
-                        <button class="btn btn-danger" data-bs-toggle="modal"
-                            data-bs-target="#confirmDeleteModal">Supprimer le compte</button>
+            <div class="row g-4">
+
+                <div class="col-12">
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="fw-semibold mb-4">Sécurité</h5>
+                            <p class="text-muted">Actions sensibles du compte</p>
+
+                            <div class="mt-3 d-flex gap-2">
+                                <button class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#confirmDeleteModal">Supprimer mon compte</button>
+                                {% if current_user.role in ['admin','bibliothecaire'] %}
+                                <form method="POST" action="{{ url_for('delete_all_non_admins') }}"
+                                    onsubmit="return confirm('Confirmer la suppression de tous les comptes non-admin (sauf votre compte) ?');">
+                                    <button type="submit" class="btn btn-danger">Supprimer tous les comptes
+                                        non-admin</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                {% if current_user.role in ['admin','bibliothecaire'] %}
+                <!-- Supprimer un utilisateur spécifique -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="fw-semibold">Supprimer un utilisateur</h5>
+                            <p class="text-muted small">Sélectionnez un utilisateur (hors admins si vous n'êtes pas
+                                admin)</p>
+                            <form method="POST" action="{{ url_for('delete_user') }}"
+                                onsubmit="return confirm('Confirmer la suppression de cet utilisateur ?');">
+                                <div class="mb-3">
+                                    <label class="form-label">Utilisateur</label>
+                                    <select name="user_id" class="form-select" required>
+                                        <option value="">-- Choisir un utilisateur --</option>
+                                        {% for u in users_non_admin %}
+                                        <option value="{{ u.id }}">{{ u.username }} &nbsp;({{ u.role }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-outline-danger">Supprimer l'utilisateur</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supprimer un bibliothécaire (sélection) -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="fw-semibold">Supprimer un bibliothécaire</h5>
+                            <p class="text-muted small">Sélectionnez un bibliothécaire à supprimer</p>
+                            <form method="POST" action="{{ url_for('delete_user') }}"
+                                onsubmit="return confirm('Confirmer la suppression de ce bibliothécaire ?');">
+                                <div class="mb-3">
+                                    <label class="form-label">Bibliothécaire</label>
+                                    <select name="user_id" class="form-select" required>
+                                        <option value="">-- Choisir un bibliothécaire --</option>
+                                        {% for b in bibliothecaires %}
+                                        <option value="{{ b.id }}">{{ b.username }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-outline-danger">Supprimer le
+                                    bibliothécaire</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supprimer un adhérent -->
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="fw-semibold">Supprimer un adhérent</h5>
+                            <p class="text-muted small">Sélectionnez un adhérent et toutes ses données seront supprimées
+                            </p>
+                            <form method="POST" action="{{ url_for('delete_adherent') }}"
+                                onsubmit="return confirm('Confirmer la suppression de cet adhérent et de ses données ?');">
+                                <div class="mb-3">
+                                    <label class="form-label">Adhérent</label>
+                                    <select name="adherent_id" class="form-select" required>
+                                        <option value="">-- Choisir un adhérent --</option>
+                                        {% for a in adherents %}
+                                        <option value="{{ a.id }}">{{ a.nom }} {{ a.prenom }} (ID {{ a.id }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-outline-danger">Supprimer l'adhérent</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
             </div>
         </div>
 
@@ -466,220 +561,220 @@
 
 <!-- Script pour la gestion des notifications dans les paramètres -->
 <script>
-// ===== GESTIONNAIRE DE NOTIFICATIONS PROFESSIONNEL =====
-class AdvancedNotificationManager {
-    constructor() {
-        this.notifications = this.loadNotifications();
-        this.currentUser = this.getCurrentUser();
-        this.init();
-    }
+    // ===== GESTIONNAIRE DE NOTIFICATIONS PROFESSIONNEL =====
+    class AdvancedNotificationManager {
+        constructor() {
+            this.notifications = this.loadNotifications();
+            this.currentUser = this.getCurrentUser();
+            this.init();
+        }
 
-    init() {
-        this.updateNotificationCount();
-        this.renderNotifications();
-        this.setupEventListeners();
-        this.setupAdminFeatures();
-    }
+        init() {
+            this.updateNotificationCount();
+            this.renderNotifications();
+            this.setupEventListeners();
+            this.setupAdminFeatures();
+        }
 
-    getCurrentUser() {
-        try {
-            const userElement = document.querySelector('[data-user-id]');
-            if (userElement) {
-                return {
-                    id: userElement.dataset.userId,
-                    role: userElement.dataset.userRole,
-                    name: userElement.dataset.userName
-                };
+        getCurrentUser() {
+            try {
+                const userElement = document.querySelector('[data-user-id]');
+                if (userElement) {
+                    return {
+                        id: userElement.dataset.userId,
+                        role: userElement.dataset.userRole,
+                        name: userElement.dataset.userName
+                    };
+                }
+            } catch (e) {
+                console.log('Utilisateur non connecté');
             }
-        } catch (e) {
-            console.log('Utilisateur non connecté');
+            return null;
         }
-        return null;
-    }
 
-    loadNotifications() {
-        const stored = localStorage.getItem(`notifications_${this.currentUser?.id}`);
-        if (stored) {
-            return JSON.parse(stored);
+        loadNotifications() {
+            const stored = localStorage.getItem(`notifications_${this.currentUser?.id}`);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return this.getDefaultNotifications();
         }
-        return this.getDefaultNotifications();
-    }
 
-    getDefaultNotifications() {
-        if (this.currentUser?.role === 'admin') {
-            return [
-                {
-                    id: 1,
-                    type: 'system',
-                    title: 'Bienvenue Administrateur',
-                    message: 'Vous avez accès au panel d\'administration complet',
-                    time: new Date(),
-                    read: false,
-                    category: 'system',
-                    priority: 'high'
-                }
-            ];
-        } else {
-            return [
-                {
-                    id: 1,
-                    type: 'success',
-                    title: 'Bienvenue sur BibliosDjib',
-                    message: 'Votre compte a été créé avec succès à l\'instant',
-                    time: new Date(),
-                    read: false,
-                    category: 'welcome',
-                    priority: 'normal'
-                }
-            ];
-        }
-    }
-
-    // ===== FONCTIONNALITÉS ADMIN =====
-    setupAdminFeatures() {
-        if (this.currentUser?.role === 'admin') {
-            const form = document.getElementById('sendNotificationForm');
-            if (form) {
-                form.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.sendAdminNotification();
-                });
+        getDefaultNotifications() {
+            if (this.currentUser?.role === 'admin') {
+                return [
+                    {
+                        id: 1,
+                        type: 'system',
+                        title: 'Bienvenue Administrateur',
+                        message: 'Vous avez accès au panel d\'administration complet',
+                        time: new Date(),
+                        read: false,
+                        category: 'system',
+                        priority: 'high'
+                    }
+                ];
+            } else {
+                return [
+                    {
+                        id: 1,
+                        type: 'success',
+                        title: 'Bienvenue sur BibliosDjib',
+                        message: 'Votre compte a été créé avec succès à l\'instant',
+                        time: new Date(),
+                        read: false,
+                        category: 'welcome',
+                        priority: 'normal'
+                    }
+                ];
             }
         }
-    }
 
-    sendAdminNotification() {
-        const recipient = document.getElementById('notificationRecipient').value;
-        const type = document.getElementById('notificationType').value;
-        const title = document.getElementById('notificationTitle').value;
-        const message = document.getElementById('notificationMessage').value;
-        const sendEmail = document.getElementById('sendEmail').checked;
-
-        if (!recipient || !title || !message) {
-            this.showToast('Veuillez remplir tous les champs', 'danger');
-            return;
+        // ===== FONCTIONNALITÉS ADMIN =====
+        setupAdminFeatures() {
+            if (this.currentUser?.role === 'admin') {
+                const form = document.getElementById('sendNotificationForm');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.sendAdminNotification();
+                    });
+                }
+            }
         }
 
-        // Simuler l'envoi
-        const notification = {
-            id: Date.now(),
-            type: type,
-            title: title,
-            message: message,
-            time: new Date(),
-            read: false,
-            category: 'admin_sent',
-            priority: 'high',
-            recipient: recipient,
-            sentBy: this.currentUser.name
-        };
+        sendAdminNotification() {
+            const recipient = document.getElementById('notificationRecipient').value;
+            const type = document.getElementById('notificationType').value;
+            const title = document.getElementById('notificationTitle').value;
+            const message = document.getElementById('notificationMessage').value;
+            const sendEmail = document.getElementById('sendEmail').checked;
 
-        this.addNotification(notification);
-        
-        // Simuler l'envoi par email
-        if (sendEmail) {
-            setTimeout(() => {
-                this.showToast('Notification envoyée par email avec succès', 'success');
-            }, 1000);
+            if (!recipient || !title || !message) {
+                this.showToast('Veuillez remplir tous les champs', 'danger');
+                return;
+            }
+
+            // Simuler l'envoi
+            const notification = {
+                id: Date.now(),
+                type: type,
+                title: title,
+                message: message,
+                time: new Date(),
+                read: false,
+                category: 'admin_sent',
+                priority: 'high',
+                recipient: recipient,
+                sentBy: this.currentUser.name
+            };
+
+            this.addNotification(notification);
+
+            // Simuler l'envoi par email
+            if (sendEmail) {
+                setTimeout(() => {
+                    this.showToast('Notification envoyée par email avec succès', 'success');
+                }, 1000);
+            }
+
+            this.showToast('Notification envoyée avec succès', 'success');
+
+            // Réinitialiser le formulaire
+            document.getElementById('sendNotificationForm').reset();
         }
 
-        this.showToast('Notification envoyée avec succès', 'success');
-        
-        // Réinitialiser le formulaire
-        document.getElementById('sendNotificationForm').reset();
-    }
-
-    addNotification(notification) {
-        this.notifications.unshift(notification);
-        this.saveNotifications();
-        this.updateNotificationCount();
-        this.renderNotifications();
-        this.animateNotification();
-
-        // Mettre à jour l'historique si on est dans les paramètres
-        if (typeof updateNotificationHistory === 'function') {
-            updateNotificationHistory();
-        }
-    }
-
-    // ===== GESTION DES NOTIFICATIONS =====
-    saveNotifications() {
-        if (this.currentUser) {
-            localStorage.setItem(`notifications_${this.currentUser.id}`, JSON.stringify(this.notifications));
-        }
-    }
-
-    markAsRead(notificationId) {
-        const notification = this.notifications.find(n => n.id === notificationId);
-        if (notification && !notification.read) {
-            notification.read = true;
+        addNotification(notification) {
+            this.notifications.unshift(notification);
             this.saveNotifications();
             this.updateNotificationCount();
             this.renderNotifications();
-            this.showToast('Notification marquée comme lue', 'success');
-        }
-    }
+            this.animateNotification();
 
-    markAllAsRead() {
-        let hasUnread = false;
-        this.notifications.forEach(notification => {
-            if (!notification.read) {
+            // Mettre à jour l'historique si on est dans les paramètres
+            if (typeof updateNotificationHistory === 'function') {
+                updateNotificationHistory();
+            }
+        }
+
+        // ===== GESTION DES NOTIFICATIONS =====
+        saveNotifications() {
+            if (this.currentUser) {
+                localStorage.setItem(`notifications_${this.currentUser.id}`, JSON.stringify(this.notifications));
+            }
+        }
+
+        markAsRead(notificationId) {
+            const notification = this.notifications.find(n => n.id === notificationId);
+            if (notification && !notification.read) {
                 notification.read = true;
-                hasUnread = true;
+                this.saveNotifications();
+                this.updateNotificationCount();
+                this.renderNotifications();
+                this.showToast('Notification marquée comme lue', 'success');
             }
-        });
+        }
 
-        if (hasUnread) {
+        markAllAsRead() {
+            let hasUnread = false;
+            this.notifications.forEach(notification => {
+                if (!notification.read) {
+                    notification.read = true;
+                    hasUnread = true;
+                }
+            });
+
+            if (hasUnread) {
+                this.saveNotifications();
+                this.updateNotificationCount();
+                this.renderNotifications();
+                this.showToast('Toutes les notifications marquées comme lues', 'success');
+            }
+        }
+
+        deleteNotification(notificationId) {
+            this.notifications = this.notifications.filter(n => n.id !== notificationId);
             this.saveNotifications();
             this.updateNotificationCount();
             this.renderNotifications();
-            this.showToast('Toutes les notifications marquées comme lues', 'success');
+            this.showToast('Notification supprimée', 'success');
         }
-    }
 
-    deleteNotification(notificationId) {
-        this.notifications = this.notifications.filter(n => n.id !== notificationId);
-        this.saveNotifications();
-        this.updateNotificationCount();
-        this.renderNotifications();
-        this.showToast('Notification supprimée', 'success');
-    }
-
-    clearAll() {
-        if (this.notifications.length > 0) {
-            this.notifications = [];
-            this.saveNotifications();
-            this.updateNotificationCount();
-            this.renderNotifications();
-            this.showToast('Toutes les notifications ont été supprimées', 'success');
+        clearAll() {
+            if (this.notifications.length > 0) {
+                this.notifications = [];
+                this.saveNotifications();
+                this.updateNotificationCount();
+                this.renderNotifications();
+                this.showToast('Toutes les notifications ont été supprimées', 'success');
+            }
         }
-    }
 
-    updateNotificationCount() {
-        const unreadCount = this.notifications.filter(n => !n.read).length;
-        const countElement = document.getElementById('notificationCount');
+        updateNotificationCount() {
+            const unreadCount = this.notifications.filter(n => !n.read).length;
+            const countElement = document.getElementById('notificationCount');
 
-        if (countElement) {
-            countElement.textContent = unreadCount > 99 ? '99+' : unreadCount;
-            countElement.style.display = unreadCount > 0 ? 'flex' : 'none';
+            if (countElement) {
+                countElement.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                countElement.style.display = unreadCount > 0 ? 'flex' : 'none';
+            }
         }
-    }
 
-    renderNotifications() {
-        const listElement = document.getElementById('notificationList');
-        if (!listElement) return;
+        renderNotifications() {
+            const listElement = document.getElementById('notificationList');
+            if (!listElement) return;
 
-        if (this.notifications.length === 0) {
-            listElement.innerHTML = `
+            if (this.notifications.length === 0) {
+                listElement.innerHTML = `
                 <div class="notification-empty">
                     <i class="ri-inbox-line"></i>
                     <p class="text-muted text-center mb-0">Aucune notification</p>
                 </div>
             `;
-            return;
-        }
+                return;
+            }
 
-        listElement.innerHTML = this.notifications.slice(0, 10).map(notification => `
+            listElement.innerHTML = this.notifications.slice(0, 10).map(notification => `
             <div class="notification-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}">
                 <div class="notification-content">
                     <div class="notification-icon ${notification.type}">
@@ -706,137 +801,137 @@ class AdvancedNotificationManager {
                 </div>
             </div>
         `).join('');
-    }
-
-    getNotificationIcon(type) {
-        const icons = {
-            info: 'information-line',
-            warning: 'alert-line',
-            success: 'checkbox-circle-line',
-            danger: 'error-warning-line',
-            system: 'settings-line'
-        };
-        return icons[type] || 'notification-line';
-    }
-
-    formatTime(date) {
-        const now = new Date();
-        const diff = now - new Date(date);
-        const minutes = Math.floor(diff / 60000);
-        const hours = Math.floor(diff / 3600000);
-        const days = Math.floor(diff / 86400000);
-
-        if (minutes < 1) return 'À l\'instant';
-        if (minutes < 60) return `Il y a ${minutes} min`;
-        if (hours < 24) return `Il y a ${hours} h`;
-        if (days < 7) return `Il y a ${days} j`;
-        return new Date(date).toLocaleDateString('fr-FR');
-    }
-
-    animateNotification() {
-        const countElement = document.getElementById('notificationCount');
-        if (countElement) {
-            countElement.classList.add('notification-pulse');
-            setTimeout(() => {
-                countElement.classList.remove('notification-pulse');
-            }, 600);
         }
-    }
 
-    showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-        toast.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
-        toast.innerHTML = `
+        getNotificationIcon(type) {
+            const icons = {
+                info: 'information-line',
+                warning: 'alert-line',
+                success: 'checkbox-circle-line',
+                danger: 'error-warning-line',
+                system: 'settings-line'
+            };
+            return icons[type] || 'notification-line';
+        }
+
+        formatTime(date) {
+            const now = new Date();
+            const diff = now - new Date(date);
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'À l\'instant';
+            if (minutes < 60) return `Il y a ${minutes} min`;
+            if (hours < 24) return `Il y a ${hours} h`;
+            if (days < 7) return `Il y a ${days} j`;
+            return new Date(date).toLocaleDateString('fr-FR');
+        }
+
+        animateNotification() {
+            const countElement = document.getElementById('notificationCount');
+            if (countElement) {
+                countElement.classList.add('notification-pulse');
+                setTimeout(() => {
+                    countElement.classList.remove('notification-pulse');
+                }, 600);
+            }
+        }
+
+        showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
+            toast.innerHTML = `
             <i class="ri-${type === 'success' ? 'check-line' : 'error-warning-line'} me-2"></i>
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        document.body.appendChild(toast);
+            document.body.appendChild(toast);
 
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        setupEventListeners() {
+            // Écouteur pour marquer toutes comme lues
+            const markAllBtn = document.getElementById('markAllAsRead');
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.markAllAsRead();
+                });
             }
-        }, 5000);
+        }
     }
 
-    setupEventListeners() {
-        // Écouteur pour marquer toutes comme lues
-        const markAllBtn = document.getElementById('markAllAsRead');
-        if (markAllBtn) {
-            markAllBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.markAllAsRead();
+    // ===== FONCTIONS GLOBALES POUR LES PARAMÈTRES =====
+    function saveNotificationSettings() {
+        const settings = {
+            web: document.getElementById('notifWeb').checked,
+            email: document.getElementById('notifEmail').checked,
+            sms: document.getElementById('notifSMS')?.checked || false,
+            books: document.getElementById('notifBooks').checked,
+            newBooks: document.getElementById('notifNewBooks').checked,
+            reservations: document.getElementById('notifReservations').checked,
+            system: document.getElementById('notifSystem')?.checked || false,
+            reports: document.getElementById('notifReports')?.checked || false,
+            alerts: document.getElementById('notifAlerts')?.checked || false
+        };
+
+        localStorage.setItem('notificationSettings', JSON.stringify(settings));
+        showNotification('Préférences de notification sauvegardées avec succès', 'success');
+    }
+
+    function loadNotificationSettings() {
+        const saved = localStorage.getItem('notificationSettings');
+        if (saved) {
+            const settings = JSON.parse(saved);
+            Object.keys(settings).forEach(key => {
+                const element = document.getElementById(`notif${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                if (element) {
+                    element.checked = settings[key];
+                }
             });
         }
     }
-}
 
-// ===== FONCTIONS GLOBALES POUR LES PARAMÈTRES =====
-function saveNotificationSettings() {
-    const settings = {
-        web: document.getElementById('notifWeb').checked,
-        email: document.getElementById('notifEmail').checked,
-        sms: document.getElementById('notifSMS')?.checked || false,
-        books: document.getElementById('notifBooks').checked,
-        newBooks: document.getElementById('notifNewBooks').checked,
-        reservations: document.getElementById('notifReservations').checked,
-        system: document.getElementById('notifSystem')?.checked || false,
-        reports: document.getElementById('notifReports')?.checked || false,
-        alerts: document.getElementById('notifAlerts')?.checked || false
-    };
-
-    localStorage.setItem('notificationSettings', JSON.stringify(settings));
-    showNotification('Préférences de notification sauvegardées avec succès', 'success');
-}
-
-function loadNotificationSettings() {
-    const saved = localStorage.getItem('notificationSettings');
-    if (saved) {
-        const settings = JSON.parse(saved);
-        Object.keys(settings).forEach(key => {
-            const element = document.getElementById(`notif${key.charAt(0).toUpperCase() + key.slice(1)}`);
-            if (element) {
-                element.checked = settings[key];
+    function clearAllNotifications() {
+        if (confirm('Êtes-vous sûr de vouloir supprimer toutes les notifications ? Cette action est irréversible.')) {
+            if (typeof advancedNotificationManager !== 'undefined') {
+                advancedNotificationManager.clearAll();
+                updateNotificationHistory();
             }
-        });
-    }
-}
-
-function clearAllNotifications() {
-    if (confirm('Êtes-vous sûr de vouloir supprimer toutes les notifications ? Cette action est irréversible.')) {
-        if (typeof advancedNotificationManager !== 'undefined') {
-            advancedNotificationManager.clearAll();
-            updateNotificationHistory();
         }
     }
-}
 
-function updateNotificationHistory() {
-    const historyList = document.getElementById('notificationHistoryList');
-    const totalCount = document.getElementById('totalNotifications');
-    const unreadCount = document.getElementById('unreadNotifications');
+    function updateNotificationHistory() {
+        const historyList = document.getElementById('notificationHistoryList');
+        const totalCount = document.getElementById('totalNotifications');
+        const unreadCount = document.getElementById('unreadNotifications');
 
-    if (typeof advancedNotificationManager !== 'undefined' && historyList) {
-        const notifications = advancedNotificationManager.notifications;
-        const unread = notifications.filter(n => !n.read).length;
+        if (typeof advancedNotificationManager !== 'undefined' && historyList) {
+            const notifications = advancedNotificationManager.notifications;
+            const unread = notifications.filter(n => !n.read).length;
 
-        totalCount.textContent = `${notifications.length} notification${notifications.length > 1 ? 's' : ''}`;
-        unreadCount.textContent = `${unread} non lue${unread > 1 ? 's' : ''}`;
+            totalCount.textContent = `${notifications.length} notification${notifications.length > 1 ? 's' : ''}`;
+            unreadCount.textContent = `${unread} non lue${unread > 1 ? 's' : ''}`;
 
-        if (notifications.length === 0) {
-            historyList.innerHTML = `
+            if (notifications.length === 0) {
+                historyList.innerHTML = `
                 <div class="text-center py-5">
                     <i class="ri-inbox-line text-muted" style="font-size: 3rem;"></i>
                     <p class="text-muted mt-2">Aucune notification dans l'historique</p>
                 </div>
             `;
-            return;
-        }
+                return;
+            }
 
-        historyList.innerHTML = notifications.map(notification => `
+            historyList.innerHTML = notifications.map(notification => `
             <div class="notification-history-item ${notification.read ? '' : 'unread'}" data-id="${notification.id}">
                 <div class="d-flex align-items-start gap-3">
                     <div class="notification-icon ${notification.type} flex-shrink-0">
@@ -863,326 +958,337 @@ function updateNotificationHistory() {
                 </div>
             </div>
         `).join('');
+        }
     }
-}
 
-function markNotificationAsRead(id) {
-    if (typeof advancedNotificationManager !== 'undefined') {
-        advancedNotificationManager.markAsRead(id);
-        updateNotificationHistory();
+    function markNotificationAsRead(id) {
+        if (typeof advancedNotificationManager !== 'undefined') {
+            advancedNotificationManager.markAsRead(id);
+            updateNotificationHistory();
+        }
     }
-}
 
-function deleteNotification(id) {
-    if (typeof advancedNotificationManager !== 'undefined') {
-        advancedNotificationManager.deleteNotification(id);
-        updateNotificationHistory();
+    function deleteNotification(id) {
+        if (typeof advancedNotificationManager !== 'undefined') {
+            advancedNotificationManager.deleteNotification(id);
+            updateNotificationHistory();
+        }
     }
-}
 
-function getNotificationIcon(type) {
-    const icons = {
-        info: 'information-line',
-        warning: 'alert-line',
-        success: 'checkbox-circle-line',
-        danger: 'error-warning-line',
-        system: 'settings-line'
-    };
-    return icons[type] || 'notification-line';
-}
+    function getNotificationIcon(type) {
+        const icons = {
+            info: 'information-line',
+            warning: 'alert-line',
+            success: 'checkbox-circle-line',
+            danger: 'error-warning-line',
+            system: 'settings-line'
+        };
+        return icons[type] || 'notification-line';
+    }
 
-function formatTime(date) {
-    const now = new Date();
-    const diff = now - new Date(date);
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+    function formatTime(date) {
+        const now = new Date();
+        const diff = now - new Date(date);
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'À l\'instant';
-    if (minutes < 60) return `Il y a ${minutes} min`;
-    if (hours < 24) return `Il y a ${hours} h`;
-    if (days < 7) return `Il y a ${days} j`;
-    return new Date(date).toLocaleDateString('fr-FR');
-}
+        if (minutes < 1) return 'À l\'instant';
+        if (minutes < 60) return `Il y a ${minutes} min`;
+        if (hours < 24) return `Il y a ${hours} h`;
+        if (days < 7) return `Il y a ${days} j`;
+        return new Date(date).toLocaleDateString('fr-FR');
+    }
 
-function showNotification(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    toast.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
-    toast.innerHTML = `
+    function showNotification(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 1060; min-width: 300px;';
+        toast.innerHTML = `
         <i class="ri-${type === 'success' ? 'check-line' : 'error-warning-line'} me-2"></i>
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    document.body.appendChild(toast);
+        document.body.appendChild(toast);
 
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.remove();
-        }
-    }, 5000);
-}
-
-// Filtrer les notifications
-document.addEventListener('click', function (e) {
-    if (e.target.matches('[data-filter]')) {
-        const filter = e.target.dataset.filter;
-
-        // Mettre à jour les boutons actifs
-        document.querySelectorAll('[data-filter]').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        e.target.classList.add('active');
-
-        // Appliquer le filtre
-        filterNotifications(filter);
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 5000);
     }
-});
 
-function filterNotifications(filter) {
-    const items = document.querySelectorAll('.notification-history-item');
+    // Filtrer les notifications
+    document.addEventListener('click', function (e) {
+        if (e.target.matches('[data-filter]')) {
+            const filter = e.target.dataset.filter;
 
-    items.forEach(item => {
-        const isRead = !item.classList.contains('unread');
+            // Mettre à jour les boutons actifs
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            e.target.classList.add('active');
 
-        switch (filter) {
-            case 'all':
-                item.style.display = 'block';
-                break;
-            case 'unread':
-                item.style.display = !isRead ? 'block' : 'none';
-                break;
-            case 'read':
-                item.style.display = isRead ? 'block' : 'none';
-                break;
+            // Appliquer le filtre
+            filterNotifications(filter);
         }
     });
-}
 
-function loadMoreNotifications() {
-    showNotification('Chargement des notifications supplémentaires...', 'info');
-    setTimeout(() => {
-        showNotification('Toutes les notifications sont chargées', 'success');
-    }, 1000);
-}
+    function filterNotifications(filter) {
+        const items = document.querySelectorAll('.notification-history-item');
 
-// ===== INITIALISATION =====
-let advancedNotificationManager;
+        items.forEach(item => {
+            const isRead = !item.classList.contains('unread');
 
-document.addEventListener('DOMContentLoaded', function () {
-    advancedNotificationManager = new AdvancedNotificationManager();
-    window.advancedNotificationManager = advancedNotificationManager;
-
-    loadNotificationSettings();
-
-    // Mettre à jour l'historique
-    setInterval(updateNotificationHistory, 2000);
-    setTimeout(updateNotificationHistory, 1000);
-
-    // Ajouter des notifications de démonstration
-    setTimeout(() => {
-        if (advancedNotificationManager.currentUser) {
-            if (advancedNotificationManager.currentUser.role === 'admin') {
-                advancedNotificationManager.addNotification({
-                    type: 'system',
-                    title: 'Système opérationnel',
-                    message: 'Tous les services fonctionnent normalement',
-                    category: 'system'
-                });
-            } else {
-                advancedNotificationManager.addNotification({
-                    type: 'info',
-                    title: 'Nouveautés disponibles',
-                    message: 'Découvrez les nouveaux livres ajoutés cette semaine',
-                    category: 'new_books'
-                });
+            switch (filter) {
+                case 'all':
+                    item.style.display = 'block';
+                    break;
+                case 'unread':
+                    item.style.display = !isRead ? 'block' : 'none';
+                    break;
+                case 'read':
+                    item.style.display = isRead ? 'block' : 'none';
+                    break;
             }
-        }
-    }, 2000);
-});
+        });
+    }
+
+    function loadMoreNotifications() {
+        showNotification('Chargement des notifications supplémentaires...', 'info');
+        setTimeout(() => {
+            showNotification('Toutes les notifications sont chargées', 'success');
+        }, 1000);
+    }
+
+    // ===== INITIALISATION =====
+    let advancedNotificationManager;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        advancedNotificationManager = new AdvancedNotificationManager();
+        window.advancedNotificationManager = advancedNotificationManager;
+
+        loadNotificationSettings();
+
+        // Mettre à jour l'historique
+        setInterval(updateNotificationHistory, 2000);
+        setTimeout(updateNotificationHistory, 1000);
+
+        // Ajouter des notifications de démonstration
+        setTimeout(() => {
+            if (advancedNotificationManager.currentUser) {
+                if (advancedNotificationManager.currentUser.role === 'admin') {
+                    advancedNotificationManager.addNotification({
+                        type: 'system',
+                        title: 'Système opérationnel',
+                        message: 'Tous les services fonctionnent normalement',
+                        category: 'system'
+                    });
+                } else {
+                    advancedNotificationManager.addNotification({
+                        type: 'info',
+                        title: 'Nouveautés disponibles',
+                        message: 'Découvrez les nouveaux livres ajoutés cette semaine',
+                        category: 'new_books'
+                    });
+                }
+            }
+        }, 2000);
+    });
 </script>
 
 <style>
-/* ===== STYLES PROFESSIONNELS POUR NOTIFICATIONS ===== */
-.notification-setting-item {
-    padding: 1rem;
-    border-radius: 12px;
-    margin-bottom: 0.5rem;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(0,0,0,0.05);
-}
-
-.notification-setting-item:hover {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
-    transform: translateX(8px);
-    border-color: rgba(99, 102, 241, 0.2);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-}
-
-.notification-history-item {
-    transition: all 0.3s ease;
-    padding: 1.2rem;
-    border-radius: 16px;
-    margin-bottom: 1rem;
-    border: 1px solid rgba(0,0,0,0.05);
-    background: white;
-}
-
-.notification-history-item:hover {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-    border-color: rgba(99, 102, 241, 0.2);
-}
-
-.notification-history-item.unread {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
-    border-left: 4px solid var(--primary);
-    border-color: rgba(99, 102, 241, 0.3);
-}
-
-.notification-history .notification-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-}
-
-.notification-history .notification-icon:hover {
-    transform: scale(1.1);
-}
-
-.notification-history .notification-icon.info {
-    background: linear-gradient(135deg, #0dcaf0, #0aa2c0);
-    color: white;
-}
-
-.notification-history .notification-icon.warning {
-    background: linear-gradient(135deg, #ffc107, #e0a800);
-    color: white;
-}
-
-.notification-history .notification-icon.success {
-    background: linear-gradient(135deg, #198754, #157347);
-    color: white;
-}
-
-.notification-history .notification-icon.danger {
-    background: linear-gradient(135deg, #dc3545, #c82333);
-    color: white;
-}
-
-.notification-history .notification-icon.system {
-    background: linear-gradient(135deg, #6c757d, #5a6268);
-    color: white;
-}
-
-/* En-têtes avec dégradés */
-.card-header.bg-gradient-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
-}
-
-.card-header.bg-gradient-info {
-    background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
-}
-
-/* Boutons améliorés */
-.btn-outline-primary {
-    border: 2px solid var(--primary);
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-primary:hover {
-    background: var(--gradient-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
-}
-
-/* Badges animés */
-.badge {
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.badge:hover {
-    transform: scale(1.05);
-}
-
-/* Formulaires améliorés */
-.form-control, .form-select {
-    border: 2px solid #e9ecef;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    transform: translateY(-1px);
-}
-
-/* Switch personnalisé */
-.form-check-input:checked {
-    background-color: var(--success);
-    border-color: var(--success);
-}
-
-.form-check-input:focus {
-    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.25);
-}
-
-/* Animation de pulse pour les notifications */
-@keyframes professional-pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-.notification-pulse {
-    animation: professional-pulse 0.6s ease-in-out;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
+    /* ===== STYLES PROFESSIONNELS POUR NOTIFICATIONS ===== */
     .notification-setting-item {
-        padding: 0.8rem;
-    }
-    
-    .notification-history-item {
         padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
-    
+
+    .notification-setting-item:hover {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+        transform: translateX(8px);
+        border-color: rgba(99, 102, 241, 0.2);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .notification-history-item {
+        transition: all 0.3s ease;
+        padding: 1.2rem;
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        background: white;
+    }
+
+    .notification-history-item:hover {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .notification-history-item.unread {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+        border-left: 4px solid var(--primary);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+
     .notification-history .notification-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1.1rem;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
     }
-}
 
-/* Effets de profondeur */
-.card {
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-}
+    .notification-history .notification-icon:hover {
+        transform: scale(1.1);
+    }
 
-.card:hover {
-    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
-}
+    .notification-history .notification-icon.info {
+        background: linear-gradient(135deg, #0dcaf0, #0aa2c0);
+        color: white;
+    }
 
-/* Icônes avec effets */
-[class^="ri-"], [class*=" ri-"] {
-    transition: all 0.3s ease;
-}
+    .notification-history .notification-icon.warning {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        color: white;
+    }
 
-.notification-setting-item:hover [class^="ri-"],
-.notification-setting-item:hover [class*=" ri-"] {
-    transform: scale(1.2);
-}
+    .notification-history .notification-icon.success {
+        background: linear-gradient(135deg, #198754, #157347);
+        color: white;
+    }
+
+    .notification-history .notification-icon.danger {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+    }
+
+    .notification-history .notification-icon.system {
+        background: linear-gradient(135deg, #6c757d, #5a6268);
+        color: white;
+    }
+
+    /* En-têtes avec dégradés */
+    .card-header.bg-gradient-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
+    }
+
+    .card-header.bg-gradient-info {
+        background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
+    }
+
+    /* Boutons améliorés */
+    .btn-outline-primary {
+        border: 2px solid var(--primary);
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--gradient-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Badges animés */
+    .badge {
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .badge:hover {
+        transform: scale(1.05);
+    }
+
+    /* Formulaires améliorés */
+    .form-control,
+    .form-select {
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        transform: translateY(-1px);
+    }
+
+    /* Switch personnalisé */
+    .form-check-input:checked {
+        background-color: var(--success);
+        border-color: var(--success);
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.25);
+    }
+
+    /* Animation de pulse pour les notifications */
+    @keyframes professional-pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .notification-pulse {
+        animation: professional-pulse 0.6s ease-in-out;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .notification-setting-item {
+            padding: 0.8rem;
+        }
+
+        .notification-history-item {
+            padding: 1rem;
+        }
+
+        .notification-history .notification-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+        }
+    }
+
+    /* Effets de profondeur */
+    .card {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Icônes avec effets */
+    [class^="ri-"],
+    [class*=" ri-"] {
+        transition: all 0.3s ease;
+    }
+
+    .notification-setting-item:hover [class^="ri-"],
+    .notification-setting-item:hover [class*=" ri-"] {
+        transform: scale(1.2);
+    }
 </style>
 
 {% endblock %}

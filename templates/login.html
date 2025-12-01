@@ -5,7 +5,7 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
-                <div class="card">
+                <div class="card shadow border-0">
                     <div class="card-body p-5">
                         <div class="text-center mb-4">
                             <h2 class="fw-bold">Connexion</h2>
@@ -64,12 +64,24 @@
                             </button>
                         </form>
 
-                        <div class="text-center mt-3">
-                            <p class="text-muted mb-0">Pas encore de compte ?
-                                <a href="{{ url_for('register') }}" class="text-primary text-decoration-none">
-                                    <i class="ri-user-add-line me-1"></i>Inscrivez-vous ici
+                        <div class="text-center mt-4">
+                            <p class="text-muted mb-3">Pas encore de compte ?</p>
+                            <div class="d-flex flex-column gap-2">
+                                <a href="{{ url_for('register_with_type', user_type='adherent') }}"
+                                    class="btn btn-outline-warning">
+                                    <i class="ri-user-line me-2"></i>S'inscrire comme adhérent
                                 </a>
-                            </p>
+                                <a href="{{ url_for('register_with_type', user_type='bibliothecaire') }}"
+                                    class="btn btn-outline-info">
+                                    <i class="ri-user-star-line me-2"></i>S'inscrire comme bibliothécaire
+                                </a>
+                                {% if not admin_exists %}
+                                <a href="{{ url_for('register_with_type', user_type='admin') }}"
+                                    class="btn btn-outline-danger">
+                                    <i class="ri-shield-user-line me-2"></i>Créer un compte administrateur
+                                </a>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -79,16 +91,13 @@
 </div>
 
 <script>
-    // Script spécifique pour gérer la soumission du formulaire et l'affichage du bouton
     (() => {
         const form = document.getElementById('loginForm');
         const button = document.getElementById('loginButton');
         const btnText = button.querySelector('.btn-text');
 
         form.addEventListener('submit', function (e) {
-            // Désactiver le bouton pour éviter les doubles soumissions
             button.disabled = true;
-            // Remplacer le texte par un indicateur de chargement
             if (btnText) {
                 btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Chargement...';
             } else {

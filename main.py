@@ -480,56 +480,158 @@ def contact():
     
     return render_template("contact.html", title="Contact")
 
-# INSCRIPTION
-@app.route("/inscription", methods=['GET', 'POST'])
-def register():
+# Route pour choisir le type d'inscription
+@app.route('/inscription/choix', methods=['GET'])
+def register_choice():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     
+    # Vérifier si un admin existe déjà
+    admin_exists = User.query.filter_by(role='admin').first() is not None
+    
+    return render_template('register_choice.html', 
+                         title='Choix d\'inscription',
+                         admin_exists=admin_exists)
+
+# Route d'inscription générique avec type
+@app.route('/inscription/<string:user_type>', methods=['GET', 'POST'])
+def register_with_type(user_type):
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    allowed_types = ['adherent', 'bibliothecaire', 'admin']
+    if user_type not in allowed_types:
+        flash('Type d\'utilisateur invalide', 'danger')
+        return redirect(url_for('register_choice'))
+    
+    # Vérifier si un admin existe déjà (pour éviter les doublons)
+    admin_exists = User.query.filter_by(role='admin').first() is not None
+    if user_type == 'admin' and admin_exists:
+        flash('Un administrateur existe déjà. Contactez l\'administrateur actuel pour créer un nouveau compte admin.', 'warning')
+        return redirect(url_for('login'))
+    
     if request.method == 'POST':
+        # Données du formulaire commun
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         
+        # Données spécifiques
+        nom = request.form.get('nom', '').strip()
+        prenom = request.form.get('prenom', '').strip()
+        telephone = request.form.get('telephone', '').strip()
+        classe = request.form.get('classe', '').strip()
+        
+        # Validation
+        if not username or not email or not password:
+            flash('Tous les champs obligatoires doivent être remplis', 'danger')
+            return render_template('register_form.html', 
+                                 title=f'Inscription - {user_type.capitalize()}',
+                                 user_type=user_type,
+                                 admin_exists=admin_exists)
+        
+        if password != confirm_password:
+            flash('Les mots de passe ne correspondent pas', 'danger')
+            return render_template('register_form.html', 
+                                 title=f'Inscription - {user_type.capitalize()}',
+                                 user_type=user_type,
+                                 admin_exists=admin_exists)
+        
+        # Vérifier l'existence
         if User.query.filter_by(username=username).first():
             flash('Ce nom d\'utilisateur est déjà pris', 'danger')
-            return render_template('register.html', title='Inscription')
+            return render_template('register_form.html', 
+                                 title=f'Inscription - {user_type.capitalize()}',
+                                 user_type=user_type,
+                                 admin_exists=admin_exists)
             
         if User.query.filter_by(email=email).first():
             flash('Cette adresse email est déjà utilisée', 'danger')
-            return render_template('register.html', title='Inscription')
-            
-        if password != confirm_password:
-            flash('Les mots de passe ne correspondent pas', 'danger')
-            return render_template('register.html', title='Inscription')
+            return render_template('register_form.html', 
+                                 title=f'Inscription - {user_type.capitalize()}',
+                                 user_type=user_type,
+                                 admin_exists=admin_exists)
         
-        # CORRECTION: Cette partie était mal indentée
-        user = User(username=username, email=email, role='user', confirmed=False)
+        # Validation email
+        if not is_valid_email(email):
+            flash('Adresse email invalide', 'danger')
+            return render_template('register_form.html', 
+                                 title=f'Inscription - {user_type.capitalize()}',
+                                 user_type=user_type,
+                                 admin_exists=admin_exists)
+        
+        # Créer l'utilisateur
+        confirmed = True if user_type == 'admin' else False
+        
+        user = User(
+            username=username,
+            email=email,
+            role=user_type,
+            confirmed=confirmed
+        )
+        
+        # Configuration de la vérification email pour non-admins
+        if not confirmed:
+            code = _generate_confirmation_code()
+            user.confirmation_code = code
+            user.confirmation_expires = datetime.utcnow() + timedelta(minutes=30)
+        
         user.set_password(password)
         
-        code = _generate_confirmation_code()
-        user.confirmation_code = code
-        user.confirmation_expires = datetime.utcnow() + timedelta(minutes=30)
-
-        db.session.add(user)
+        # Créer un profil adhérent si nécessaire
+        if user_type in ['adherent', 'bibliothecaire']:
+            adherent = Adherent(
+                nom=nom if nom else username,
+                prenom=prenom if prenom else username,
+                email=email,
+                telephone=telephone if telephone else None,
+                classe=classe if classe else None,
+                statut='Actif'
+            )
+            db.session.add(adherent)
+            db.session.flush()  # Pour obtenir l'ID
+            user.adherent = adherent
+        
         try:
+            db.session.add(user)
             db.session.commit()
+            
+            # Gérer la vérification/notification
+            if not confirmed:
+                sent = send_verification_email(user.email, user.username, code)
+                if sent:
+                    flash('Inscription réussie ! Un code de vérification a été envoyé à votre email.', 'success')
+                else:
+                    flash('Inscription créée, mais impossible d\'envoyer le code. Contactez un administrateur.', 'warning')
+                
+                return redirect(url_for('verify_email', username=username))
+            else:
+                # Connexion automatique pour admin
+                login_user(user)
+                flash('Compte administrateur créé avec succès !', 'success')
+                return redirect(url_for('dashboard'))
+                
         except Exception as e:
             db.session.rollback()
-            current_app.logger.exception('Erreur lors de l\'inscription')
-            flash('Erreur lors de l\'inscription : ' + str(e), 'danger')
-            return render_template('register.html', title='Inscription')
+            flash(f'Erreur lors de l\'inscription: {str(e)}', 'danger')
+            return render_template('register_form.html', 
+                                 title=f'Inscription - {user_type.capitalize()}',
+                                 user_type=user_type,
+                                 admin_exists=admin_exists)
+    
+    # GET request
+    return render_template('register_form.html', 
+                         title=f'Inscription - {user_type.capitalize()}',
+                         user_type=user_type,
+                         admin_exists=admin_exists)
 
-        sent = send_verification_email(user.email, user.username, code)
-        if sent:
-            flash('Inscription réussie ! Un code de vérification a été envoyé à votre adresse email.', 'success')
-        else:
-            flash('Inscription créée, mais impossible d\'envoyer le code par email. Contactez un administrateur.', 'warning')
-
-        return redirect(url_for('verify_email'))
-        
-    return render_template('register.html', title='Inscription')
+# Route d'inscription par défaut (redirige)
+@app.route("/inscription", methods=['GET'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('register_choice'))
 
 # CONNEXION
 @app.route("/connexion", methods=['GET', 'POST'])
@@ -540,42 +642,50 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-
-        logging.info(f"Tentative de connexion - Username reçu")
         
         user = User.query.filter_by(username=username).first()
         
         if user:
             if user.check_password(password):
                 if not user.confirmed and user.role != 'admin':
-                    # Générer et envoyer un code de vérification au moment de la tentative de connexion
+                    # Générer et envoyer un nouveau code
                     code = _generate_confirmation_code()
                     user.confirmation_code = code
                     user.confirmation_expires = datetime.utcnow() + timedelta(minutes=30)
+                    
                     try:
                         db.session.commit()
                     except Exception:
                         db.session.rollback()
-
+                    
                     sent = send_verification_email(user.email, user.username, code)
                     if sent:
-                        flash('Un code de vérification a été envoyé à votre adresse email. Vérifiez votre boîte et entrez le code.', 'info')
+                        flash('Un code de vérification a été envoyé à votre email. Vérifiez votre boîte et entrez le code.', 'info')
                     else:
-                        flash('Impossible d\'envoyer le code de vérification par email. Contactez un administrateur.', 'warning')
-
-                    # Rediriger vers la page de vérification en préremplissant le champ username
+                        flash('Impossible d\'envoyer le code de vérification. Contactez un administrateur.', 'warning')
+                    
                     return redirect(url_for('verify_email', username=username))
 
                 login_user(user)
                 flash('Connexion réussie!', 'success')
-                return redirect(url_for('catalogue'))
+                
+                # Redirection selon le rôle
+                if has_roles('admin', 'bibliothecaire'):
+                    return redirect(url_for('dashboard'))
+                else:
+                    return redirect(url_for('catalogue'))
             else:
-                logging.info("Mot de passe incorrect")
                 flash('Mot de passe incorrect', 'danger')
         else:
             flash('Nom d\'utilisateur non trouvé', 'danger')
 
     return render_template("login.html", title="Connexion")
+
+@app.context_processor
+def inject_admin_exists():
+    """Injecte la variable admin_exists dans tous les templates"""
+    admin_exists = User.query.filter_by(role='admin').first() is not None
+    return dict(admin_exists=admin_exists)
 
 @app.route("/deconnexion")
 @login_required
@@ -1353,7 +1463,148 @@ def statistiques():
 @app.route("/dashboard/parametres")
 @login_required
 def parametres():
-    return render_template("parametres.html", title="Paramètres")
+    # Prepare dynamic data for the template
+    # Library settings could be stored in DB or config; use app.config defaults for now
+    library_settings = {
+        'max_emprunts': app.config.get('MAX_EMPRUNTS_PER_USER', 3),
+        'duree_emprunt': app.config.get('DUREE_EMPRUNT_JOURS', 14),
+        'max_prolongations': app.config.get('MAX_PROLONGATIONS', 2),
+        'amende_par_jour': app.config.get('AMENDE_PAR_JOUR', 0.5)
+    }
+
+    # Notification preferences placeholders (in future, persist per-user)
+    notification_settings = {
+        'email': True,
+        'sms': False,
+        'livres_retard': True,
+        'nouveaux_livres': True,
+        'reservations': True,
+        'system': False,
+        'reports': False,
+        'alerts': False
+    }
+
+    # Lists for admin/bibliothecaire to manage
+    users_non_admin = User.query.filter(User.role != 'admin').order_by(User.username.asc()).all()
+    bibliothecaires = User.query.filter_by(role='bibliothecaire').order_by(User.username.asc()).all()
+    adherents = Adherent.query.order_by(Adherent.nom.asc()).all()
+
+    return render_template("parametres.html", title="Paramètres",
+                           library_settings=library_settings,
+                           notification_settings=notification_settings,
+                           users_non_admin=users_non_admin,
+                           bibliothecaires=bibliothecaires,
+                           adherents=adherents)
+
+
+@app.route('/dashboard/parametres/delete_all_non_admins', methods=['POST'])
+@login_required
+def delete_all_non_admins():
+    # Allow admin and bibliothecaire to remove all non-admin accounts
+    if not has_roles('admin', 'bibliothecaire'):
+        flash('Accès non autorisé', 'danger')
+        return redirect(url_for('parametres'))
+
+    try:
+        # Do not delete the current user to avoid immediate logout issues
+        User.query.filter(User.role != 'admin', User.id != current_user.id).delete(synchronize_session=False)
+        db.session.commit()
+        flash('Tous les comptes non-admin ont été supprimés (sauf votre compte).', 'success')
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Erreur lors de la suppression de tous les comptes non-admin')
+        flash('Erreur lors de la suppression des comptes.', 'danger')
+    return redirect(url_for('parametres'))
+
+
+@app.route('/dashboard/parametres/delete_user', methods=['POST'])
+@login_required
+def delete_user():
+    if not has_roles('admin', 'bibliothecaire'):
+        flash('Accès non autorisé', 'danger')
+        return redirect(url_for('parametres'))
+
+    user_id = request.form.get('user_id')
+    try:
+        uid = int(user_id)
+    except Exception:
+        flash('Utilisateur invalide', 'danger')
+        return redirect(url_for('parametres'))
+
+    user = User.query.get(uid)
+    if not user:
+        flash('Utilisateur introuvable', 'danger')
+        return redirect(url_for('parametres'))
+
+    # Prevent non-admins from deleting admin accounts
+    if user.role == 'admin' and not (getattr(current_user, 'role', None) == 'admin'):
+        flash('Vous n\'êtes pas autorisé à supprimer un administrateur', 'danger')
+        return redirect(url_for('parametres'))
+
+    try:
+        # If user has an adherent profile, delete related emprunts/reservations
+        adherent = getattr(user, 'adherent', None)
+        if adherent:
+            try:
+                db.session.query(Emprunt).filter(Emprunt.adherent_id == adherent.id).delete(synchronize_session=False)
+            except Exception:
+                current_app.logger.exception('Erreur suppression emprunts utilisateur lors suppression user')
+            try:
+                db.session.query(Reservation).filter(Reservation.adherent_id == adherent.id).delete(synchronize_session=False)
+            except Exception:
+                current_app.logger.exception('Erreur suppression reservations utilisateur lors suppression user')
+
+        db.session.delete(user)
+        if adherent:
+            db.session.delete(adherent)
+        db.session.commit()
+        flash('Utilisateur supprimé avec succès', 'success')
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Erreur lors de la suppression d\'un utilisateur')
+        flash('Erreur lors de la suppression de l\'utilisateur', 'danger')
+
+    return redirect(url_for('parametres'))
+
+
+@app.route('/dashboard/parametres/delete_adherent', methods=['POST'])
+@login_required
+def delete_adherent():
+    if not has_roles('admin', 'bibliothecaire'):
+        flash('Accès non autorisé', 'danger')
+        return redirect(url_for('parametres'))
+
+    adherent_id = request.form.get('adherent_id')
+    try:
+        aid = int(adherent_id)
+    except Exception:
+        flash('Adhérent invalide', 'danger')
+        return redirect(url_for('parametres'))
+
+    a = Adherent.query.get(aid)
+    if not a:
+        flash('Adhérent introuvable', 'danger')
+        return redirect(url_for('parametres'))
+
+    try:
+        db.session.query(Emprunt).filter(Emprunt.adherent_id == a.id).delete(synchronize_session=False)
+        db.session.query(Reservation).filter(Reservation.adherent_id == a.id).delete(synchronize_session=False)
+        # delete linked user if any
+        if getattr(a, 'user', None):
+            try:
+                db.session.delete(a.user)
+            except Exception:
+                current_app.logger.exception('Erreur lors de suppression du user lié à l\'adhérent')
+
+        db.session.delete(a)
+        db.session.commit()
+        flash('Adhérent supprimé avec succès', 'success')
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Erreur suppression adhérent')
+        flash('Erreur lors de la suppression de l\'adhérent', 'danger')
+
+    return redirect(url_for('parametres'))
 
 # PROFIL UTILISATEUR
 @app.route("/profil")
@@ -1485,6 +1736,18 @@ def delete_account():
         return redirect(url_for('profil'))
 
     return redirect(url_for('index'))
+
+@app.context_processor
+def inject_variables():
+    """Injecte des variables utiles dans tous les templates"""
+    admin_exists = User.query.filter_by(role='admin').first() is not None
+    return dict(
+        admin_exists=admin_exists,
+        current_year=datetime.now().year
+    )
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
