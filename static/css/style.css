@@ -390,10 +390,10 @@ body {
     }
 }
 
-/* ===== SIDEBAR MODERNE ===== */
+/* ===== SIDEBAR MODERNE AVEC SCROLL ===== */
 .sidebar {
     width: 260px;
-    min-height: 100vh;
+    height: 100vh;
     position: fixed;
     left: 0;
     top: 0;
@@ -401,6 +401,10 @@ body {
     z-index: 1000;
     box-shadow: var(--shadow-lg);
     animation: fadeInLeft 0.6s ease-out;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar::before {
@@ -413,20 +417,98 @@ body {
     background: var(--gradient-primary);
 }
 
-.sidebar a {
+/* Header fixe du sidebar */
+.sidebar .admin-header,
+.sidebar .bibliothecaire-header {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+/* Navigation scrollable */
+.sidebar nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 15px 12px 20px 12px;
+    margin-top: 10px;
+}
+
+/* Scrollbar stylisée */
+.sidebar nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar nav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Styles spécifiques pour les panels */
+.admin-sidebar .admin-header {
+    background: linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%);
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-sidebar .btn.active {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%) !important;
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+}
+
+.bibliothecaire-sidebar .bibliothecaire-header {
+    background: linear-gradient(135deg, #0c4a6e 0%, #0ea5e9 100%);
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bibliothecaire-sidebar .btn.active {
+    background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%) !important;
+    box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4);
+}
+
+/* ===== BOUTONS DU SIDEBAR (CORRECTION COMPLÈTE) ===== */
+.sidebar .btn {
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
     border-radius: 12px;
-    margin: 6px 12px;
-    color: white !important;
+    margin: 6px 0;
+    color: rgba(255, 255, 255, 0.9) !important;
     border: 1px solid transparent;
     text-decoration: none;
-    display: block;
-    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    padding: 14px 16px !important;
+    white-space: nowrap;
+    min-height: 52px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.05) !important;
+    width: 100%;
+    text-align: left;
+    gap: 12px;
 }
 
-.sidebar a::before {
+/* Icônes dans les boutons */
+.sidebar .btn i {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    min-width: 24px;
+}
+
+/* Effet de surbrillance au survol */
+.sidebar .btn::before {
     content: '';
     position: absolute;
     top: 0;
@@ -437,50 +519,66 @@ body {
     transition: left 0.6s;
 }
 
-.sidebar a:hover::before {
+.sidebar .btn:hover::before {
     left: 100%;
 }
 
-.sidebar a:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
+/* États des boutons */
+.sidebar .btn:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
     transform: translateX(8px);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.15);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.sidebar a.active {
+.sidebar .btn:hover i {
+    color: white;
+    transform: scale(1.1);
+}
+
+/* État actif */
+.sidebar .btn.active {
     background: var(--gradient-primary) !important;
     box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
     transform: translateX(5px);
+    color: white !important;
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Amélioration de la lisibilité des sous-items */
+.sidebar .btn.active i {
+    color: white;
+}
+
+/* États spécifiques */
 .sidebar .btn.bg-light {
-    background: rgba(255, 255, 255, 0.04) !important;
-    color: rgba(255, 255, 255, 0.92) !important;
-    border: 1px solid rgba(255, 255, 255, 0.03) !important;
-    box-shadow: none !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
 }
 
-.sidebar .btn.bg-primary,
-.sidebar .btn.bg-primary.text-white {
-    background: var(--gradient-primary) !important;
-    color: #ffffff !important;
-    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35) !important;
+.sidebar .btn.bg-light:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
 }
 
 .sidebar .btn.text-dark {
-    color: rgba(255, 255, 255, 0.92) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
 }
 
-.sidebar .btn:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-    transform: translateX(6px) !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
+/* ===== SECTIONS DANS LA NAVIGATION ===== */
+.admin-nav-section,
+.bibliothecaire-nav-section {
+    width: 100%;
 }
 
-.sidebar .btn i {
-    color: rgba(255, 255, 255, 0.9);
+.admin-nav-section h6,
+.bibliothecaire-nav-section h6 {
+    padding: 0 8px;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* ===== CONTENU PRINCIPAL ===== */
@@ -808,7 +906,6 @@ body {
     box-shadow: var(--shadow-lg);
     padding: 0;
     border: 1px solid var(--gray-light);
-    /* Z-INDEX TRÈS ÉLEVÉ POUR PASSER AU-DESSUS */
     position: absolute !important;
     z-index: 99999 !important;
     transform: translateX(-50%) !important;
@@ -965,6 +1062,7 @@ body {
         transition: transform 0.3s ease;
         position: fixed;
         z-index: 1040;
+        width: 280px;
     }
 
     .sidebar.mobile-open {
@@ -988,6 +1086,12 @@ body {
 
     .content {
         padding: 15px;
+    }
+
+    .sidebar .btn {
+        padding: 16px 20px !important;
+        min-height: 56px;
+        font-size: 1rem;
     }
 
     /* Notifications sur mobile */
@@ -1024,9 +1128,6 @@ body {
     --bs-gutter-x: 1.5rem;
     --bs-gutter-y: 0;
 }
-
-/* Styles restants... */
-/* (Tous les autres styles restent inchangés) */
 
 .table {
     border-radius: 12px;
@@ -1097,7 +1198,6 @@ footer::before {
     height: 4px;
     background: var(--gradient-primary);
 }
-
 
 /* ===== BADGES ANIMÉS ===== */
 .badge {
@@ -1590,8 +1690,6 @@ footer::before {
 }
 
 /* ===== CORRECTIONS URGENTES NOTIFICATIONS ===== */
-
-/* CORRECTION DU DROPDOWN - NE PAS BLOQUER LES CLICS */
 .notification-dropdown {
     z-index: 99999 !important;
     pointer-events: auto !important;
