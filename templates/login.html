@@ -67,18 +67,17 @@
                         <div class="text-center mt-4">
                             <p class="text-muted mb-3">Pas encore de compte ?</p>
                             <div class="d-flex flex-column gap-2">
-                                <a href="{{ url_for('register_with_type', user_type='adherent') }}"
-                                    class="btn btn-outline-warning">
-                                    <i class="ri-user-line me-2"></i>S'inscrire comme adhérent
+                                <!-- Bouton principal d'inscription adhérent -->
+                                <a href="{{ url_for('register') }}" class="btn btn-primary">
+                                    <i class="ri-user-add-line me-2"></i>S'inscrire comme adhérent
                                 </a>
-                                <a href="{{ url_for('register_with_type', user_type='bibliothecaire') }}"
-                                    class="btn btn-outline-info">
-                                    <i class="ri-user-star-line me-2"></i>S'inscrire comme bibliothécaire
-                                </a>
+                                
+                                <!-- Option administrateur seulement si aucun admin n'existe -->
                                 {% if not admin_exists %}
+                                <div class="text-muted small mt-2 mb-1">Pour la configuration initiale :</div>
                                 <a href="{{ url_for('register_with_type', user_type='admin') }}"
-                                    class="btn btn-outline-danger">
-                                    <i class="ri-shield-user-line me-2"></i>Créer un compte administrateur
+                                    class="btn btn-outline-danger btn-sm">
+                                    <i class="ri-shield-user-line me-1"></i>Créer le premier administrateur
                                 </a>
                                 {% endif %}
                             </div>

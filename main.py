@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, current_app
+from flask import Flask, render_template, request, redirect, url_for, flash, session, current_app, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text, inspect
 from sqlalchemy.exc import IntegrityError
@@ -14,6 +14,19 @@ import random
 import smtplib
 from email.message import EmailMessage
 import re
+from functools import wraps
+import csv
+from io import StringIO
+import io
+
+# Ajout des imports pour ReportLab (PDF)
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch, cm
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 
 logging.basicConfig(level=logging.INFO)
 
@@ -59,6 +72,23 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+def role_required(roles):
+    """Décorateur pour vérifier le rôle de l'utilisateur"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for('login'))
+            
+            if current_user.role not in roles:
+                flash('Accès non autorisé', 'danger')
+                return redirect(url_for('dashboard'))
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 def has_roles(*roles):
     """Return True if current_user.role is one of the provided roles."""
     try:
@@ -90,7 +120,11 @@ class User(UserMixin, db.Model):
     
     # Lien avec le profil adhérent
     adherent_id = db.Column(db.Integer, db.ForeignKey('adherent.id'))
-    adherent = db.relationship('Adherent', backref='user', uselist=False)
+    adherent = db.relationship('Adherent', backref=db.backref('user', uselist=False), uselist=False)
+    
+    # Lien avec le profil bibliothécaire
+    bibliothecaire_id = db.Column(db.Integer, db.ForeignKey('bibliothecaire.id'))
+    bibliothecaire = db.relationship('Bibliothecaire', backref=db.backref('user', uselist=False), uselist=False)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
@@ -110,6 +144,31 @@ class Adherent(db.Model):
     statut = db.Column(db.String(20), default='Actif')
     date_inscription = db.Column(db.DateTime, default=datetime.utcnow)
     emprunts = db.relationship('Emprunt', backref='adherent', lazy=True)
+<<<<<<< HEAD
+=======
+
+class Bibliothecaire(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(100), nullable=False)
+    prenom = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    telephone = db.Column(db.String(20))
+    poste = db.Column(db.String(50), default='Bibliothécaire')
+    departement = db.Column(db.String(50))
+    date_embauche = db.Column(db.Date, default=datetime.utcnow)
+    statut = db.Column(db.String(20), default='Actif')
+    date_naissance = db.Column(db.Date)
+    genre = db.Column(db.String(1))
+    adresse = db.Column(db.Text)
+    email_personnel = db.Column(db.String(120))
+    telephone_personnel = db.Column(db.String(20))
+    description_poste = db.Column(db.Text)
+    image = db.Column(db.String(200), nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+>>>>>>> 38ddd9789dad89c7a80700b17777664aacecec78
 class Livre(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titre = db.Column(db.String(200), nullable=False)
@@ -169,6 +228,280 @@ with app.app_context():
             db.session.commit()
     except Exception:
         current_app.logger.exception('Impossible d\'ajouter automatiquement les colonnes de confirmation')
+
+# Fonctions pour générer les PDF
+def generate_bibliothecaires_pdf(bibliothecaires):
+    """Générer un PDF avec la liste des bibliothécaires"""
+    buffer = io.BytesIO()
+    
+    # Créer le document
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=72
+    )
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        alignment=1  # Centré
+    )
+    
+    # Contenu du PDF
+    story = []
+    
+    # Titre
+    story.append(Paragraph("LISTE DES BIBLIOTHÉCAIRES", title_style))
+    story.append(Spacer(1, 20))
+    
+    # Informations générales
+    date_str = datetime.now().strftime("%d/%m/%Y")
+    total = len(bibliothecaires)
+    info_text = f"<b>Date d'export :</b> {date_str} | <b>Total :</b> {total} bibliothécaires"
+    story.append(Paragraph(info_text, styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Préparer les données du tableau
+    data = []
+    
+    # En-têtes du tableau
+    headers = [
+        "Nom", 
+        "Prénom", 
+        "Email", 
+        "Téléphone", 
+        "Poste", 
+        "Département", 
+        "Statut",
+        "Date embauche"
+    ]
+    data.append(headers)
+    
+    # Données des bibliothécaires
+    for bib in bibliothecaires:
+        row = [
+            bib.nom or '',
+            bib.prenom or '',
+            bib.email or '',
+            bib.telephone or '',
+            bib.poste or '',
+            bib.departement or '',
+            bib.statut or '',
+            bib.date_embauche.strftime('%d/%m/%Y') if bib.date_embauche else ''
+        ]
+        data.append(row)
+    
+    # Créer le tableau
+    table = Table(data, repeatRows=1)
+    
+    # Style du tableau
+    table.setStyle(TableStyle([
+        # Style de l'en-tête
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        
+        # Bordures
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+        ('BOX', (0, 0), (-1, -1), 2, colors.black),
+        
+        # Alignement des cellules
+        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        
+        # Alternance des couleurs des lignes
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), 
+         [colors.white, colors.HexColor('#f8f9fa')]),
+        
+        # Hauteur des lignes
+        ('MINIMUMHEIGHT', (0, 0), (-1, -1), 20),
+        
+        # Padding
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    
+    # Ajuster la largeur des colonnes
+    table._argW = [
+        1.5*cm,  # Nom
+        1.5*cm,  # Prénom
+        3*cm,    # Email
+        2*cm,    # Téléphone
+        2*cm,    # Poste
+        2*cm,    # Département
+        1.5*cm,  # Statut
+        2*cm     # Date embauche
+    ]
+    
+    story.append(table)
+    story.append(Spacer(1, 30))
+    
+    # Statistiques
+    actifs = len([b for b in bibliothecaires if b.statut == 'Actif'])
+    inactifs = total - actifs
+    
+    stats_text = f"""
+    <b>STATISTIQUES :</b><br/>
+    • Bibliothécaires actifs : {actifs}<br/>
+    • Bibliothécaires inactifs : {inactifs}<br/>
+    • Total : {total}
+    """
+    story.append(Paragraph(stats_text, styles['Normal']))
+    
+    # Pied de page
+    story.append(Spacer(1, 50))
+    footer_text = f"Export généré le {date_str} - Système de Gestion de Bibliothèque"
+    story.append(Paragraph(footer_text, ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.grey,
+        alignment=1
+    )))
+    
+    # Générer le PDF
+    doc.build(story)
+    
+    # Récupérer le PDF depuis le buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    return pdf
+
+def generate_detailed_bibliothecaire_pdf(bibliothecaire):
+    """Générer un PDF détaillé pour un bibliothécaire spécifique"""
+    buffer = io.BytesIO()
+    
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=72
+    )
+    
+    styles = getSampleStyleSheet()
+    story = []
+    
+    # Titre
+    story.append(Paragraph(f"FICHE DU BIBLIOTHÉCAIRE", ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=20,
+        alignment=1
+    )))
+    
+    # Informations principales
+    info_data = [
+        [Paragraph("<b>Nom complet :</b>", styles['Normal']), 
+         f"{bibliothecaire.prenom} {bibliothecaire.nom}"],
+        [Paragraph("<b>Email professionnel :</b>", styles['Normal']), 
+         bibliothecaire.email],
+        [Paragraph("<b>Téléphone professionnel :</b>", styles['Normal']), 
+         bibliothecaire.telephone or 'Non renseigné'],
+        [Paragraph("<b>Poste :</b>", styles['Normal']), 
+         bibliothecaire.poste],
+        [Paragraph("<b>Département :</b>", styles['Normal']), 
+         bibliothecaire.departement or 'Non renseigné'],
+        [Paragraph("<b>Statut :</b>", styles['Normal']), 
+         bibliothecaire.statut],
+        [Paragraph("<b>Date d'embauche :</b>", styles['Normal']), 
+         bibliothecaire.date_embauche.strftime('%d/%m/%Y') if bibliothecaire.date_embauche else 'Non renseigné'],
+    ]
+    
+    # Informations personnelles (si disponibles)
+    if bibliothecaire.date_naissance or bibliothecaire.genre or bibliothecaire.adresse:
+        story.append(Spacer(1, 20))
+        story.append(Paragraph("INFORMATIONS PERSONNELLES", ParagraphStyle(
+            'Subtitle',
+            parent=styles['Heading2'],
+            fontSize=16,
+            spaceAfter=10
+        )))
+        
+        perso_data = []
+        if bibliothecaire.date_naissance:
+            perso_data.append([
+                Paragraph("<b>Date de naissance :</b>", styles['Normal']),
+                bibliothecaire.date_naissance.strftime('%d/%m/%Y')
+            ])
+        if bibliothecaire.genre:
+            perso_data.append([
+                Paragraph("<b>Genre :</b>", styles['Normal']),
+                'Masculin' if bibliothecaire.genre == 'M' else 'Féminin' if bibliothecaire.genre == 'F' else 'Autre'
+            ])
+        if bibliothecaire.adresse:
+            perso_data.append([
+                Paragraph("<b>Adresse :</b>", styles['Normal']),
+                Paragraph(bibliothecaire.adresse, styles['Normal'])
+            ])
+        if bibliothecaire.email_personnel:
+            perso_data.append([
+                Paragraph("<b>Email personnel :</b>", styles['Normal']),
+                bibliothecaire.email_personnel
+            ])
+        if bibliothecaire.telephone_personnel:
+            perso_data.append([
+                Paragraph("<b>Téléphone personnel :</b>", styles['Normal']),
+                bibliothecaire.telephone_personnel
+            ])
+        
+        info_data.extend(perso_data)
+    
+    # Créer le tableau d'informations
+    info_table = Table(info_data, colWidths=[3*cm, 10*cm])
+    info_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+    ]))
+    
+    story.append(info_table)
+    
+    # Description du poste
+    if bibliothecaire.description_poste:
+        story.append(Spacer(1, 20))
+        story.append(Paragraph("DESCRIPTION DU POSTE", ParagraphStyle(
+            'Subtitle',
+            parent=styles['Heading2'],
+            fontSize=16,
+            spaceAfter=10
+        )))
+        story.append(Paragraph(bibliothecaire.description_poste, styles['Normal']))
+    
+    # Pied de page
+    story.append(Spacer(1, 50))
+    date_str = datetime.now().strftime("%d/%m/%Y")
+    footer_text = f"Document généré le {date_str} - Système de Gestion de Bibliothèque"
+    story.append(Paragraph(footer_text, ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.grey,
+        alignment=1
+    )))
+    
+    doc.build(story)
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    return pdf
 
 # Route pour créer un admin
 @app.route('/setup/admin', methods=['GET', 'POST'])
@@ -479,18 +812,15 @@ def contact():
     
     return render_template("contact.html", title="Contact")
 
-# Route pour choisir le type d'inscription
-@app.route('/inscription/choix', methods=['GET'])
-def register_choice():
+# Route d'inscription par défaut (inscription automatique adhérent)
+@app.route("/inscription", methods=['GET', 'POST'])
+def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     
-    # Vérifier si un admin existe déjà
-    admin_exists = User.query.filter_by(role='admin').first() is not None
-    
-    return render_template('register_choice.html', 
-                         title='Choix d\'inscription',
-                         admin_exists=admin_exists)
+    # Utiliser directement la route d'inscription adhérent
+    return register_with_type('adherent')
+
 
 # Route d'inscription générique avec type
 @app.route('/inscription/<string:user_type>', methods=['GET', 'POST'])
@@ -501,7 +831,7 @@ def register_with_type(user_type):
     allowed_types = ['adherent', 'bibliothecaire', 'admin']
     if user_type not in allowed_types:
         flash('Type d\'utilisateur invalide', 'danger')
-        return redirect(url_for('register_choice'))
+        return redirect(url_for('index'))
     
     # Vérifier si un admin existe déjà (pour éviter les doublons)
     admin_exists = User.query.filter_by(role='admin').first() is not None
@@ -526,14 +856,14 @@ def register_with_type(user_type):
         if not username or not email or not password:
             flash('Tous les champs obligatoires doivent être remplis', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
         
         if password != confirm_password:
             flash('Les mots de passe ne correspondent pas', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
         
@@ -541,14 +871,14 @@ def register_with_type(user_type):
         if User.query.filter_by(username=username).first():
             flash('Ce nom d\'utilisateur est déjà pris', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
             
         if User.query.filter_by(email=email).first():
             flash('Cette adresse email est déjà utilisée', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
         
@@ -556,7 +886,7 @@ def register_with_type(user_type):
         if not is_valid_email(email):
             flash('Adresse email invalide', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
         
@@ -642,22 +972,15 @@ def register_with_type(user_type):
             db.session.rollback()
             flash(f'Erreur lors de l\'inscription: {str(e)}', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
     
     # GET request
     return render_template('register_form.html', 
-                         title=f'Inscription - {user_type.capitalize()}',
+                         title=f'Inscription',
                          user_type=user_type,
                          admin_exists=admin_exists)
-
-# Route d'inscription par défaut (redirige)
-@app.route("/inscription", methods=['GET'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('register_choice'))
 
 # CONNEXION
 @app.route("/connexion", methods=['GET', 'POST'])
@@ -728,6 +1051,7 @@ def dashboard():
         total_livres = Livre.query.count()
         livres_disponibles = Livre.query.filter_by(disponible=True).count()
         total_adherents = Adherent.query.count()
+        total_bibliothecaires = Bibliothecaire.query.count()
         emprunts_en_cours = Emprunt.query.filter_by(status='en_cours').count()
 
         return render_template(
@@ -738,9 +1062,10 @@ def dashboard():
             total_livres=total_livres,
             livres_disponibles=livres_disponibles,
             total_adherents=total_adherents,
+            total_bibliothecaires=total_bibliothecaires,
             emprunts_en_cours=emprunts_en_cours,
-            timedelta=timedelta,  # Ajouter cette ligne
-            now=datetime.utcnow()  # Ajouter cette ligne
+            timedelta=timedelta,
+            now=datetime.utcnow()
         )
     
     adherent_id_for_query = getattr(current_user, 'adherent_id', None) or current_user.id
@@ -763,8 +1088,8 @@ def dashboard():
         emprunts_en_cours_user=emprunts_en_cours_user,
         retards_user=retards_user,
         total_amende_user=total_amende_user,
-        timedelta=timedelta,  # Ajouter cette ligne
-        now=datetime.utcnow()  # Ajouter cette ligne
+        timedelta=timedelta,
+        now=datetime.utcnow()
     )
 
 # ROUTES ADMIN
@@ -1101,7 +1426,6 @@ def emprunts():
 
     if request.method == 'POST':
         # TODO: gérer la soumission POST (création / modification d'emprunts)
-        # Placeholder pour éviter l'IndentationError si aucun traitement n'est encore implémenté
         pass
 
     emprunts_liste = Emprunt.query.all()
@@ -1118,8 +1442,586 @@ def emprunts():
         reservations=reservations_liste,
         now=datetime.utcnow(),
         today=datetime.utcnow().date(),
-        timedelta=timedelta  # Ajouter cette ligne
+        timedelta=timedelta
     )
+
+# ============================================
+# ROUTES POUR LES BIBLIOTHÉCAIRES
+# ============================================
+
+@app.route("/dashboard/bibliothecaires")
+@login_required
+@role_required(['admin'])
+def bibliothecaires():
+    """Page principale de gestion des bibliothécaires"""
+    
+    # Récupérer les paramètres de filtre
+    recherche = request.args.get('recherche', '').strip()
+    poste = request.args.get('poste', '')
+    statut = request.args.get('statut', '')
+    page = request.args.get('page', 1, type=int)
+    
+    # Construire la requête
+    query = Bibliothecaire.query
+    
+    # Filtre de recherche
+    if recherche:
+        recherche_pattern = f"%{recherche}%"
+        query = query.filter(
+            db.or_(
+                Bibliothecaire.nom.ilike(recherche_pattern),
+                Bibliothecaire.prenom.ilike(recherche_pattern),
+                Bibliothecaire.email.ilike(recherche_pattern),
+                Bibliothecaire.telephone.ilike(recherche_pattern)
+            )
+        )
+    
+    # Filtre par poste
+    if poste:
+        query = query.filter(Bibliothecaire.poste == poste)
+    
+    # Filtre par statut
+    if statut:
+        query = query.filter(Bibliothecaire.statut == statut)
+    
+    # Pagination
+    per_page = 10
+    pagination = query.order_by(Bibliothecaire.nom.asc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    return render_template(
+        "bibliothecaires.html",
+        title="Bibliothécaires",
+        bibliothecaires=pagination.items,
+        pagination=pagination,
+        recherche=recherche,
+        poste=poste,
+        statut=statut
+    )
+
+
+@app.route("/dashboard/bibliothecaires/new")
+@login_required
+@role_required(['admin'])
+def new_bibliothecaire():
+    """Page pour créer un nouveau bibliothécaire"""
+    return render_template(
+        "new_bibliothecaire.html",
+        title="Nouveau bibliothécaire"
+    )
+
+
+@app.route("/dashboard/bibliothecaires/create", methods=['POST'])
+@login_required
+@role_required(['admin'])
+def create_bibliothecaire():
+    """Créer un nouveau bibliothécaire"""
+    try:
+        # Récupérer les données du formulaire
+        nom = request.form.get('nom', '').strip()
+        prenom = request.form.get('prenom', '').strip()
+        email = request.form.get('email', '').strip()
+        telephone = request.form.get('telephone', '').strip()
+        poste = request.form.get('poste', 'Bibliothécaire').strip()
+        departement = request.form.get('departement', '').strip()
+        date_embauche_str = request.form.get('date_embauche', '').strip()
+        statut = request.form.get('statut', 'Actif').strip()
+        date_naissance_str = request.form.get('date_naissance', '').strip()
+        genre = request.form.get('genre', '').strip()
+        adresse = request.form.get('adresse', '').strip()
+        email_personnel = request.form.get('email_personnel', '').strip()
+        telephone_personnel = request.form.get('telephone_personnel', '').strip()
+        description_poste = request.form.get('description_poste', '').strip()
+        
+        # Validation des champs obligatoires
+        if not nom or not prenom or not email or not poste:
+            flash('Les champs Nom, Prénom, Email et Poste sont obligatoires', 'danger')
+            return redirect(url_for('new_bibliothecaire'))
+        
+        # Vérifier l'unicité de l'email
+        if Bibliothecaire.query.filter_by(email=email).first():
+            flash('Un bibliothécaire avec cet email existe déjà', 'danger')
+            return redirect(url_for('new_bibliothecaire'))
+        
+        # Convertir les dates
+        date_embauche = None
+        if date_embauche_str:
+            try:
+                date_embauche = datetime.strptime(date_embauche_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Format de date d\'embauche invalide', 'danger')
+                return redirect(url_for('new_bibliothecaire'))
+        
+        date_naissance = None
+        if date_naissance_str:
+            try:
+                date_naissance = datetime.strptime(date_naissance_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Format de date de naissance invalide', 'danger')
+                return redirect(url_for('new_bibliothecaire'))
+        
+        # Créer le bibliothécaire
+        nouveau_bibliothecaire = Bibliothecaire(
+            nom=nom,
+            prenom=prenom,
+            email=email,
+            telephone=telephone,
+            poste=poste,
+            departement=departement,
+            date_embauche=date_embauche,
+            statut=statut,
+            date_naissance=date_naissance,
+            genre=genre,
+            adresse=adresse,
+            email_personnel=email_personnel,
+            telephone_personnel=telephone_personnel,
+            description_poste=description_poste
+        )
+        
+        # Gérer l'upload de l'image
+        photo = request.files.get('photo')
+        if photo and photo.filename:
+            filename = secure_filename(photo.filename)
+            if filename:
+                unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                photo_path = os.path.join(app.config['PROFILE_FOLDER'], unique_filename)
+                photo.save(photo_path)
+                nouveau_bibliothecaire.image = unique_filename
+        
+        db.session.add(nouveau_bibliothecaire)
+        db.session.flush()  # Pour obtenir l'ID
+        
+        # Créer un compte utilisateur si demandé
+        if request.form.get('creer_compte') == 'on':
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '').strip()
+            confirm_password = request.form.get('confirm_password', '').strip()
+            role = request.form.get('role', 'bibliothecaire').strip()
+            
+            # Validation du compte utilisateur
+            if not username or not password:
+                flash('Pour créer un compte, le nom d\'utilisateur et le mot de passe sont obligatoires', 'danger')
+                db.session.rollback()
+                return redirect(url_for('new_bibliothecaire'))
+            
+            if password != confirm_password:
+                flash('Les mots de passe ne correspondent pas', 'danger')
+                db.session.rollback()
+                return redirect(url_for('new_bibliothecaire'))
+            
+            # Vérifier si l'utilisateur existe déjà
+            if User.query.filter_by(username=username).first():
+                flash('Ce nom d\'utilisateur est déjà pris', 'danger')
+                db.session.rollback()
+                return redirect(url_for('new_bibliothecaire'))
+            
+            if User.query.filter_by(email=email).first():
+                flash('Un compte avec cet email existe déjà', 'danger')
+                db.session.rollback()
+                return redirect(url_for('new_bibliothecaire'))
+            
+            # Créer l'utilisateur
+            user = User(
+                username=username,
+                email=email,
+                role=role,
+                confirmed=True  # Les bibliothécaires sont confirmés automatiquement
+            )
+            user.set_password(password)
+            user.bibliothecaire = nouveau_bibliothecaire
+            db.session.add(user)
+            
+            # Envoyer un email de bienvenue
+            try:
+                msg = EmailMessage()
+                msg['Subject'] = 'Bienvenue dans l\'équipe de la bibliothèque'
+                msg['From'] = app.config['EMAIL_FROM']
+                msg['To'] = email
+                
+                msg.set_content(f"""
+                Bonjour {prenom} {nom},
+                
+                Votre compte bibliothécaire a été créé avec succès.
+                
+                Informations de connexion :
+                - Nom d\'utilisateur : {username}
+                - Mot de passe : [celui que vous avez défini]
+                - Rôle : {role}
+                
+                Vous pouvez vous connecter à l\'adresse : {request.host_url}connexion
+                
+                Cordialement,
+                L\'équipe de la Bibliothèque
+                """)
+                
+                with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+                    if app.config['MAIL_USE_TLS']:
+                        server.starttls()
+                    server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+                    server.send_message(msg)
+            except Exception as e:
+                current_app.logger.error(f"Erreur lors de l'envoi de l'email de bienvenue : {str(e)}")
+                # Ne pas bloquer la création si l'email échoue
+        
+        db.session.commit()
+        flash('Bibliothécaire créé avec succès', 'success')
+        
+        # Rediriger vers la page de détails ou la liste
+        return redirect(url_for('view_bibliothecaire', id=nouveau_bibliothecaire.id))
+        
+    except IntegrityError:
+        db.session.rollback()
+        flash('Erreur : l\'email est déjà utilisé', 'danger')
+        return redirect(url_for('new_bibliothecaire'))
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.exception('Erreur lors de la création du bibliothécaire')
+        flash(f'Erreur lors de la création : {str(e)}', 'danger')
+        return redirect(url_for('new_bibliothecaire'))
+
+
+@app.route("/dashboard/bibliothecaires/<int:id>")
+@login_required
+@role_required(['admin'])
+def view_bibliothecaire(id):
+    """Voir les détails d'un bibliothécaire"""
+    bibliothecaire = Bibliothecaire.query.get_or_404(id)
+    
+    # Récupérer les statistiques du bibliothécaire (si gestion des emprunts)
+    emprunts_geres = Emprunt.query.filter(
+        Emprunt.status == 'en_cours'
+    ).count() if hasattr(bibliothecaire, 'emprunts_geres') else 0
+    
+    return render_template(
+        "view_bibliothecaire.html",
+        title=f"Bibliothécaire {bibliothecaire.prenom} {bibliothecaire.nom}",
+        bibliothecaire=bibliothecaire,
+        emprunts_geres=emprunts_geres
+    )
+
+
+@app.route("/dashboard/bibliothecaires/<int:id>/edit", methods=['GET', 'POST'])
+@login_required
+@role_required(['admin'])
+def edit_bibliothecaire(id):
+    """Modifier un bibliothécaire"""
+    bibliothecaire = Bibliothecaire.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        try:
+            # Mettre à jour les informations
+            bibliothecaire.nom = request.form.get('nom', bibliothecaire.nom).strip()
+            bibliothecaire.prenom = request.form.get('prenom', bibliothecaire.prenom).strip()
+            bibliothecaire.email = request.form.get('email', bibliothecaire.email).strip()
+            bibliothecaire.telephone = request.form.get('telephone', bibliothecaire.telephone).strip()
+            bibliothecaire.poste = request.form.get('poste', bibliothecaire.poste).strip()
+            bibliothecaire.departement = request.form.get('departement', bibliothecaire.departement).strip()
+            bibliothecaire.statut = request.form.get('statut', bibliothecaire.statut).strip()
+            
+            # Gérer les dates
+            date_embauche_str = request.form.get('date_embauche', '').strip()
+            if date_embauche_str:
+                try:
+                    bibliothecaire.date_embauche = datetime.strptime(date_embauche_str, '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Format de date d\'embauche invalide', 'danger')
+            
+            date_naissance_str = request.form.get('date_naissance', '').strip()
+            if date_naissance_str:
+                try:
+                    bibliothecaire.date_naissance = datetime.strptime(date_naissance_str, '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Format de date de naissance invalide', 'danger')
+            
+            # Autres champs
+            bibliothecaire.genre = request.form.get('genre', bibliothecaire.genre).strip()
+            bibliothecaire.adresse = request.form.get('adresse', bibliothecaire.adresse).strip()
+            bibliothecaire.email_personnel = request.form.get('email_personnel', bibliothecaire.email_personnel).strip()
+            bibliothecaire.telephone_personnel = request.form.get('telephone_personnel', bibliothecaire.telephone_personnel).strip()
+            bibliothecaire.description_poste = request.form.get('description_poste', bibliothecaire.description_poste).strip()
+            
+            # Gérer l'upload de la photo
+            photo = request.files.get('photo')
+            if photo and photo.filename:
+                filename = secure_filename(photo.filename)
+                if filename:
+                    # Supprimer l'ancienne photo si elle existe
+                    if bibliothecaire.image:
+                        old_photo_path = os.path.join(app.config['PROFILE_FOLDER'], bibliothecaire.image)
+                        if os.path.exists(old_photo_path):
+                            os.remove(old_photo_path)
+                    
+                    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                    photo_path = os.path.join(app.config['PROFILE_FOLDER'], unique_filename)
+                    photo.save(photo_path)
+                    bibliothecaire.image = unique_filename
+            
+            db.session.commit()
+            flash('Bibliothécaire mis à jour avec succès', 'success')
+            return redirect(url_for('view_bibliothecaire', id=bibliothecaire.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception('Erreur lors de la mise à jour du bibliothécaire')
+            flash(f'Erreur lors de la mise à jour : {str(e)}', 'danger')
+    
+    return render_template(
+        "edit_bibliothecaire.html",
+        title=f"Modifier {bibliothecaire.prenom} {bibliothecaire.nom}",
+        bibliothecaire=bibliothecaire
+    )
+
+
+@app.route("/dashboard/bibliothecaires/<int:id>/delete", methods=['POST'])
+@login_required
+@role_required(['admin'])
+def delete_bibliothecaire(id):
+    """Supprimer un bibliothécaire"""
+    bibliothecaire = Bibliothecaire.query.get_or_404(id)
+    
+    try:
+        # Supprimer la photo si elle existe
+        if bibliothecaire.image:
+            photo_path = os.path.join(app.config['PROFILE_FOLDER'], bibliothecaire.image)
+            if os.path.exists(photo_path):
+                os.remove(photo_path)
+        
+        # Supprimer le compte utilisateur associé s'il existe
+        user = User.query.filter_by(bibliothecaire_id=id).first()
+        if user:
+            db.session.delete(user)
+        
+        # Supprimer le bibliothécaire
+        db.session.delete(bibliothecaire)
+        db.session.commit()
+        
+        flash('Bibliothécaire supprimé avec succès', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.exception('Erreur lors de la suppression du bibliothécaire')
+        flash(f'Erreur lors de la suppression : {str(e)}', 'danger')
+    
+    return redirect(url_for('bibliothecaires'))
+
+
+@app.route("/dashboard/bibliothecaires/export/<format>")
+@login_required
+@role_required(['admin'])
+def export_bibliothecaires(format):
+    """Exporter la liste des bibliothécaires"""
+    
+    # Récupérer les mêmes filtres que pour l'affichage
+    recherche = request.args.get('recherche', '').strip()
+    poste = request.args.get('poste', '')
+    statut = request.args.get('statut', '')
+    
+    # Construire la requête avec les mêmes filtres
+    query = Bibliothecaire.query
+    
+    if recherche:
+        recherche_pattern = f"%{recherche}%"
+        query = query.filter(
+            db.or_(
+                Bibliothecaire.nom.ilike(recherche_pattern),
+                Bibliothecaire.prenom.ilike(recherche_pattern),
+                Bibliothecaire.email.ilike(recherche_pattern),
+                Bibliothecaire.telephone.ilike(recherche_pattern)
+            )
+        )
+    
+    if poste:
+        query = query.filter(Bibliothecaire.poste == poste)
+    
+    if statut:
+        query = query.filter(Bibliothecaire.statut == statut)
+    
+    bibliothecaires = query.order_by(Bibliothecaire.nom.asc()).all()
+    
+    if format == 'csv':
+        # Générer un CSV simple
+        si = StringIO()
+        writer = csv.writer(si)
+        
+        # En-têtes
+        writer.writerow(['Nom', 'Prénom', 'Email', 'Téléphone', 'Poste', 
+                        'Département', 'Statut', 'Date d\'embauche'])
+        
+        # Données
+        for bib in bibliothecaires:
+            writer.writerow([
+                bib.nom,
+                bib.prenom,
+                bib.email,
+                bib.telephone or '',
+                bib.poste or '',
+                bib.departement or '',
+                bib.statut or '',
+                bib.date_embauche.strftime('%d/%m/%Y') if bib.date_embauche else ''
+            ])
+        
+        output = si.getvalue()
+        return Response(
+            output,
+            mimetype="text/csv",
+            headers={"Content-disposition": 
+                    f"attachment; filename=bibliothecaires_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
+        )
+    
+    elif format == 'pdf':
+        try:
+            pdf = generate_bibliothecaires_pdf(bibliothecaires)
+            
+            filename = f"bibliothecaires_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            
+            return Response(
+                pdf,
+                mimetype="application/pdf",
+                headers={
+                    "Content-disposition": f"attachment; filename={filename}",
+                    "Content-Type": "application/pdf"
+                }
+            )
+        except Exception as e:
+            current_app.logger.error(f"Erreur lors de la génération du PDF : {str(e)}")
+            flash(f'Erreur lors de la génération du PDF : {str(e)}', 'danger')
+            return redirect(url_for('bibliothecaires'))
+    
+    flash('Format d\'export non supporté', 'danger')
+    return redirect(url_for('bibliothecaires'))
+
+
+@app.route("/dashboard/bibliothecaires/<int:id>/toggle_status", methods=['POST'])
+@login_required
+@role_required(['admin'])
+def toggle_bibliothecaire_status(id):
+    """Activer/désactiver un bibliothécaire"""
+    bibliothecaire = Bibliothecaire.query.get_or_404(id)
+    
+    try:
+        if bibliothecaire.statut == 'Actif':
+            bibliothecaire.statut = 'Inactif'
+            message = 'Bibliothécaire désactivé'
+        else:
+            bibliothecaire.statut = 'Actif'
+            message = 'Bibliothécaire activé'
+        
+        db.session.commit()
+        flash(f'{message} avec succès', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur lors du changement de statut : {str(e)}', 'danger')
+    
+    return redirect(url_for('view_bibliothecaire', id=id))
+
+
+@app.route("/dashboard/bibliothecaires/<int:id>/create_account", methods=['POST'])
+@login_required
+@role_required(['admin'])
+def create_bibliothecaire_account(id):
+    """Créer un compte utilisateur pour un bibliothécaire existant"""
+    bibliothecaire = Bibliothecaire.query.get_or_404(id)
+    
+    # Vérifier si un compte existe déjà
+    user = User.query.filter_by(bibliothecaire_id=id).first()
+    if user:
+        flash('Ce bibliothécaire a déjà un compte utilisateur', 'warning')
+        return redirect(url_for('view_bibliothecaire', id=id))
+    
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    confirm_password = request.form.get('confirm_password', '').strip()
+    role = request.form.get('role', 'bibliothecaire').strip()
+    
+    # Validation
+    if not username or not password:
+        flash('Le nom d\'utilisateur et le mot de passe sont obligatoires', 'danger')
+        return redirect(url_for('view_bibliothecaire', id=id))
+    
+    if password != confirm_password:
+        flash('Les mots de passe ne correspondent pas', 'danger')
+        return redirect(url_for('view_bibliothecaire', id=id))
+    
+    if User.query.filter_by(username=username).first():
+        flash('Ce nom d\'utilisateur est déjà pris', 'danger')
+        return redirect(url_for('view_bibliothecaire', id=id))
+    
+    try:
+        # Créer l'utilisateur
+        user = User(
+            username=username,
+            email=bibliothecaire.email,
+            role=role,
+            confirmed=True
+        )
+        user.set_password(password)
+        user.bibliothecaire = bibliothecaire
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        flash('Compte utilisateur créé avec succès', 'success')
+        
+        # Envoyer un email avec les informations de connexion
+        try:
+            msg = EmailMessage()
+            msg['Subject'] = 'Votre compte bibliothécaire a été créé'
+            msg['From'] = app.config['EMAIL_FROM']
+            msg['To'] = bibliothecaire.email
+            
+            msg.set_content(f"""
+            Bonjour {bibliothecaire.prenom} {bibliothecaire.nom},
+            
+            Un compte utilisateur a été créé pour vous sur le système de la bibliothèque.
+            
+            Informations de connexion :
+            - Nom d\'utilisateur : {username}
+            - Mot de passe : [celui qui a été défini]
+            
+            Vous pouvez vous connecter à l\'adresse : {request.host_url}connexion
+            
+            Cordialement,
+            L\'équipe de la Bibliothèque
+            """)
+            
+            with smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT']) as server:
+                if app.config['MAIL_USE_TLS']:
+                    server.starttls()
+                server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+                server.send_message(msg)
+        except Exception as e:
+            current_app.logger.error(f"Erreur lors de l'envoi de l'email : {str(e)}")
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erreur lors de la création du compte : {str(e)}', 'danger')
+    
+    return redirect(url_for('view_bibliothecaire', id=id))
+
+@app.route("/dashboard/bibliothecaires/<int:id>/export_pdf")
+@login_required
+@role_required(['admin'])
+def export_bibliothecaire_pdf(id):
+    """Exporter la fiche d'un bibliothécaire en PDF"""
+    bibliothecaire = Bibliothecaire.query.get_or_404(id)
+    
+    try:
+        pdf = generate_detailed_bibliothecaire_pdf(bibliothecaire)
+        
+        filename = f"bibliothecaire_{bibliothecaire.nom}_{bibliothecaire.prenom}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        
+        return Response(
+            pdf,
+            mimetype="application/pdf",
+            headers={
+                "Content-disposition": f"attachment; filename={filename}",
+                "Content-Type": "application/pdf"
+            }
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erreur lors de la génération du PDF : {str(e)}")
+        flash(f'Erreur lors de la génération du PDF : {str(e)}', 'danger')
+        return redirect(url_for('view_bibliothecaire', id=id))
 
 # ROUTES RESERVATIONS
 @app.route('/reservation/create', methods=['POST'])
@@ -1393,6 +2295,7 @@ def statistiques():
 
         total_adherents = Adherent.query.count()
         total_livres = Livre.query.count()
+        total_bibliothecaires = Bibliothecaire.query.count()
         emprunts_en_cours = Emprunt.query.filter(Emprunt.date_emprunt >= start).filter_by(status='en_cours').count()
         livres_disponibles = Livre.query.filter_by(disponible=True).count()
         
@@ -1506,6 +2409,7 @@ def statistiques():
                      is_admin=True,
                      total_adherents=total_adherents,
                      total_livres=total_livres,
+                     total_bibliothecaires=total_bibliothecaires,
                      emprunts_en_cours=emprunts_en_cours,
                      livres_disponibles=livres_disponibles,
                      livres_empruntes=livres_empruntes,
@@ -1580,14 +2484,14 @@ def parametres():
 
     # Lists for admin/bibliothecaire to manage
     users_non_admin = User.query.filter(User.role != 'admin').order_by(User.username.asc()).all()
-    bibliothecaires = User.query.filter_by(role='bibliothecaire').order_by(User.username.asc()).all()
+    bibliothecaires_list = Bibliothecaire.query.order_by(Bibliothecaire.nom.asc()).all()
     adherents = Adherent.query.order_by(Adherent.nom.asc()).all()
 
     return render_template("parametres.html", title="Paramètres",
                            library_settings=library_settings,
                            notification_settings=notification_settings,
                            users_non_admin=users_non_admin,
-                           bibliothecaires=bibliothecaires,
+                           bibliothecaires=bibliothecaires_list,
                            adherents=adherents)
 
 
@@ -1870,10 +2774,11 @@ def utility_processor():
     
     return dict(
         timedelta=timedelta,
-        now=datetime.utcnow,
+        now=datetime.utcnow(),
         format_date=format_date,
         datetime=datetime
     )
+<<<<<<< HEAD
 
 @app.context_processor
 def utility_processor():
@@ -1883,6 +2788,8 @@ def utility_processor():
         datetime=datetime,
         today=datetime.utcnow().date()
     )
+=======
+>>>>>>> 38ddd9789dad89c7a80700b17777664aacecec78
 
 if __name__ == "__main__":
     app.run(debug=True)

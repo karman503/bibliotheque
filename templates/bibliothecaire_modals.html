@@ -25,8 +25,14 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Date de retour prévue</label>
+                    {# Ensure `today` is available; fall back to `now.date()` from context processor #}
+                    {% if today is defined %}
+                        {% set __today_val = today %}
+                    {% else %}
+                        {% set __today_val = now.date() %}
+                    {% endif %}
                     <input name="date_retour" type="date" class="form-control" required
-                        value="{{ today.strftime('%Y-%m-%d') }}" min="{{ today.strftime('%Y-%m-%d') }}">
+                        value="{{ __today_val.strftime('%Y-%m-%d') }}" min="{{ __today_val.strftime('%Y-%m-%d') }}">
                 </div>
                 <div class="d-flex gap-2 mt-3">
                     <button type="submit" class="btn btn-info flex-fill">Créer l'emprunt</button>
