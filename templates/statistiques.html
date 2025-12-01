@@ -7,6 +7,7 @@
         <h2 class="fw-bold">Statistiques</h2>
         <p class="text-muted">Analyse et rapports de la bibliothèque</p>
     </div>
+
     {% if is_admin %}
 
     <!-- Période d'analyse (boutons) -->
@@ -33,8 +34,13 @@
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <p class="mb-1">Taux de disponibilité</p>
-                        <h3 class="fw-bold">{{ (livres_disponibles / total_livres * 100)|round|int if total_livres > 0
-                            else 100 }}%</h3>
+                        <h3 class="fw-bold">
+                            {% if total_livres > 0 %}
+                            {{ (livres_disponibles / total_livres * 100)|round|int }}%
+                            {% else %}
+                            100%
+                            {% endif %}
+                        </h3>
                         <small>{{ livres_disponibles }}/{{ total_livres }} livres</small>
                     </div>
                     <div class="bg-white bg-opacity-25 rounded p-2">
@@ -90,62 +96,131 @@
         </div>
     </div>
 
-
-
-    {% endif %}
-
     <!-- Graphiques répartition par catégorie et adhérents actifs -->
     <div class="row g-4 mb-4">
-        <!-- Colonne gauche : Répartition par catégorie (remplacée par carte détaillée) -->
+        <!-- Colonne gauche : Répartition par catégorie améliorée -->
         <div class="col-12 col-lg-6">
             <div class="card border-light shadow-sm">
                 <div class="card-body">
                     <h3 class="h5 mb-4">Répartition par catégorie</h3>
+                    <p class="text-muted small mb-3">
+                        <i class="ri-information-line me-1"></i>
+                        Barres principales : emprunts | Barres secondaires : disponibilité
+                    </p>
 
-                    {# Palette par défaut si stat.couleur non fournie #}
                     {% set palette = ['var(--primary)', 'var(--success)', 'var(--warning)', 'var(--purple)',
-                    'var(--danger)', 'var(--gray)'] %}
+                    'var(--danger)', 'var(--gray)', 'var(--info)', 'var(--teal)', 'var(--pink)', 'var(--indigo)'] %}
 
                     {% if stats_categories %}
-                    {% for stat in stats_categories %}
-                    {% set color = stat.couleur if stat.couleur is defined and stat.couleur else (palette[loop.index0 %
-                    (palette|length)]) %}
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle"
-                                    style="width: 16px; height: 16px; background-color: {{ color }};"></div>
-                                <span class="small text-secondary mb-0">{{ stat.categorie }}</span>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="small">Catégorie</th>
+                                    <th class="small text-center">Livres</th>
+                                    <th class="small text-center">Emprunts</th>
+                                    <th class="small text-center">Disponibilité</th>
+                                    <th class="small" style="width: 45%;">Progression</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in stats_categories %}
+                                {% set color = palette[loop.index0 % palette|length] %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle category-dot" data-color="{{ color }}"
+                                                style="width: 12px; height: 12px;"></div>
+                                            <span class="small fw-medium">{{ stat.categorie[:20] }}{% if
+                                                stat.categorie|length > 20 %}...{% endif %}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fw-bold">{{ stat.count_livres|default(stat.count, true) }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">{{ stat.count_emprunts|default(0, true) }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if stat.pourcentage_dispo is defined %}
+                                        {% set pourcentage_dispo = stat.pourcentage_dispo %}
+                                        <span
+                                            class="badge {% if pourcentage_dispo > 70 %}bg-success{% elif pourcentage_dispo > 30 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ pourcentage_dispo }}%
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <!-- Barre de progression pour les emprunts -->
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="flex-grow-1">
+                                                {% set pourcentage_emprunts =
+                                                stat.pourcentage_emprunts|default(stat.pourcentage, true) %}
+                                                <div class="progress" style="height: 10px; border-radius: 5px;">
+                                                    <div class="progress-bar stat-percentage" role="progressbar"
+                                                        data-percentage="{{ pourcentage_emprunts }}"
+                                                        data-color="{{ color }}" style="border-radius: 5px;"
+                                                        title="{{ stat.count_emprunts|default(stat.count, true) }} emprunts">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="small fw-medium" style="min-width: 40px;">
+                                                {{ pourcentage_emprunts }}%
+                                            </div>
+                                        </div>
+
+                                        <!-- Barre horizontale pour la disponibilité -->
+                                        {% if stat.pourcentage_dispo is defined %}
+                                        <div class="d-flex align-items-center gap-2 mt-2">
+                                            <div class="flex-grow-1">
+                                                <div class="progress" style="height: 6px; border-radius: 3px;">
+                                                    <div class="progress-bar bg-success stat-percentage"
+                                                        role="progressbar"
+                                                        data-percentage="{{ stat.pourcentage_dispo }}"
+                                                        style="border-radius: 3px;"
+                                                        title="{{ stat.livres_disponibles|default(0, true) }} livres disponibles">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="small text-muted" style="min-width: 40px; font-size: 0.7rem;">
+                                                {{ stat.livres_disponibles|default(0, true) }} dispo
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Légende -->
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <div class="rounded"
+                                        style="width: 20px; height: 10px; background-color: var(--primary);"></div>
+                                    <span class="small text-muted">Pourcentage d'emprunts par catégorie</span>
+                                </div>
                             </div>
-                            <div class="text-end">
-                                <span class="fw-medium">{{ stat.count }}</span>
-                                <span class="small text-muted ms-2">({{ stat.pourcentage }}%)</span>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <div class="rounded"
+                                        style="width: 20px; height: 6px; background-color: var(--success);"></div>
+                                    <span class="small text-muted">Taux de disponibilité des livres</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar" role="progressbar"
-                                style="width: {{ stat.pourcentage }}%; background-color: {{ color }};"></div>
                         </div>
                     </div>
-                    {% endfor %}
+
                     {% else %}
-                    <!-- Fallback statique si aucune donnée -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle"
-                                    style="width: 16px; height: 16px; background-color: var(--primary);"></div>
-                                <span class="small text-secondary mb-0">Littérature</span>
-                            </div>
-                            <div class="text-end">
-                                <span class="fw-medium">245</span>
-                                <span class="small text-muted ms-2">(34%)</span>
-                            </div>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar" role="progressbar"
-                                style="width: 34%; background-color: var(--primary);"></div>
-                        </div>
+                    <div class="text-center py-5">
+                        <i class="ri-pie-chart-line fs-1 text-muted mb-3"></i>
+                        <p class="text-muted mb-2">Aucune donnée de catégorie disponible</p>
+                        <small class="text-muted">Les statistiques par catégorie s'afficheront ici</small>
                     </div>
                     {% endif %}
 
@@ -153,142 +228,49 @@
             </div>
         </div>
 
-        <!-- Colonne droite : adhérents actifs (admin) ou derniers emprunts (utilisateur) -->
+        <!-- Colonne droite : adhérents actifs -->
         <div class="col-lg-6">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    {% if is_admin %}
                     <h5 class="fw-semibold mb-4">Adhérents les plus actifs</h5>
                     {% if stats_adherents %}
                     {% for stat in stats_adherents %}
                     <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span>{{ stat.adherent.nom }} {{ stat.adherent.prenom }}</span>
-                            <span class="badge bg-primary">{{ stat.total }} emprunts</span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-success adherent-progress"
-                                data-percentage="{{ stat.pourcentage }}" role="progressbar" aria-valuenow="0"
-                                aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    {% else %}
-                    <p class="text-muted">Aucun adhérent actif.</p>
-                    {% endif %}
-                    {% else %}
-                    <h5 class="fw-semibold mb-4">Derniers emprunts</h5>
-                    {% if recent_emprunts %}
-                    <ul class="list-group list-group-flush">
-                        {% for emp in recent_emprunts %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
-                                <strong>{{ emp.livre.titre }}</strong><br>
-                                <small class="text-muted">Emprunté le {{ emp.date_emprunt.strftime('%d/%m/%Y')
-                                    }}</small>
+                                <span class="fw-medium">{{ stat.adherent.nom }} {{ stat.adherent.prenom }}</span>
+                                {% if stat.adherent.email %}
+                                <small class="text-muted ms-2">{{ stat.adherent.email }}</small>
+                                {% endif %}
                             </div>
-                            <span class="badge bg-primary">{{ emp.status }}</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <p class="text-muted">Aucun emprunt récent.</p>
-                    {% endif %}
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Série temporelle : répartition par catégorie (par semaine / par mois) -->
-    {% if category_buckets and category_series %}
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h3 class="h5 mb-3">Répartition par catégorie — série temporelle</h3>
-            <div class="table-responsive">
-                <table class="table table-sm table-striped">
-                    <thead>
-                        <tr>
-                            <th>Catégorie</th>
-                            {% for label in category_buckets %}
-                            <th class="text-center">{{ label }}</th>
-                            {% endfor %}
-                            <th class="text-center">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for series in category_series %}
-                        <tr>
-                            <td>{{ series.categorie }}</td>
-                            {% set s = 0 %}
-                            {% for c in series.counts %}
-                            <td class="text-center">{{ c }}</td>
-                            {% set s = s + c %}
-                            {% endfor %}
-                            <td class="text-center"><strong>{{ s }}</strong></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Graphique des emprunts par jour -->
-    <div class="row g-4 mb-4">
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5 class="fw-semibold mb-4">Emprunts par jour</h5>
-
-                    {% if stats_days %}
-                    {% for d in stats_days %}
-                    <div class="mb-2 d-flex justify-content-between align-items-center">
-                        <span>{{ d.label }}</span>
-                        <div class="flex-grow-1 mx-2">
-                            {% for bar in d.bars %}
-                            <div class="progress {% if not loop.first %}mt-1{% endif %}">
-                                <div class="progress-bar" role="progressbar"
-                                    style="width: {{ bar.width }}%; background-color: {{ bar.color if bar.color is defined else 'var(--primary)' }}">
-                                    {{ bar.count }}</div>
+                            <span class="badge bg-primary rounded-pill">{{ stat.total }} emprunts</span>
+                        </div>
+                        <div class="progress" style="height: 8px; border-radius: 4px;">
+                            <div class="progress-bar bg-success stat-percentage" role="progressbar"
+                                data-percentage="{{ stat.pourcentage }}" style="border-radius: 4px;"
+                                aria-valuenow="{{ stat.pourcentage }}" aria-valuemin="0" aria-valuemax="100">
                             </div>
-                            {% endfor %}
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-muted">Activité</small>
+                            <small class="text-muted">{{ stat.pourcentage }}%</small>
                         </div>
                     </div>
                     {% endfor %}
                     {% else %}
-                    <div class="mb-2 d-flex justify-content-between align-items-center">
-                        <span>Jour 1</span>
-                        <div class="flex-grow-1 mx-2">
-                            <div class="progress mb-1">
-                                <div class="progress-bar bg-primary" style="width:57.5%">23</div>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar bg-success" style="width:45%">18</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-2 d-flex justify-content-between align-items-center">
-                        <span>Jour 2</span>
-                        <div class="flex-grow-1 mx-2">
-                            <div class="progress mb-1">
-                                <div class="progress-bar bg-primary" style="width:77.5%">31</div>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar bg-success" style="width:62.5%">25</div>
-                            </div>
-                        </div>
+                    <div class="text-center py-4">
+                        <i class="ri-user-line fs-1 text-muted mb-2"></i>
+                        <p class="text-muted mb-0">Aucun adhérent actif sur cette période</p>
                     </div>
                     {% endif %}
-
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Nouvelle ligne : État de la collection & Livres les plus empruntés -->
+    <!-- État de la collection & Livres les plus empruntés -->
     <div class="row g-4 mb-4">
+        <!-- État de la collection -->
         <div class="col-lg-6">
             <div class="card border-light shadow-sm">
                 <div class="card-body">
@@ -301,53 +283,94 @@
                     {% set total = total_livres if total_livres is defined and total_livres > 0 else (dispon + empruntes
                     + reserves) %}
 
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle"
-                                style="width: 16px; height: 16px; background-color: var(--success);"></div>
-                            <span class="text-secondary mb-0">Disponibles</span>
-                        </div>
-                        <div class="text-end">
-                            <span class="fw-bold">{{ dispon }}</span>
-                            <span class="small text-muted ms-2">({{ ((dispon / total * 100) | round(1)) if total > 0
-                                else 0 }}%)</span>
-                        </div>
-                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle"
+                                        style="width: 16px; height: 16px; background-color: var(--success);"></div>
+                                    <span class="text-secondary mb-0">Disponibles</span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold fs-5">{{ dispon }}</span>
+                                    {% if total > 0 %}
+                                    {% set pourcentage_dispo = (dispon / total * 100)|round(1) %}
+                                    <span class="small text-muted ms-2">({{ pourcentage_dispo }}%)</span>
+                                    {% else %}
+                                    <span class="small text-muted ms-2">(0%)</span>
+                                    {% endif %}
+                                </div>
+                            </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle"
-                                style="width: 16px; height: 16px; background-color: var(--primary);"></div>
-                            <span class="text-secondary mb-0">Empruntés</span>
-                        </div>
-                        <div class="text-end">
-                            <span class="fw-bold">{{ empruntes }}</span>
-                            <span class="small text-muted ms-2">({{ ((empruntes / total * 100) | round(1)) if total > 0
-                                else 0 }}%)</span>
-                        </div>
-                    </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle"
+                                        style="width: 16px; height: 16px; background-color: var(--primary);"></div>
+                                    <span class="text-secondary mb-0">Empruntés</span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold fs-5">{{ empruntes }}</span>
+                                    {% if total > 0 %}
+                                    {% set pourcentage_emp = (empruntes / total * 100)|round(1) %}
+                                    <span class="small text-muted ms-2">({{ pourcentage_emp }}%)</span>
+                                    {% else %}
+                                    <span class="small text-muted ms-2">(0%)</span>
+                                    {% endif %}
+                                </div>
+                            </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle"
-                                style="width: 16px; height: 16px; background-color: var(--warning);"></div>
-                            <span class="text-secondary mb-0">Réservés</span>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle"
+                                        style="width: 16px; height: 16px; background-color: var(--warning);"></div>
+                                    <span class="text-secondary mb-0">Réservés</span>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold fs-5">{{ reserves }}</span>
+                                    {% if total > 0 %}
+                                    {% set pourcentage_res = (reserves / total * 100)|round(1) %}
+                                    <span class="small text-muted ms-2">({{ pourcentage_res }}%)</span>
+                                    {% else %}
+                                    <span class="small text-muted ms-2">(0%)</span>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <span class="fw-bold">{{ reserves }}</span>
-                            <span class="small text-muted ms-2">({{ ((reserves / total * 100) | round(1)) if total > 0
-                                else 0 }}%)</span>
+
+                        <div class="col-md-4 d-flex align-items-center justify-content-center">
+                            <div class="position-relative" style="width: 120px; height: 120px;">
+                                <canvas id="collectionChart"></canvas>
+                            </div>
                         </div>
                     </div>
 
                     <div class="mt-3 pt-3 border-top">
-                        <div class="progress" style="height: 16px;">
-                            <div class="progress-bar bg-success" role="progressbar"
-                                style="width: {{ ((dispon / total * 100) | round(4)) if total > 0 else 0 }}%"></div>
-                            <div class="progress-bar bg-primary" role="progressbar"
-                                style="width: {{ ((empruntes / total * 100) | round(4)) if total > 0 else 0 }}%"></div>
-                            <div class="progress-bar bg-warning" role="progressbar"
-                                style="width: {{ ((reserves / total * 100) | round(4)) if total > 0 else 0 }}%"></div>
+                        {% if total > 0 %}
+                        {% set width_dispo = (dispon / total * 100)|round(4) %}
+                        {% set width_emp = (empruntes / total * 100)|round(4) %}
+                        {% set width_res = (reserves / total * 100)|round(4) %}
+                        <div class="progress" style="height: 16px; border-radius: 8px;">
+                            <div class="progress-bar bg-success stat-percentage" role="progressbar"
+                                data-percentage="{{ width_dispo }}"
+                                style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                            </div>
+                            <div class="progress-bar bg-primary stat-percentage" role="progressbar"
+                                data-percentage="{{ width_emp }}">
+                            </div>
+                            <div class="progress-bar bg-warning stat-percentage" role="progressbar"
+                                data-percentage="{{ width_res }}"
+                                style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="progress" style="height: 16px; border-radius: 8px;">
+                            <div class="progress-bar bg-secondary" role="progressbar" style="width: 100%"></div>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between mt-2">
+                            <small class="text-muted">Disponibles</small>
+                            <small class="text-muted">Empruntés</small>
+                            <small class="text-muted">Réservés</small>
                         </div>
                     </div>
 
@@ -355,108 +378,860 @@
             </div>
         </div>
 
+        <!-- Livres les plus empruntés -->
         <div class="col-lg-6">
             <div class="card border-light shadow-sm">
                 <div class="card-body">
-                    <h3 class="h5 mb-4">Livres les plus empruntés</h3>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="h5 mb-0">Livres les plus empruntés</h3>
+                        <span class="badge bg-primary">Période: {{ period }}</span>
+                    </div>
 
-                    {% set books = top_books if top_books is defined else (most_borrowed_books if most_borrowed_books is
-                    defined else []) %}
+                    {% set books = top_books if top_books is defined else [] %}
 
                     {% if books and books|length > 0 %}
                     {% for book in books[:5] %}
-                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-2 hover-overlay">
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-2 hover-overlay"
+                        style="background-color: rgba(0, 123, 255, 0.05); transition: all 0.3s;">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
-                                style="width: 32px; height: 32px;">
-                                <span class="fw-bold small">#{{ loop.index }}</span>
+                            <div class="position-relative">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 40px; height: 40px;">
+                                    <span class="fw-bold">#{{ loop.index }}</span>
+                                </div>
+                                {% if loop.index <= 3 %} <div
+                                    class="position-absolute top-0 start-100 translate-middle">
+                                    <span class="badge bg-warning rounded-circle p-1" style="font-size: 0.6rem;">
+                                        <i class="ri-trophy-line"></i>
+                                    </span>
                             </div>
-                            <div>
-                                <p class="mb-0 fw-medium text-dark">{{ book.titre }}</p>
-                                <p class="mb-0 small text-secondary">{{ book.auteur if book.auteur is defined else
-                                    (book.author if book.author is defined else '') }}</p>
-                            </div>
+                            {% endif %}
                         </div>
-                        <div class="text-end">
-                            <p class="mb-0 fw-bold text-dark">{{ book.count if book.count is defined else (book.emprunts
-                                if book.emprunts is defined else 0) }}</p>
-                            <p class="mb-0 small text-muted">emprunts</p>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-bold text-dark">{{ book.titre[:40] }}{% if book.titre|length > 40 %}...{%
+                                endif %}</p>
+                            <p class="mb-0 small text-secondary">
+                                <i class="ri-user-3-line me-1"></i>{{ book.auteur if book.auteur is defined else '' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="text-center">
+                                <p class="mb-0 fw-bold fs-4 text-dark">{{ book.count if book.count is defined else 0 }}
+                                </p>
+                                <p class="mb-0 small text-muted">emprunts</p>
+                            </div>
+                            <i class="ri-arrow-right-s-line text-muted"></i>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Voir tous les livres -->
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('livres') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="ri-book-open-line me-1"></i> Voir tous les livres
+                    </a>
+                </div>
+
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="ri-book-line fs-1 text-muted mb-3"></i>
+                    <p class="text-muted mb-2">Aucun livre emprunté sur cette période</p>
+                    <small class="text-muted">Les livres les plus populaires s'afficheront ici</small>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphique des emprunts par jour -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-semibold mb-0">Emprunts par jour</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary">Total: {{ emprunts_en_cours }}</span>
+                        {% if period == 'month' %}
+                        {% set moyenne = (emprunts_en_cours / 30)|round(1) %}
+                        {% elif period == 'week' %}
+                        {% set moyenne = (emprunts_en_cours / 7)|round(1) %}
+                        {% else %}
+                        {% set moyenne = emprunts_en_cours %}
+                        {% endif %}
+                        <span class="badge bg-success">Moyenne/jour: {{ moyenne }}</span>
+                    </div>
+                </div>
+
+                {% if stats_days %}
+                <div class="row g-3">
+                    {% for d in stats_days %}
+                    <div class="col-md-2 col-sm-4 col-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body text-center p-3">
+                                <p class="small text-muted mb-2">{{ d.label }}</p>
+                                {% for bar in d.bars %}
+                                <div class="d-flex justify-content-center align-items-center mb-1">
+                                    <div class="progress flex-grow-1" style="height: 20px;">
+                                        <div class="progress-bar stat-percentage" role="progressbar"
+                                            data-percentage="{{ bar.width }}"
+                                            data-color="{{ bar.color if bar.color is defined else 'var(--primary)' }}"
+                                            style="font-size: 0.7rem;">
+                                            {{ bar.count }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                {% set total_jour = 0 %}
+                                {% for bar in d.bars %}
+                                {% set total_jour = total_jour + bar.count %}
+                                {% endfor %}
+                                <p class="small text-muted mb-0 mt-2">
+                                    Total: {{ total_jour }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
-                    {% else %}
-                    <!-- Fallback statique -->
-                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-2 hover-overlay">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center"
-                                style="width: 32px; height: 32px;">
-                                <span class="fw-bold small">#1</span>
-                            </div>
-                            <div>
-                                <p class="mb-0 fw-medium text-dark">Le Petit Prince</p>
-                                <p class="mb-0 small text-secondary">Saint-Exupéry</p>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <p class="mb-0 fw-bold text-dark">15</p>
-                            <p class="mb-0 small text-muted">emprunts</p>
-                        </div>
-                    </div>
-                    {% endif %}
+                </div>
 
+                <!-- Graphique en barres -->
+                <div class="mt-4">
+                    <canvas id="dailyChart" height="100"></canvas>
+                </div>
+
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="ri-bar-chart-line fs-1 text-muted mb-3"></i>
+                    <p class="text-muted mb-2">Aucune donnée journalière disponible</p>
+                    <small class="text-muted">Les statistiques journalières s'afficheront ici</small>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques détaillées par catégorie (tableau avancé) -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="h5 mb-0">Statistiques détaillées par catégorie</h3>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm"
+                    onclick="exportTableToCSV('statistiques_categories.csv')">
+                    <i class="ri-download-line me-1"></i> Exporter CSV
+                </button>
+            </div>
+        </div>
+
+        {% if stats_categories %}
+        <div class="table-responsive">
+            <table class="table table-hover" id="categoryStatsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Catégorie</th>
+                        <th class="text-center">Total Livres</th>
+                        <th class="text-center">Disponibles</th>
+                        <th class="text-center">Empruntés</th>
+                        <th class="text-center">Taux Disponibilité</th>
+                        <th class="text-center">Emprunts ({{ period }})</th>
+                        <th class="text-center">% des Emprunts</th>
+                        <th class="text-center">Popularité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in stats_categories %}
+                    {% set dispon_rate = stat.pourcentage_dispo if stat.pourcentage_dispo is defined else 0 %}
+                    {% set emprunt_rate = stat.pourcentage_emprunts|default(stat.pourcentage, true) %}
+                    {% set total_livres_cat = stat.count_livres|default(0, true) %}
+                    {% set livres_dispo_cat = stat.livres_disponibles|default(0, true) %}
+                    {% set emprunts_cat = stat.count_emprunts|default(0, true) %}
+
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle category-dot"
+                                    data-color="{{ palette[loop.index0 % palette|length] }}"
+                                    style="width: 10px; height: 10px;"></div>
+                                <span class="fw-medium">{{ stat.categorie }}</span>
+                            </div>
+                        </td>
+                        <td class="text-center fw-bold">{{ total_livres_cat }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if livres_dispo_cat > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ livres_dispo_cat }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-primary">{{ total_livres_cat - livres_dispo_cat }}</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <div class="progress flex-grow-1" style="width: 80px; height: 8px;">
+                                    <div class="progress-bar stat-percentage {% if dispon_rate > 70 %}bg-success{% elif dispon_rate > 30 %}bg-warning{% else %}bg-danger{% endif %}"
+                                        role="progressbar" data-percentage="{{ dispon_rate }}"></div>
+                                </div>
+                                <span class="small">{{ dispon_rate }}%</span>
+                            </div>
+                        </td>
+                        <td class="text-center fw-bold">{{ emprunts_cat }}</td>
+                        <td class="text-center">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <div class="progress flex-grow-1" style="width: 80px; height: 8px;">
+                                    <div class="progress-bar bg-info stat-percentage" role="progressbar"
+                                        data-percentage="{{ emprunt_rate }}"></div>
+                                </div>
+                                <span class="small">{{ emprunt_rate }}%</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if total_livres_cat > 0 %}
+                            {% set popularity = (emprunts_cat / total_livres_cat * 100) %}
+                            {% if popularity > 50 %}
+                            <span class="badge bg-success"><i class="ri-fire-line me-1"></i> Élevée</span>
+                            {% elif popularity > 20 %}
+                            <span class="badge bg-warning"><i class="ri-trending-up-line me-1"></i> Moyenne</span>
+                            {% else %}
+                            <span class="badge bg-secondary"><i class="ri-trending-down-line me-1"></i> Basse</span>
+                            {% endif %}
+                            {% else %}
+                            <span class="badge bg-secondary">N/A</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th>TOTAL</th>
+                        <th class="text-center">{{ total_livres }}</th>
+                        <th class="text-center">{{ livres_disponibles }}</th>
+                        <th class="text-center">{{ livres_empruntes if livres_empruntes is defined else total_livres -
+                            livres_disponibles }}</th>
+                        <th class="text-center">
+                            {% if total_livres > 0 %}
+                            {{ ((livres_disponibles / total_livres * 100)|round(1)) }}%
+                            {% else %}
+                            0%
+                            {% endif %}
+                        </th>
+                        <th class="text-center">{{ emprunts_en_cours }}</th>
+                        <th class="text-center">100%</th>
+                        <th class="text-center">-</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">Aucune statistique détaillée disponible</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% else %}
+<!-- VERSION UTILISATEUR (non-admin) -->
+
+<!-- Cartes statistiques utilisateur -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1">Mes emprunts totaux</p>
+                    <h3 class="fw-bold">{{ total_emprunts_user }}</h3>
+                    <small>Depuis mon inscription</small>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded p-2">
+                    <i class="ri-bookmark-line fs-3"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Rapports et exports -->
-    <div class="card shadow-sm">
-        <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="fw-semibold mb-1">Rapports et exports</h5>
-                <p class="text-muted mb-0">Générez des rapports détaillés pour vos analyses</p>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-outline-secondary btn-sm"><i class="ri-file-excel-line me-1"></i> Excel</button>
-                <button class="btn btn-outline-secondary btn-sm"><i class="ri-file-pdf-line me-1"></i> PDF</button>
-                <button class="btn btn-primary btn-sm"><i class="ri-printer-line me-1"></i> Imprimer</button>
+    <div class="col-md-3">
+        <div class="card text-white bg-success shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1">Emprunts en cours</p>
+                    <h3 class="fw-bold">{{ emprunts_en_cours_user }}</h3>
+                    <small>Actuellement</small>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded p-2">
+                    <i class="ri-book-open-line fs-3"></i>
+                </div>
             </div>
         </div>
     </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-warning shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1">Retards</p>
+                    <h3 class="fw-bold">{{ retards_user }}</h3>
+                    <small>À régulariser</small>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded p-2">
+                    <i class="ri-time-line fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-danger shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1">Amendes totales</p>
+                    <h3 class="fw-bold">{{ total_amende_user }} €</h3>
+                    <small>Montant cumulé</small>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded p-2">
+                    <i class="ri-money-euro-circle-line fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mes statistiques par catégorie -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card border-light shadow-sm">
+            <div class="card-body">
+                <h3 class="h5 mb-4">Mes emprunts par catégorie</h3>
+
+                {% if stats_categories %}
+                {% set palette = ['var(--primary)', 'var(--success)', 'var(--warning)', 'var(--purple)', 'var(--info)']
+                %}
+
+                {% for stat in stats_categories %}
+                {% set color = palette[loop.index0 % palette|length] %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle category-dot" data-color="{{ color }}"
+                                style="width: 14px; height: 14px;"></div>
+                            <span class="fw-medium">{{ stat.categorie }}</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary rounded-pill">{{ stat.count }} emprunts</span>
+                            <span class="small text-muted ms-2">({{ stat.pourcentage }}%)</span>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 12px; border-radius: 6px;">
+                        <div class="progress-bar stat-percentage" role="progressbar"
+                            data-percentage="{{ stat.pourcentage }}" data-color="{{ color }}"
+                            style="border-radius: 6px;">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">Proportion de mes emprunts</small>
+                        <small class="text-muted">{{ stat.pourcentage }}%</small>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Résumé -->
+                <div class="mt-4 pt-3 border-top">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="fw-bold">{{ total_emprunts_user }}</h4>
+                            <small class="text-muted">Total emprunts</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="fw-bold">{{ stats_categories|length }}</h4>
+                            <small class="text-muted">Catégories</small>
+                        </div>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="ri-pie-chart-line fs-1 text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Vous n'avez pas encore d'emprunts</p>
+                    <a href="{{ url_for('livres') }}" class="btn btn-primary btn-sm mt-3">
+                        <i class="ri-book-line me-1"></i> Parcourir les livres
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="fw-semibold mb-4">Mes derniers emprunts</h5>
+                {% if recent_emprunts %}
+                <div class="list-group list-group-flush">
+                    {% for emp in recent_emprunts %}
+                    <div class="list-group-item border-0 px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-1">{{ emp.livre.titre[:50] }}{% if emp.livre.titre|length > 50
+                                    %}...{% endif %}</h6>
+                                <p class="small text-muted mb-1">
+                                    <i class="ri-user-3-line me-1"></i>{{ emp.livre.auteur }}
+                                    {% if emp.livre.categorie %}
+                                    <span class="ms-2">
+                                        <i class="ri-price-tag-3-line me-1"></i>{{ emp.livre.categorie }}
+                                    </span>
+                                    {% endif %}
+                                </p>
+                                <div class="d-flex gap-3">
+                                    <small class="text-muted">
+                                        <i class="ri-calendar-line me-1"></i>Emprunté: {{
+                                        emp.date_emprunt.strftime('%d/%m/%Y') }}
+                                    </small>
+                                    {% if emp.date_retour_prevue %}
+                                    <small class="text-muted">
+                                        <i class="ri-calendar-event-line me-1"></i>Retour: {{
+                                        emp.date_retour_prevue.strftime('%d/%m/%Y') }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                {% if emp.status == 'en_cours' %}
+                                {% set badge_class = 'bg-success' %}
+                                {% elif emp.status == 'retard' %}
+                                {% set badge_class = 'bg-danger' %}
+                                {% else %}
+                                {% set badge_class = 'bg-secondary' %}
+                                {% endif %}
+                                <span class="badge {{ badge_class }}">
+                                    {{ emp.status|replace('_', ' ')|title }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('mes_emprunts') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="ri-history-line me-1"></i> Voir tous mes emprunts
+                    </a>
+                </div>
+
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="ri-history-line fs-1 text-muted mb-3"></i>
+                    <p class="text-muted mb-0">Aucun emprunt récent</p>
+                    <a href="{{ url_for('livres') }}" class="btn btn-primary btn-sm mt-3">
+                        <i class="ri-book-line me-1"></i> Faire un emprunt
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mes préférences de lecture -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h5 class="fw-semibold mb-4">Mes préférences de lecture</h5>
+        {% if stats_categories %}
+        <div class="row">
+            <div class="col-md-8">
+                <div class="position-relative" style="height: 200px;">
+                    <canvas id="userCategoryChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 bg-light rounded">
+                    <h6 class="fw-bold mb-3">Résumé</h6>
+                    <div class="mb-2">
+                        <span class="small text-muted">Catégorie préférée:</span>
+                        {% set categorie_preferee = stats_categories|sort(attribute='count', reverse=true)|first %}
+                        <p class="fw-bold mb-0">{{ categorie_preferee.categorie }}</p>
+                    </div>
+                    <div class="mb-2">
+                        <span class="small text-muted">Diversité:</span>
+                        <p class="fw-bold mb-0">{{ stats_categories|length }} catégories différentes</p>
+                    </div>
+                    <div class="mb-2">
+                        <span class="small text-muted">Taux d'activité:</span>
+                        {% set taux_activite = (total_emprunts_user / 50 * 100) %}
+                        {% if taux_activite > 100 %}
+                        {% set taux_activite = 100 %}
+                        {% endif %}
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success stat-percentage" role="progressbar"
+                                data-percentage="{{ taux_activite }}">
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ total_emprunts_user }} / 50 livres</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">Commencez à emprunter pour voir vos préférences</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Rapports et exports (visible pour tous) -->
+<div class="card shadow-sm">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="fw-semibold mb-1">Rapports et exports</h5>
+            <p class="text-muted mb-0">Générez des rapports détaillés pour vos analyses</p>
+        </div>
+        <div class="btn-group">
+            {% if is_admin %}
+            <button class="btn btn-outline-secondary btn-sm" onclick="exportTableToCSV('statistiques_complete.csv')">
+                <i class="ri-file-excel-line me-1"></i> Excel
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                <i class="ri-file-pdf-line me-1"></i> PDF
+            </button>
+            {% endif %}
+            <button class="btn btn-primary btn-sm" onclick="window.print()">
+                <i class="ri-printer-line me-1"></i> Imprimer
+            </button>
+        </div>
+    </div>
+</div>
 
 </div>
 
 {% endblock %}
 
+<!-- Your existing HTML code... -->
 {% block scripts %}
 {{ super() }}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Gestion des boutons de période
         var buttons = document.querySelectorAll('[data-period]');
         var periodInput = document.getElementById('periodInput');
         var current = periodInput ? periodInput.value : 'month';
         buttons.forEach(function (b) {
             if (b.getAttribute('data-period') === current) {
-                b.classList.remove('btn-outline-secondary'); b.classList.add('btn-primary');
+                b.classList.remove('btn-outline-secondary');
+                b.classList.add('btn-primary');
             }
             b.addEventListener('click', function () {
                 if (periodInput) periodInput.value = b.getAttribute('data-period');
                 document.getElementById('periodeForm').submit();
             });
         });
-    });
-</script>
-<script>
-    // Inject server-side stats (may be null)
-    window.SERVER_STATS = {
-        categories: {{ stats_categories | tojson if stats_categories is defined else 'null' }},
-    days: { { stats_days | tojson if stats_days is defined else 'null' } },
-    top_books: { { top_books | tojson if top_books is defined else 'null' } },
-    livres_disponibles: { { livres_disponibles if livres_disponibles is defined else 'null' } },
-    livres_empruntes: { { livres_empruntes if livres_empruntes is defined else 'null' } },
-    livres_reserves: { { livres_reserves if livres_reserves is defined else 'null' } },
-    total_livres: { { total_livres if total_livres is defined else 'null' } }
+
+        // Animer les barres de progression
+        document.querySelectorAll('.stat-percentage').forEach(function (bar) {
+            const percentage = bar.dataset.percentage || '0';
+            const color = bar.dataset.color || '';
+
+            // Initialiser à 0
+            bar.style.width = '0';
+
+            // Appliquer la couleur si spécifiée
+            if (color && color !== 'undefined') {
+                try {
+                    bar.style.backgroundColor = color;
+                } catch (e) {
+                    console.log('Couleur invalide:', color);
+                }
+            }
+
+            // Animer après un délai
+            setTimeout(() => {
+                let widthValue = percentage;
+                if (percentage && !percentage.includes('%')) {
+                    widthValue = percentage + '%';
+                }
+                bar.style.width = widthValue;
+                bar.style.transition = 'width 1s ease-in-out';
+            }, 100);
+        });
+
+        // Appliquer les couleurs aux points de catégorie
+        document.querySelectorAll('.category-dot').forEach(function (dot) {
+            const color = dot.dataset.color || '';
+            if (color && color !== 'undefined') {
+                try {
+                    dot.style.backgroundColor = color;
+                } catch (e) {
+                    console.log('Couleur invalide pour dot:', color);
+                }
+            }
+        });
+
+        // Chart.js pour l'état de la collection (admin)
+        {% if is_admin %}
+        const collectionCtx = document.getElementById('collectionChart');
+        if (collectionCtx) {
+            // Utiliser des valeurs par défaut pour éviter les erreurs
+            const disponibleValue = {{ livres_disponibles|default (0)
+        }
     };
+    const emprunteValue = {{ livres_empruntes|default (0) }};
+    const reserveValue = {{ livres_reserves|default (0) }};
+
+    const collectionData = [
+        disponibleValue,
+        emprunteValue,
+        reserveValue
+    ];
+
+    new Chart(collectionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Disponibles', 'Empruntés', 'Réservés'],
+            datasets: [{
+                data: collectionData,
+                backgroundColor: ['#28a745', '#007bff', '#ffc107'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.label || '';
+                            if (label) label += ': ';
+                            label += context.raw + ' livres';
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+        }
+    {% endif %}
+
+    // Chart.js pour les emprunts par jour
+    {% if stats_days and is_admin %}
+    const dailyCtx = document.getElementById('dailyChart');
+    if (dailyCtx) {
+        // Préparer les données de manière sécurisée
+        const dailyLabels = [];
+        const dailyData = [];
+
+        // Utiliser une approche plus simple
+        {% for d in stats_days %}
+        dailyLabels.push("{{ d.label|escapejs }}");
+        {% set totalDay = 0 %}
+        {% if d.bars %}
+        {% for bar in d.bars %}
+        {% set totalDay = totalDay + bar.get('count', 0) %}
+        {% endfor %}
+        {% endif %}
+        dailyData.push({{ totalDay }});
+    {% endfor %}
+
+    new Chart(dailyCtx, {
+        type: 'bar',
+        data: {
+            labels: dailyLabels,
+            datasets: [{
+                label: 'Emprunts',
+                data: dailyData,
+                backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Nombre d'emprunts"
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Jours'
+                    }
+                }
+            }
+        }
+    });
+        }
+    {% endif %}
+
+    // Chart.js pour les catégories utilisateur (non-admin)
+    {% if not is_admin and stats_categories %}
+    const userCategoryCtx = document.getElementById('userCategoryChart');
+    if (userCategoryCtx) {
+        // Préparer les données de manière sécurisée
+        const userLabels = [];
+        const userData = [];
+
+        {% for stat in stats_categories %}
+        userLabels.push("{{ stat.categorie|escapejs }}");
+        userData.push({{ stat.count |default(0) }});
+    {% endfor %}
+
+    const backgroundColors = [
+        'rgba(0, 123, 255, 0.7)',
+        'rgba(40, 167, 69, 0.7)',
+        'rgba(255, 193, 7, 0.7)',
+        'rgba(111, 66, 193, 0.7)',
+        'rgba(220, 53, 69, 0.7)',
+        'rgba(108, 117, 125, 0.7)'
+    ];
+
+    new Chart(userCategoryCtx, {
+        type: 'pie',
+        data: {
+            labels: userLabels,
+            datasets: [{
+                data: userData,
+                backgroundColor: backgroundColors.slice(0, userLabels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { padding: 20, usePointStyle: true }
+                }
+            }
+        }
+    });
+        }
+    {% endif %}
+    });
+
+    // Fonction d'export CSV
+    function exportTableToCSV(filename) {
+        var csv = [];
+        var rows = document.querySelectorAll("#categoryStatsTable tr");
+
+        for (var i = 0; i < rows.length; i++) {
+            var row = [], cols = rows[i].querySelectorAll("td, th");
+
+            for (var j = 0; j < cols.length; j++) {
+                var text = cols[j].innerText;
+                text = text.replace(/"/g, '""');
+                if (text.indexOf(',') > -1 || text.indexOf('"') > -1) {
+                    text = '"' + text + '"';
+                }
+                row.push(text);
+            }
+
+            csv.push(row.join(","));
+        }
+
+        // Télécharger le fichier CSV
+        var csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+        var downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
+
+    // Fonction pour animer les barres de progression
+    function animateProgressBars() {
+        document.querySelectorAll('.stat-percentage').forEach(bar => {
+            const percentage = bar.dataset.percentage || '0';
+            const color = bar.dataset.color || '';
+
+            bar.style.width = '0';
+
+            if (color && color !== 'undefined') {
+                try {
+                    bar.style.backgroundColor = color;
+                } catch (e) {
+                    // Ignorer les erreurs de couleur
+                }
+            }
+
+            setTimeout(() => {
+                let widthValue = percentage;
+                if (percentage && !percentage.includes('%')) {
+                    widthValue = percentage + '%';
+                }
+                bar.style.width = widthValue;
+                bar.style.transition = 'width 1s ease-in-out';
+            }, 100);
+        });
+    }
+
+    // Initialiser les animations au chargement
+    window.addEventListener('load', animateProgressBars);
 </script>
-<script src="/static/js/stats.js"></script>
+
+<!-- Script stats.js séparé -->
+<script src="{{ url_for('static', filename='js/stats.js') }}"></script>
+
+<style>
+    .hover-overlay:hover {
+        background-color: rgba(0, 123, 255, 0.1) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-bar {
+        transition: width 1s ease-in-out;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+
+    .table th {
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    @media print {
+
+        .btn-group,
+        .btn,
+        .no-print {
+            display: none !important;
+        }
+
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #dee2e6 !important;
+        }
+    }
+</style>
 {% endblock %}

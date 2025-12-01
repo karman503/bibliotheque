@@ -580,16 +580,43 @@ def register_with_type(user_type):
         
         # Créer un profil adhérent si nécessaire
         if user_type in ['adherent', 'bibliothecaire']:
-            adherent = Adherent(
-                nom=nom if nom else username,
-                prenom=prenom if prenom else username,
-                email=email,
-                telephone=telephone if telephone else None,
-                classe=classe if classe else None,
-                statut='Actif'
-            )
-            db.session.add(adherent)
-            db.session.flush()  # Pour obtenir l'ID
+            # Réutiliser un adhérent existant si l'email est déjà présent
+            existing_adherent = Adherent.query.filter_by(email=email).first()
+            if existing_adherent:
+                # Ne pas créer de doublon ; attacher l'utilisateur à l'adhérent existant
+                adherent = existing_adherent
+                # Mettre à jour les champs vides si des valeurs sont fournies
+                if nom and (not adherent.nom or adherent.nom.strip() == ''):
+                    adherent.nom = nom
+                if prenom and (not adherent.prenom or adherent.prenom.strip() == ''):
+                    adherent.prenom = prenom
+                if telephone and (not adherent.telephone or adherent.telephone.strip() == ''):
+                    adherent.telephone = telephone
+                if classe and (not adherent.classe or adherent.classe.strip() == ''):
+                    adherent.classe = classe
+            else:
+                adherent = Adherent(
+                    nom=nom if nom else username,
+                    prenom=prenom if prenom else username,
+                    email=email,
+                    telephone=telephone if telephone else None,
+                    classe=classe if classe else None,
+                    statut='Actif'
+                )
+                db.session.add(adherent)
+                # flush only when we created a new adherent to get its id
+                try:
+                    db.session.flush()
+                except IntegrityError:
+                    db.session.rollback()
+                    # Collision improbable due to race; try to reuse existing record
+                    adherent = Adherent.query.filter_by(email=email).first()
+                    if not adherent:
+                        flash('Erreur lors de la création du profil adhérent (conflit email).', 'danger')
+                        return render_template('register_form.html', 
+                             title=f'Inscription - {user_type.capitalize()}',
+                             user_type=user_type,
+                             admin_exists=admin_exists)
             user.adherent = adherent
         
         try:
@@ -1369,21 +1396,62 @@ def statistiques():
         emprunts_en_cours = Emprunt.query.filter(Emprunt.date_emprunt >= start).filter_by(status='en_cours').count()
         livres_disponibles = Livre.query.filter_by(disponible=True).count()
         
-        taux_disponibilite = round((livres_disponibles / total_livres * 100) if total_livres > 0 else 100)
+        # Récupérer TOUTES les catégories distinctes de livres
+        toutes_categories = db.session.query(Livre.categorie).distinct().all()
+        toutes_categories = [c[0] for c in toutes_categories if c[0]]  # Nettoyer les valeurs None
         
+        # Récupérer les emprunts par catégorie pour la période
         emprunts_par_categorie = db.session.query(
             Livre.categorie, 
             db.func.count(Emprunt.id).label('count')
         ).join(Emprunt).filter(Emprunt.date_emprunt >= start).group_by(Livre.categorie).all()
         
+        # Créer un dictionnaire pour les emprunts par catégorie
+        emprunts_dict = {categorie: count for categorie, count in emprunts_par_categorie}
+        
+        # Calculer le nombre total de livres par catégorie
+        livres_par_categorie = db.session.query(
+            Livre.categorie,
+            db.func.count(Livre.id).label('total_livres')
+        ).group_by(Livre.categorie).all()
+        
+        livres_dict = {categorie: count for categorie, count in livres_par_categorie}
+        
+        # Préparer les statistiques pour TOUTES les catégories
         stats_categories = []
-        for categorie, count in emprunts_par_categorie:
-            pourcentage = round((count / emprunts_en_cours * 100) if emprunts_en_cours > 0 else 0)
+        for categorie in toutes_categories:
+            emprunts_cat = emprunts_dict.get(categorie, 0)
+            total_livres_cat = livres_dict.get(categorie, 0)
+            
+            # Pourcentage d'emprunts dans cette catégorie
+            pourcentage_emprunts = round((emprunts_cat / max(emprunts_en_cours, 1)) * 100) if emprunts_en_cours > 0 else 0
+            
+            # Pourcentage de disponibilité par catégorie
+            livres_cat = Livre.query.filter_by(categorie=categorie).all()
+            livres_cat_ids = [l.id for l in livres_cat]
+            livres_dispo_cat = Livre.query.filter(
+                Livre.id.in_(livres_cat_ids),
+                Livre.disponible == True
+            ).count() if livres_cat_ids else 0
+            
+            pourcentage_dispo = round((livres_dispo_cat / max(total_livres_cat, 1)) * 100) if total_livres_cat > 0 else 100
+            
             stats_categories.append({
                 'categorie': categorie,
-                'count': count,
-                'pourcentage': pourcentage
+                'count_livres': total_livres_cat,
+                'count_emprunts': emprunts_cat,
+                'pourcentage_emprunts': pourcentage_emprunts,
+                'livres_disponibles': livres_dispo_cat,
+                'pourcentage_dispo': pourcentage_dispo
             })
+        
+        # Trier par nombre d'emprunts décroissant
+        stats_categories.sort(key=lambda x: x['count_emprunts'], reverse=True)
+        
+        # Statistiques d'état de la collection
+        livres_empruntes = Livre.query.filter_by(disponible=False).count()
+        # Calculer les livres réservés (à adapter selon votre modèle)
+        livres_reserves = 0  # À remplacer par votre logique de réservation
         
         adherents_actifs = db.session.query(
             Adherent,
@@ -1400,6 +1468,39 @@ def statistiques():
                 'pourcentage': pourcentage
             })
         
+        # Livres les plus empruntés
+        top_books = db.session.query(
+            Livre,
+            db.func.count(Emprunt.id).label('count')
+        ).join(Emprunt).filter(Emprunt.date_emprunt >= start).group_by(Livre).order_by(db.text('count DESC')).limit(5).all()
+        
+        top_books_data = []
+        for livre, count in top_books:
+            top_books_data.append({
+                'titre': livre.titre,
+                'auteur': livre.auteur,
+                'count': count
+            })
+        
+        # Statistiques par jour
+        stats_days = []
+        if period == 'week':
+            for i in range(7):
+                day = start + timedelta(days=i)
+                count = Emprunt.query.filter(
+                    db.func.date(Emprunt.date_emprunt) == day.date()
+                ).count()
+                stats_days.append({
+                    'label': day.strftime('%a %d'),
+                    'bars': [{'width': min(count * 5, 100), 'color': 'var(--primary)', 'count': count}]
+                })
+        
+        # Calcul du taux de disponibilité global (en pourcentage)
+        if total_livres and total_livres > 0:
+            taux_disponibilite = round((livres_disponibles / total_livres) * 100, 1)
+        else:
+            taux_disponibilite = 100
+
         return render_template("statistiques.html", 
                      title="Statistiques",
                      is_admin=True,
@@ -1407,9 +1508,13 @@ def statistiques():
                      total_livres=total_livres,
                      emprunts_en_cours=emprunts_en_cours,
                      livres_disponibles=livres_disponibles,
+                     livres_empruntes=livres_empruntes,
+                     livres_reserves=livres_reserves,
                      taux_disponibilite=taux_disponibilite,
                      stats_categories=stats_categories,
                      stats_adherents=stats_adherents,
+                     top_books=top_books_data,
+                     stats_days=stats_days if stats_days else None,
                      period=period)
 
     adherent_id_for_query = getattr(current_user, 'adherent_id', None) or current_user.id
