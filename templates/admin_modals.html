@@ -1,0 +1,96 @@
+<!-- Modals and scripts for admin -->
+<!-- Modal pour ajouter un livre -->
+<div class="modal fade" id="nouveauLivreModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="ri-book-add-line me-1 text-danger"></i> Ajouter un nouveau livre
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('livres') }}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Titre</label>
+                            <input type="text" name="titre" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Auteur</label>
+                            <input type="text" name="auteur" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">ISBN</label>
+                            <input type="text" name="isbn" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Année de publication</label>
+                            <input type="number" name="annee_publication" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Catégorie</label>
+                            <select name="categorie" class="form-select">
+                                <option value="Littérature">Littérature</option>
+                                <option value="Sciences">Sciences</option>
+                                <option value="Histoire">Histoire</option>
+                                <option value="Fantasy">Fantasy</option>
+                                <option value="Science-Fiction">Science-Fiction</option>
+                                <option value="Philosophie">Philosophie</option>
+                                <option value="Roman">Roman</option>
+                                <option value="Culture">Culture</option>
+                                <option value="Informatique">Informatique</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Résumé</label>
+                            <textarea name="resume" class="form-control" rows="4"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Contenu PDF</label>
+                            <input type="file" name="contenu_pdf" accept="application/pdf" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label for="image_couverture" class="form-label">Image de couverture</label>
+                            <input type="file" class="form-control" id="image_couverture" name="image_couverture"
+                                accept=".jpg,.jpeg,.png,.gif,.webp">
+                            <div class="form-text">Formats acceptés: JPG, PNG, GIF, WEBP</div>
+                        </div>
+                        <div class="col-12" id="imagePreview" style="display: none;">
+                            <label class="form-label">Aperçu de l'image</label>
+                            <div>
+                                <img id="preview" src="#" alt="Aperçu" class="img-thumbnail" style="max-height: 200px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script pour l'aperçu d'image
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('image_couverture');
+        if (!input) return;
+        document.getElementById('image_couverture').addEventListener('change', function (e) {
+            const preview = document.getElementById('preview');
+            const previewContainer = document.getElementById('imagePreview');
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    });
+</script>

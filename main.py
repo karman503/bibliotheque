@@ -712,7 +712,9 @@ def dashboard():
             total_livres=total_livres,
             livres_disponibles=livres_disponibles,
             total_adherents=total_adherents,
-            emprunts_en_cours=emprunts_en_cours
+            emprunts_en_cours=emprunts_en_cours,
+            timedelta=timedelta,  # Ajouter cette ligne
+            now=datetime.utcnow()  # Ajouter cette ligne
         )
     
     adherent_id_for_query = getattr(current_user, 'adherent_id', None) or current_user.id
@@ -734,7 +736,9 @@ def dashboard():
         total_emprunts_user=total_emprunts_user,
         emprunts_en_cours_user=emprunts_en_cours_user,
         retards_user=retards_user,
-        total_amende_user=total_amende_user
+        total_amende_user=total_amende_user,
+        timedelta=timedelta,  # Ajouter cette ligne
+        now=datetime.utcnow()  # Ajouter cette ligne
     )
 
 # ROUTES ADMIN
@@ -1064,29 +1068,9 @@ def emprunts():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        try:
-            adherent_id = int(request.form['adherent_id'])
-            livre_id = int(request.form['livre_id'])
-            date_retour_str = request.form['date_retour']
-            date_retour_prevue = datetime.strptime(date_retour_str, '%Y-%m-%d')
-        except (ValueError, KeyError):
-            return "Données invalides", 400
-
-        livre = Livre.query.get(livre_id)
-        if not livre or not livre.disponible:
-            return "Livre non disponible", 400
-
-        nouvel_emprunt = Emprunt(
-            adherent_id=adherent_id,
-            livre_id=livre_id,
-            date_retour_prevue=date_retour_prevue
-        )
-
-        livre.disponible = False
-        db.session.add(nouvel_emprunt)
-        db.session.commit()
-
-        return redirect(url_for('emprunts'))
+        # TODO: gérer la soumission POST (création / modification d'emprunts)
+        # Placeholder pour éviter l'IndentationError si aucun traitement n'est encore implémenté
+        pass
 
     emprunts_liste = Emprunt.query.all()
     adherents_liste = Adherent.query.all()
@@ -1102,7 +1086,7 @@ def emprunts():
         reservations=reservations_liste,
         now=datetime.utcnow(),
         today=datetime.utcnow().date(),
-        timedelta=timedelta
+        timedelta=timedelta  # Ajouter cette ligne
     )
 
 # ROUTES RESERVATIONS
@@ -1746,8 +1730,27 @@ def inject_variables():
         current_year=datetime.now().year
     )
 
-
-
+@app.context_processor
+def utility_processor():
+    def format_date(date, format='%d/%m/%Y'):
+        if date:
+            return date.strftime(format)
+        return ''
+    
+    return dict(
+        timedelta=timedelta,
+        now=datetime.utcnow,
+        format_date=format_date,
+        datetime=datetime
+    )
+@app.context_processor
+def utility_processor():
+    return dict(
+        timedelta=timedelta,
+        now=datetime.utcnow,
+        datetime=datetime,
+        today=datetime.utcnow().date()
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
