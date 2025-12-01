@@ -1,0 +1,307 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<div class="container-fluid p-4">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="ri-edit-line text-primary me-2"></i>
+                Modifier le bibliothécaire
+            </h2>
+            <p class="text-muted mb-0">
+                {{ bibliothecaire.prenom }} {{ bibliothecaire.nom }} • ID: {{ bibliothecaire.id }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('view_bibliothecaire', id=bibliothecaire.id) }}" class="btn btn-outline-secondary">
+                <i class="ri-eye-line me-1"></i> Voir
+            </a>
+            <a href="{{ url_for('bibliothecaires') }}" class="btn btn-outline-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="ri-user-settings-line me-2"></i>
+                        Modifier les informations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <!-- Section 1: Informations personnelles -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-4">
+                                <i class="ri-user-line text-primary me-2"></i>
+                                Informations personnelles
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nom *</label>
+                                    <input type="text" name="nom" class="form-control" 
+                                           value="{{ bibliothecaire.nom }}" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Prénom *</label>
+                                    <input type="text" name="prenom" class="form-control" 
+                                           value="{{ bibliothecaire.prenom }}" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Date de naissance</label>
+                                    <input type="date" name="date_naissance" class="form-control"
+                                           value="{{ bibliothecaire.date_naissance.strftime('%Y-%m-%d') if bibliothecaire.date_naissance else '' }}">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Genre</label>
+                                    <select name="genre" class="form-select">
+                                        <option value="">Non spécifié</option>
+                                        <option value="M" {% if bibliothecaire.genre == 'M' %}selected{% endif %}>Masculin</option>
+                                        <option value="F" {% if bibliothecaire.genre == 'F' %}selected{% endif %}>Féminin</option>
+                                        <option value="A" {% if bibliothecaire.genre == 'A' %}selected{% endif %}>Autre</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Informations professionnelles -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-4">
+                                <i class="ri-briefcase-line text-primary me-2"></i>
+                                Informations professionnelles
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Poste *</label>
+                                    <select name="poste" class="form-select" required>
+                                        <option value="">Sélectionner un poste</option>
+                                        <option value="Bibliothécaire" {% if bibliothecaire.poste == 'Bibliothécaire' %}selected{% endif %}>Bibliothécaire</option>
+                                        <option value="Bibliothécaire principal" {% if bibliothecaire.poste == 'Bibliothécaire principal' %}selected{% endif %}>Bibliothécaire principal</option>
+                                        <option value="Responsable de section" {% if bibliothecaire.poste == 'Responsable de section' %}selected{% endif %}>Responsable de section</option>
+                                        <option value="Directeur adjoint" {% if bibliothecaire.poste == 'Directeur adjoint' %}selected{% endif %}>Directeur adjoint</option>
+                                        <option value="Administrateur" {% if bibliothecaire.poste == 'Administrateur' %}selected{% endif %}>Administrateur</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Département</label>
+                                    <select name="departement" class="form-select">
+                                        <option value="">Sélectionner un département</option>
+                                        <option value="Accueil et orientation" {% if bibliothecaire.departement == 'Accueil et orientation' %}selected{% endif %}>Accueil et orientation</option>
+                                        <option value="Prêt et retour" {% if bibliothecaire.departement == 'Prêt et retour' %}selected{% endif %}>Prêt et retour</option>
+                                        <option value="Catalogage" {% if bibliothecaire.departement == 'Catalogage' %}selected{% endif %}>Catalogage</option>
+                                        <option value="Réservations" {% if bibliothecaire.departement == 'Réservations' %}selected{% endif %}>Réservations</option>
+                                        <option value="Médiathèque" {% if bibliothecaire.departement == 'Médiathèque' %}selected{% endif %}>Médiathèque</option>
+                                        <option value="Administration" {% if bibliothecaire.departement == 'Administration' %}selected{% endif %}>Administration</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Date d'embauche *</label>
+                                    <input type="date" name="date_embauche" class="form-control" required
+                                           value="{{ bibliothecaire.date_embauche.strftime('%Y-%m-%d') if bibliothecaire.date_embauche else '' }}">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Statut *</label>
+                                    <select name="statut" class="form-select" required>
+                                        <option value="Actif" {% if bibliothecaire.statut == 'Actif' %}selected{% endif %}>Actif</option>
+                                        <option value="En congé" {% if bibliothecaire.statut == 'En congé' %}selected{% endif %}>En congé</option>
+                                        <option value="Formation" {% if bibliothecaire.statut == 'Formation' %}selected{% endif %}>En formation</option>
+                                        <option value="Suspendu" {% if bibliothecaire.statut == 'Suspendu' %}selected{% endif %}>Suspendu</option>
+                                        <option value="Inactif" {% if bibliothecaire.statut == 'Inactif' %}selected{% endif %}>Inactif</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">Description du poste</label>
+                                    <textarea name="description_poste" class="form-control" rows="3">{{ bibliothecaire.description_poste or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Contact -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-4">
+                                <i class="ri-contacts-line text-primary me-2"></i>
+                                Informations de contact
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Email professionnel *</label>
+                                    <input type="email" name="email" class="form-control" 
+                                           value="{{ bibliothecaire.email }}" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Téléphone professionnel *</label>
+                                    <input type="tel" name="telephone" class="form-control" 
+                                           value="{{ bibliothecaire.telephone or '' }}" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Email personnel</label>
+                                    <input type="email" name="email_personnel" class="form-control" 
+                                           value="{{ bibliothecaire.email_personnel or '' }}">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Téléphone personnel</label>
+                                    <input type="tel" name="telephone_personnel" class="form-control" 
+                                           value="{{ bibliothecaire.telephone_personnel or '' }}">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">Adresse</label>
+                                    <textarea name="adresse" class="form-control" rows="2">{{ bibliothecaire.adresse or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Photo de profil -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-4">
+                                <i class="ri-camera-line text-primary me-2"></i>
+                                Photo de profil
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Modifier la photo</label>
+                                    <input type="file" name="photo" class="form-control" 
+                                           accept=".jpg,.jpeg,.png,.gif" 
+                                           id="photoInput" 
+                                           onchange="previewImage(event)">
+                                    <div class="form-text">
+                                        Formats acceptés: JPG, PNG, GIF (max 2MB)
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="supprimer_photo" id="supprimerPhoto">
+                                            <label class="form-check-label text-danger" for="supprimerPhoto">
+                                                Supprimer la photo actuelle
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="imagePreviewContainer" class="text-center">
+                                        <p class="form-label">Photo actuelle</p>
+                                        {% if bibliothecaire.image %}
+                                            <img src="{{ url_for('static', filename='uploads/profiles/' + bibliothecaire.image) }}" 
+                                                 alt="Photo actuelle" 
+                                                 class="img-thumbnail rounded-circle" 
+                                                 style="width: 150px; height: 150px; object-fit: cover;">
+                                            <div class="mt-2">
+                                                <small class="text-muted">{{ bibliothecaire.image }}</small>
+                                            </div>
+                                        {% else %}
+                                            <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center mx-auto"
+                                                 style="width: 150px; height: 150px;">
+                                                <i class="ri-user-line fs-1 text-muted"></i>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small class="text-muted">Aucune photo</small>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div id="newImagePreview" class="text-center mt-3" style="display: none;">
+                                        <p class="form-label">Nouvel aperçu</p>
+                                        <img id="newImagePreviewImg" src="#" alt="Nouvel aperçu" 
+                                             class="img-thumbnail rounded-circle" 
+                                             style="width: 150px; height: 150px; object-fit: cover;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="border-top pt-4 mt-4">
+                            <div class="d-flex justify-content-between">
+                                <button type="reset" class="btn btn-outline-secondary">
+                                    <i class="ri-refresh-line me-1"></i> Réinitialiser
+                                </button>
+                                <div>
+                                    <a href="{{ url_for('view_bibliothecaire', id=bibliothecaire.id) }}" class="btn btn-secondary me-2">
+                                        Annuler
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ri-save-line me-1"></i> Enregistrer les modifications
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Note d'information -->
+            <div class="alert alert-info mt-4">
+                <i class="ri-information-line me-2"></i>
+                <strong>Note :</strong> Les modifications apportées à l'email professionnel ne mettront pas à jour automatiquement le compte utilisateur associé. 
+                Pour mettre à jour les informations de connexion du compte utilisateur, contactez un administrateur.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Prévisualisation de la nouvelle image
+function previewImage(event) {
+    const input = event.target;
+    const previewContainer = document.getElementById('newImagePreview');
+    const preview = document.getElementById('newImagePreviewImg');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        previewContainer.style.display = 'none';
+    }
+}
+
+// Validation du formulaire
+document.querySelector('form').addEventListener('submit', function(e) {
+    const email = document.querySelector('input[name="email"]').value;
+    const telephone = document.querySelector('input[name="telephone"]').value;
+    
+    // Validation basique de l'email
+    if (!email.includes('@')) {
+        alert('Veuillez saisir un email valide');
+        e.preventDefault();
+        return;
+    }
+    
+    // Validation du téléphone (optionnelle)
+    if (telephone && !/^[\d\s\+\-\(\)]+$/.test(telephone)) {
+        alert('Veuillez saisir un numéro de téléphone valide');
+        e.preventDefault();
+        return;
+    }
+});
+
+// Gestion de la case à cocher "supprimer photo"
+document.getElementById('supprimerPhoto').addEventListener('change', function() {
+    const fileInput = document.getElementById('photoInput');
+    if (this.checked) {
+        fileInput.disabled = true;
+        fileInput.value = '';
+        document.getElementById('newImagePreview').style.display = 'none';
+    } else {
+        fileInput.disabled = false;
+    }
+});
+</script>
+
+{% endblock %}

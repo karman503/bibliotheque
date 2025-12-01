@@ -1,0 +1,267 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<div class="container-fluid p-4">
+
+    <!-- Titre -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Gestion des bibliothécaires</h2>
+            <p class="text-muted mb-0">Gérez le personnel de la bibliothèque</p>
+        </div>
+        <a href="{{ url_for('new_bibliothecaire') }}" class="btn btn-primary">
+            <i class="ri-user-add-line me-1"></i> Nouveau bibliothécaire
+        </a>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <!-- Recherche -->
+                <div class="col-md-4">
+                    <label class="form-label">Rechercher</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="ri-search-line"></i></span>
+                        <input type="text" name="recherche" value="{{ recherche or '' }}" class="form-control"
+                            placeholder="Nom, prénom, email...">
+                    </div>
+                </div>
+
+                <!-- Poste -->
+                <div class="col-md-4">
+                    <label class="form-label">Poste</label>
+                    <select name="poste" class="form-select">
+                        <option value="">Tous les postes</option>
+                        <option value="Bibliothécaire" {% if poste=='Bibliothécaire' %}selected{% endif %}>Bibliothécaire</option>
+                        <option value="Bibliothécaire principal" {% if poste=='Bibliothécaire principal' %}selected{% endif %}>Bibliothécaire principal</option>
+                        <option value="Responsable de section" {% if poste=='Responsable de section' %}selected{% endif %}>Responsable de section</option>
+                        <option value="Directeur adjoint" {% if poste=='Directeur adjoint' %}selected{% endif %}>Directeur adjoint</option>
+                        <option value="Administrateur" {% if poste=='Administrateur' %}selected{% endif %}>Administrateur</option>
+                    </select>
+                </div>
+
+                <!-- Statut -->
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="Actif" {% if statut=='Actif' %}selected{% endif %}>Actif</option>
+                        <option value="En congé" {% if statut=='En congé' %}selected{% endif %}>En congé</option>
+                        <option value="Suspendu" {% if statut=='Suspendu' %}selected{% endif %}>Suspendu</option>
+                        <option value="Inactif" {% if statut=='Inactif' %}selected{% endif %}>Inactif</option>
+                    </select>
+                </div>
+
+                <!-- Boutons -->
+                <div class="col-12 mt-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ri-filter-line me-1"></i> Filtrer
+                    </button>
+                    <a href="{{ url_for('bibliothecaires') }}" class="btn btn-outline-secondary">
+                        <i class="ri-refresh-line me-1"></i> Réinitialiser
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary ms-auto" data-bs-toggle="modal" data-bs-target="#exportModal">
+                        <i class="ri-download-line me-1"></i> Exporter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau des bibliothécaires -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Bibliothécaire</th>
+                            <th>Contact</th>
+                            <th>Poste & Département</th>
+                            <th>Compte</th>
+                            <th>Date d'embauche</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bib in bibliothecaires %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    {% if bib.image %}
+                                    <img src="{{ url_for('static', filename='uploads/profiles/' + bib.image) }}"
+                                        alt="{{ bib.nom }} {{ bib.prenom }}" 
+                                        class="rounded-circle me-3"
+                                        style="width: 45px; height: 45px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center me-3"
+                                        style="width: 45px; height: 45px;">
+                                        <i class="ri-user-line fs-5"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ bib.prenom }} {{ bib.nom }}</div>
+                                        <small class="text-muted">ID: {{ bib.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 200px;">
+                                    <i class="ri-mail-line text-muted me-1"></i>
+                                    {{ bib.email }}
+                                </div>
+                                {% if bib.telephone %}
+                                <div class="text-muted small">
+                                    <i class="ri-phone-line me-1"></i>
+                                    {{ bib.telephone }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ bib.poste or 'Bibliothécaire' }}</span>
+                                {% if bib.departement %}
+                                <div class="small text-muted mt-1">{{ bib.departement }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if bib.user %}
+                                <span class="badge bg-success">Compte actif</span>
+                                <div class="small text-muted">{{ bib.user.role or 'bibliothecaire' }}</div>
+                                {% else %}
+                                <span class="badge bg-warning">Pas de compte</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if bib.date_embauche %}
+                                {{ bib.date_embauche.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                <span class="text-muted">Non définie</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('view_bibliothecaire', id=bib.id) }}" 
+                                       class="btn btn-outline-secondary" 
+                                       title="Voir">
+                                        <i class="ri-eye-line"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_bibliothecaire', id=bib.id) }}" 
+                                       class="btn btn-outline-secondary" 
+                                       title="Modifier">
+                                        <i class="ri-edit-line"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-outline-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteModal{{ bib.id }}"
+                                            title="Supprimer">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Modal de suppression -->
+                                <div class="modal fade" id="deleteModal{{ bib.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Confirmer la suppression</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Êtes-vous sûr de vouloir supprimer le bibliothécaire <strong>{{ bib.prenom }} {{ bib.nom }}</strong> ?</p>
+                                                <p class="text-danger small">Cette action est irréversible.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                                <form action="{{ url_for('delete_bibliothecaire', id=bib.id) }}" method="POST" style="display: inline;">
+                                                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="py-5">
+                                    <i class="ri-user-search-line fs-1 text-muted"></i>
+                                    <h5 class="mt-3">Aucun bibliothécaire trouvé</h5>
+                                    <p class="text-muted">Commencez par ajouter un nouveau bibliothécaire</p>
+                                    <a href="{{ url_for('new_bibliothecaire') }}" class="btn btn-primary">
+                                        <i class="ri-user-add-line me-1"></i> Ajouter un bibliothécaire
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination and pagination.pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('bibliothecaires', page=pagination.prev_num, recherche=recherche, poste=poste, statut=statut) }}">
+                    <i class="ri-arrow-left-line"></i>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in pagination.iter_pages() %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('bibliothecaires', page=page_num, recherche=recherche, poste=poste, statut=statut) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('bibliothecaires', page=pagination.next_num, recherche=recherche, poste=poste, statut=statut) }}">
+                    <i class="ri-arrow-right-line"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Modal Export -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Exporter les données</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sélectionnez le format d'export :</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('export_bibliothecaires', format='csv') }}" class="btn btn-outline-primary">
+                        <i class="ri-file-text-line me-2"></i> CSV (Excel)
+                    </a>
+                    <a href="{{ url_for('export_bibliothecaires', format='pdf') }}" class="btn btn-outline-danger">
+                        <i class="ri-file-pdf-line me-2"></i> PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

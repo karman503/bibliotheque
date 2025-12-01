@@ -1,0 +1,329 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <!-- En-tête -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="ri-user-add-line text-primary me-2"></i>
+                        Nouveau bibliothécaire
+                    </h2>
+                    <p class="text-muted">Ajoutez un nouveau membre du personnel à la bibliothèque</p>
+                </div>
+                <a href="{{ url_for('bibliothecaires') }}" class="btn btn-outline-secondary">
+                    <i class="ri-arrow-left-line me-1"></i> Retour à la liste
+                </a>
+            </div>
+
+            <!-- Formulaire -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_bibliothecaire') }}" enctype="multipart/form-data" id="bibliothecaireForm">
+                        <!-- Section 1: Informations personnelles -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-4">
+                                <i class="ri-user-line text-primary me-2"></i>
+                                Informations personnelles
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nom *</label>
+                                    <input type="text" name="nom" class="form-control" required 
+                                           placeholder="Ex: DUPONT">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Prénom *</label>
+                                    <input type="text" name="prenom" class="form-control" required 
+                                           placeholder="Ex: Jean">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Date de naissance</label>
+                                    <input type="date" name="date_naissance" class="form-control">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Genre</label>
+                                    <select name="genre" class="form-select">
+                                        <option value="">Non spécifié</option>
+                                        <option value="M">Masculin</option>
+                                        <option value="F">Féminin</option>
+                                        <option value="A">Autre</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Informations professionnelles -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-4">
+                                <i class="ri-briefcase-line text-primary me-2"></i>
+                                Informations professionnelles
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Poste *</label>
+                                    <select name="poste" class="form-select" required>
+                                        <option value="">Sélectionner un poste</option>
+                                        <option value="Bibliothécaire">Bibliothécaire</option>
+                                        <option value="Bibliothécaire principal">Bibliothécaire principal</option>
+                                        <option value="Responsable de section">Responsable de section</option>
+                                        <option value="Directeur adjoint">Directeur adjoint</option>
+                                        <option value="Administrateur">Administrateur</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Département *</label>
+                                    <select name="departement" class="form-select" required>
+                                        <option value="">Sélectionner un département</option>
+                                        <option value="Accueil et orientation">Accueil et orientation</option>
+                                        <option value="Prêt et retour">Prêt et retour</option>
+                                        <option value="Catalogage">Catalogage</option>
+                                        <option value="Réservations">Réservations</option>
+                                        <option value="Médiathèque">Médiathèque</option>
+                                        <option value="Administration">Administration</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Date d'embauche *</label>
+                                    <input type="date" name="date_embauche" class="form-control" required>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Statut *</label>
+                                    <select name="statut" class="form-select" required>
+                                        <option value="Actif" selected>Actif</option>
+                                        <option value="En congé">En congé</option>
+                                        <option value="Formation">En formation</option>
+                                        <option value="Suspendu">Suspendu</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">Description du poste</label>
+                                    <textarea name="description_poste" class="form-control" rows="3" 
+                                              placeholder="Décrivez les principales responsabilités..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Contact -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-4">
+                                <i class="ri-contacts-line text-primary me-2"></i>
+                                Informations de contact
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Email professionnel *</label>
+                                    <input type="email" name="email" class="form-control" required 
+                                           placeholder="exemple@bibliotheque.dj">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Téléphone professionnel *</label>
+                                    <input type="tel" name="telephone" class="form-control" required 
+                                           placeholder="+253 XX XX XX XX">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Email personnel</label>
+                                    <input type="email" name="email_personnel" class="form-control" 
+                                           placeholder="exemple@domaine.com">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Téléphone personnel</label>
+                                    <input type="tel" name="telephone_personnel" class="form-control" 
+                                           placeholder="+253 XX XX XX XX">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">Adresse</label>
+                                    <textarea name="adresse" class="form-control" rows="2" 
+                                              placeholder="Adresse complète..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Compte utilisateur -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-4">
+                                <i class="ri-shield-user-line text-primary me-2"></i>
+                                Compte utilisateur
+                            </h5>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="creer_compte" 
+                                       id="creerCompte" checked>
+                                <label class="form-check-label fw-bold" for="creerCompte">
+                                    Créer un compte utilisateur pour ce bibliothécaire
+                                </label>
+                            </div>
+                            
+                            <div id="compteFields">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nom d'utilisateur *</label>
+                                        <input type="text" name="username" class="form-control" 
+                                               placeholder="Ex: j.dupont" required>
+                                        <div class="form-text">Utilisé pour se connecter au système</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label">Rôle *</label>
+                                        <select name="role" class="form-select" required>
+                                            <option value="bibliothecaire">Bibliothécaire</option>
+                                            <option value="admin">Administrateur</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mot de passe *</label>
+                                        <div class="input-group">
+                                            <input type="password" name="password" class="form-control" 
+                                                   id="password" required>
+                                            <button class="btn btn-outline-secondary" type="button" 
+                                                    onclick="togglePassword('password')">
+                                                <i class="ri-eye-line"></i>
+                                            </button>
+                                        </div>
+                                        <div class="form-text">Minimum 8 caractères</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label">Confirmer le mot de passe *</label>
+                                        <div class="input-group">
+                                            <input type="password" name="confirm_password" class="form-control" 
+                                                   id="confirmPassword" required>
+                                            <button class="btn btn-outline-secondary" type="button" 
+                                                    onclick="togglePassword('confirmPassword')">
+                                                <i class="ri-eye-line"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <i class="ri-information-line me-2"></i>
+                                            Un email contenant les informations de connexion sera envoyé à l'adresse email professionnelle.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 5: Photo de profil -->
+                        <div class="mb-5">
+                            <h5 class="border-bottom pb-2 mb-4">
+                                <i class="ri-camera-line text-primary me-2"></i>
+                                Photo de profil
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Photo (optionnel)</label>
+                                    <input type="file" name="photo" class="form-control" 
+                                           accept=".jpg,.jpeg,.png,.gif" 
+                                           id="photoInput" 
+                                           onchange="previewImage(event)">
+                                    <div class="form-text">
+                                        Formats acceptés: JPG, PNG, GIF (max 2MB)
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="imagePreviewContainer" class="text-center" style="display: none;">
+                                        <p class="form-label">Aperçu</p>
+                                        <img id="imagePreview" src="#" alt="Aperçu de la photo" 
+                                             class="img-thumbnail rounded-circle" 
+                                             style="width: 150px; height: 150px; object-fit: cover;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="border-top pt-4 mt-4">
+                            <div class="d-flex justify-content-between">
+                                <button type="reset" class="btn btn-outline-secondary">
+                                    <i class="ri-refresh-line me-1"></i> Réinitialiser
+                                </button>
+                                <div>
+                                    <a href="{{ url_for('bibliothecaires') }}" class="btn btn-secondary me-2">
+                                        Annuler
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ri-save-line me-1"></i> Créer le bibliothécaire
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Afficher/masquer les champs du compte
+document.getElementById('creerCompte').addEventListener('change', function() {
+    const compteFields = document.getElementById('compteFields');
+    const compteInputs = compteFields.querySelectorAll('input, select');
+    
+    if (this.checked) {
+        compteFields.style.display = 'block';
+        compteInputs.forEach(input => input.required = true);
+    } else {
+        compteFields.style.display = 'none';
+        compteInputs.forEach(input => input.required = false);
+    }
+});
+
+// Prévisualisation de l'image
+function previewImage(event) {
+    const input = event.target;
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const preview = document.getElementById('imagePreview');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        previewContainer.style.display = 'none';
+    }
+}
+
+// Afficher/masquer le mot de passe
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+    } else {
+        input.type = 'password';
+    }
+}
+
+// Générer un nom d'utilisateur automatique
+document.querySelector('input[name="email"]').addEventListener('blur', function() {
+    const usernameInput = document.querySelector('input[name="username"]');
+    const email = this.value;
+    
+    if (email && (!usernameInput.value || usernameInput.value.trim() === '')) {
+        // Extraire la partie avant @ et remplacer les points par des underscores
+        const username = email.split('@')[0].toLowerCase().replace('.', '_');
+        usernameInput.value = username;
+    }
+});
+</script>
+
+{% endblock %}
