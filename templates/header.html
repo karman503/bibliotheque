@@ -58,40 +58,6 @@
                             </a>
                         </li>
 
-                        <!-- NOTIFICATION BELL - Visible seulement quand connecté -->
-                        {% if current_user.is_authenticated %}
-                        <li class="nav-item dropdown ms-2" style="position: relative;">
-                            <a class="nav-link position-relative dropdown-toggle-no-caret" href="#"
-                                id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-                                style="z-index: 1000;">
-                                <i class="ri-notification-3-line fs-5"></i>
-                                <span
-                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                    id="notificationCount" style="display: none;">
-                                    0
-                                </span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end notification-dropdown"
-                                aria-labelledby="notificationDropdown" style="z-index: 99999; position: absolute;">
-                                <div class="notification-header">
-                                    <h6 class="mb-0">Notifications</h6>
-                                    <small><a href="#" id="markAllAsRead">Tout marquer comme lu</a></small>
-                                </div>
-                                <div class="notification-list" id="notificationList">
-                                    <div class="notification-empty">
-                                        <p class="text-muted text-center mb-0">Aucune notification</p>
-                                    </div>
-                                </div>
-                                <div class="notification-footer">
-                                    <a href="{{ url_for('parametres') }}?tab=notifications"
-                                        class="btn btn-sm btn-outline-primary w-100">
-                                        Voir toutes les notifications
-                                    </a>
-                                </div>
-                            </div>
-                        </li>
-                        {% endif %}
-
                         <!-- Icône profil -->
                         {% if current_user.is_authenticated %}
                         <li class="nav-item dropdown ms-2">
