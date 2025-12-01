@@ -1595,12 +1595,7 @@ def delete_adherent():
 
     return redirect(url_for('parametres'))
 
-# PROFIL UTILISATEUR
-@app.route("/profil")
-@login_required
-def profil():
-    # Redirect old /profil page to the settings page profile tab
-    return redirect(url_for('parametres') + '#profil')
+# NOTE: old /profil page removed. Profile UI lives under /dashboard/parametres#profil
 
 @app.route("/profil/update", methods=["POST"])
 @login_required
@@ -1668,7 +1663,7 @@ def update_profil():
         db.session.rollback()
         current_app.logger.exception("Erreur lors de la mise à jour du profil")
         flash("Erreur lors de la mise à jour.", "danger")
-    return redirect(url_for("profil"))
+    return redirect(url_for("parametres") + '#profil')
 
 @app.route("/profil/upload", methods=["POST"])
 @login_required
@@ -1676,17 +1671,17 @@ def upload_image():
     file = request.files.get('image') or request.files.get('profile_picture')
     if not file or file.filename == "":
         flash("Aucun fichier sélectionné.", "warning")
-        return redirect(url_for("profil"))
+        return redirect(url_for("parametres") + '#profil')
 
     allowed_ext = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     filename = secure_filename(file.filename)
     if '.' not in filename:
         flash("Fichier invalide.", "danger")
-        return redirect(url_for("profil"))
+        return redirect(url_for("parametres") + '#profil')
     ext = filename.rsplit('.', 1)[1].lower()
     if ext not in allowed_ext:
         flash("Format non autorisé. Utilisez PNG/JPG/JPEG/GIF/WEBP.", "danger")
-        return redirect(url_for("profil"))
+        return redirect(url_for("parametres") + '#profil')
 
     unique_name = f"{uuid.uuid4().hex}_{filename}"
     profile_folder = app.config.get('PROFILE_FOLDER', PROFILE_FOLDER)
@@ -1713,7 +1708,7 @@ def upload_image():
         current_app.logger.exception("Erreur lors de l'upload de la photo de profil")
         flash("Erreur lors de l'upload de l'image.", "danger")
 
-    return redirect(url_for("profil"))
+    return redirect(url_for("parametres") + '#profil')
 
 @app.route('/profil/delete', methods=['POST'])
 @login_required
@@ -1721,7 +1716,7 @@ def delete_account():
     password = request.form.get('password') or ''
     if not password or not current_user.check_password(password):
         flash('Mot de passe incorrect ou manquant. Suppression annulée.', 'danger')
-        return redirect(url_for('profil'))
+        return redirect(url_for('parametres') + '#profil')
 
     try:
         adherent = getattr(current_user, 'adherent', None)
@@ -1748,7 +1743,7 @@ def delete_account():
         db.session.rollback()
         current_app.logger.exception('Erreur lors de la suppression du compte')
         flash('Erreur lors de la suppression du compte.', 'danger')
-        return redirect(url_for('profil'))
+        return redirect(url_for('parametres') + '#profil')
 
     return redirect(url_for('index'))
 
