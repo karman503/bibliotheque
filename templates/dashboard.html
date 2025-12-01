@@ -25,9 +25,7 @@
         </a>
         {% endif %}
 
-        <a href="{{ url_for('statistiques') }}" class="btn btn-outline-secondary">
-            <i class="ri-bar-chart-line me-1"></i> Statistiques
-        </a>
+        <!-- Statistiques quick link removed -->
 
         <a href="{{ url_for('parametres') }}" class="btn btn-outline-secondary">
             <i class="ri-settings-3-line me-1"></i> Paramètres
@@ -57,20 +55,7 @@
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card text-white bg-success shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1">Emprunts en cours</p>
-                        <h3 class="fw-bold">{{ emprunts_en_cours }}</h3>
-                        <small>Emprunts actifs</small>
-                    </div>
-                    <div class="bg-white bg-opacity-25 rounded p-2">
-                        <i class="ri-bookmark-line fs-3"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Admin 'Emprunts en cours' stat removed -->
 
         <div class="col-md-3">
             <div class="card text-white bg-warning shadow-sm">
@@ -121,19 +106,7 @@
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 p-3">
-                <h5>Actions emprunts</h5>
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                    <a href="{{ url_for('emprunts') }}" class="btn btn-warning text-white">
-                        <i class="ri-bookmark-line me-1"></i> Nouvel emprunt
-                    </a>
-                    <a href="{{ url_for('emprunts') }}" class="btn btn-primary">
-                        <i class="ri-book-line me-1"></i> Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
+        <!-- Admin 'Actions emprunts' card removed -->
 
     </div>
 

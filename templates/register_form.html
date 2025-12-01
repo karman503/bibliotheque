@@ -1,142 +1,170 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow border-0">
-                <div class="card-header 
-                    {% if user_type == 'adherent' %}bg-warning text-white
-                    {% elif user_type == 'bibliothecaire' %}bg-info text-white
-                    {% else %}bg-danger text-white
-                    {% endif %} py-3">
-                    <div class="text-center">
-                        <h4 class="mb-0">
-                            <i class="
-                                {% if user_type == 'adherent' %}ri-user-line
-                                {% elif user_type == 'bibliothecaire' %}ri-user-star-line
-                                {% else %}ri-shield-user-line
-                                {% endif %} me-2"></i>
-                            Inscription - {{ user_type|capitalize }}
-                        </h4>
-                    </div>
-                </div>
+<div class="auth-page register-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-7">
+                <div class="card shadow border-0">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold">Inscription</h2>
+                            <p class="text-muted">Créez votre compte d'adhérent</p>
+                        </div>
 
-                <div class="card-body p-4">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                    {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    {% endfor %}
-                    {% endif %}
-                    {% endwith %}
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                        {% endwith %}
 
-                    <form method="POST" action="{{ url_for('register_with_type', user_type=user_type) }}">
-                        <input type="hidden" name="user_type" value="{{ user_type }}">
+                        {% if user_type == 'admin' and not admin_exists %}
+                        <div class="alert alert-warning">
+                            <i class="ri-shield-user-line me-2"></i>
+                            Vous créez un compte administrateur pour la configuration initiale du système.
+                        </div>
+                        {% endif %}
 
-                        <!-- Informations personnelles (pour adherent et bibliothecaire) -->
-                        {% if user_type in ['adherent', 'bibliothecaire'] %}
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label for="nom" class="form-label">Nom *</label>
-                                <input type="text" class="form-control" id="nom" name="nom" placeholder="Votre nom"
-                                    required>
+                        <form method="POST" action="{{ url_for('register_with_type', user_type=user_type) }}" id="registerForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nom" class="form-label">Nom *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="ri-user-line"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="nom" name="nom" required
+                                            placeholder="Votre nom" value="{{ request.form.nom if request.form.nom }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="prenom" class="form-label">Prénom *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="ri-user-line"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="prenom" name="prenom" required
+                                            placeholder="Votre prénom" value="{{ request.form.prenom if request.form.prenom }}">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="prenom" class="form-label">Prénom *</label>
-                                <input type="text" class="form-control" id="prenom" name="prenom"
-                                    placeholder="Votre prénom" required>
+
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Nom d'utilisateur *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="ri-user-line"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="username" name="username" required
+                                        placeholder="Choisissez un nom d'utilisateur" value="{{ request.form.username if request.form.username }}">
+                                </div>
+                                <div class="form-text">Ce nom sera utilisé pour vous connecter</div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="telephone" class="form-label">Téléphone</label>
-                                <input type="tel" class="form-control" id="telephone" name="telephone"
-                                    placeholder="Votre numéro de téléphone">
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="ri-mail-line"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" name="email" required
+                                        placeholder="votre@email.com" value="{{ request.form.email if request.form.email }}">
+                                </div>
                             </div>
-                            {% if user_type == 'adherent' %}
-                            <div class="col-md-6">
-                                <label for="classe" class="form-label">Classe/Groupe</label>
-                                <input type="text" class="form-control" id="classe" name="classe"
-                                    placeholder="Votre classe ou groupe">
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="telephone" class="form-label">Téléphone</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="ri-phone-line"></i>
+                                        </span>
+                                        <input type="tel" class="form-control" id="telephone" name="telephone"
+                                            placeholder="Votre numéro" value="{{ request.form.telephone if request.form.telephone }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="classe" class="form-label">Classe</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="ri-book-line"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="classe" name="classe"
+                                            placeholder="Ex: Terminale, Licence 2" value="{{ request.form.classe if request.form.classe }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="password" class="form-label">Mot de passe *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="ri-lock-line"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="password" name="password" required
+                                            placeholder="Créez un mot de passe">
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                            <i class="ri-eye-line"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Minimum 8 caractères</div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="confirm_password" class="form-label">Confirmer le mot de passe *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="ri-lock-line"></i>
+                                        </span>
+                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required
+                                            placeholder="Retapez votre mot de passe">
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                            <i class="ri-eye-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if user_type == 'admin' %}
+                            <div class="alert alert-info">
+                                <i class="ri-information-line me-2"></i>
+                                <small>Le compte administrateur sera créé sans vérification email et vous serez connecté automatiquement.</small>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="ri-information-line me-2"></i>
+                                <small>Un code de vérification sera envoyé à votre email après l'inscription.</small>
                             </div>
                             {% endif %}
-                        </div>
-                        {% endif %}
 
-                        <!-- Informations de compte -->
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Nom d'utilisateur *</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="ri-user-line"></i></span>
-                                <input type="text" class="form-control" id="username" name="username"
-                                    placeholder="Choisissez un nom d'utilisateur" required>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary" id="registerButton">
+                                    <span class="btn-text">
+                                        <i class="ri-user-add-line me-2"></i>S'inscrire
+                                    </span>
+                                </button>
+                                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">
+                                    <i class="ri-arrow-left-line me-2"></i>Retour à la connexion
+                                </a>
                             </div>
-                        </div>
+                        </form>
 
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Adresse email *</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="ri-mail-line"></i></span>
-                                <input type="email" class="form-control" id="email" name="email"
-                                    placeholder="votre@email.com" required>
-                            </div>
+                        <div class="text-center mt-4">
+                            <p class="text-muted mb-0">
+                                En vous inscrivant, vous acceptez nos 
+                                <a href="#" class="text-primary text-decoration-none">conditions d'utilisation</a>
+                                et notre 
+                                <a href="#" class="text-primary text-decoration-none">politique de confidentialité</a>.
+                            </p>
                         </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="password" class="form-label">Mot de passe *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="ri-lock-line"></i></span>
-                                    <input type="password" class="form-control" id="password" name="password"
-                                        placeholder="Créez un mot de passe" required>
-                                    <button class="btn btn-outline-secondary toggle-password" type="button">
-                                        <i class="ri-eye-line"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="confirm_password" class="form-label">Confirmer *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="ri-lock-line"></i></span>
-                                    <input type="password" class="form-control" id="confirm_password"
-                                        name="confirm_password" placeholder="Confirmez le mot de passe" required>
-                                    <button class="btn btn-outline-secondary toggle-password" type="button">
-                                        <i class="ri-eye-line"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {% if user_type == 'admin' %}
-                        <div class="alert alert-warning mt-3">
-                            <i class="ri-alert-line me-2"></i>
-                            <strong>Important :</strong> Vous créez un compte administrateur avec des privilèges
-                            complets sur le système.
-                        </div>
-                        {% endif %}
-
-                        <div class="d-grid gap-2 mt-4">
-                            <button type="submit" class="btn 
-                                {% if user_type == 'adherent' %}btn-warning
-                                {% elif user_type == 'bibliothecaire' %}btn-info
-                                {% else %}btn-danger
-                                {% endif %}">
-                                <i class="ri-user-add-line me-2"></i>
-                                Créer mon compte {{ user_type|capitalize }}
-                            </button>
-                            <a href="{{ url_for('register_choice') }}" class="btn btn-outline-secondary">
-                                <i class="ri-arrow-left-line me-2"></i>Retour au choix
-                            </a>
-                        </div>
-                    </form>
-
-                    <div class="text-center mt-4">
-                        <p class="text-muted mb-0">
-                            Déjà inscrit ?
-                            <a href="{{ url_for('login') }}" class="text-primary fw-semibold">Connectez-vous</a>
-                        </p>
                     </div>
                 </div>
             </div>
@@ -145,41 +173,66 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Toggle password visibility
-        document.querySelectorAll('.toggle-password').forEach(button => {
-            button.addEventListener('click', function () {
-                const input = this.parentElement.querySelector('input');
-                const icon = this.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.className = 'ri-eye-off-line';
-                } else {
-                    input.type = 'password';
-                    icon.className = 'ri-eye-line';
-                }
-            });
-        });
-
-        // Form submission handling
-        const form = document.querySelector('form');
-        const submitBtn = form.querySelector('button[type="submit"]');
+    (() => {
+        const form = document.getElementById('registerForm');
+        const button = document.getElementById('registerButton');
+        const btnText = button.querySelector('.btn-text');
 
         form.addEventListener('submit', function (e) {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-
-            if (password !== confirmPassword) {
-                e.preventDefault();
-                alert('Les mots de passe ne correspondent pas.');
-                return;
+            button.disabled = true;
+            if (btnText) {
+                btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Inscription en cours...';
+            } else {
+                button.innerText = 'Inscription en cours...';
             }
-
-            // Disable button and show loading
-            submitBtn.disabled = true;
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Création en cours...';
         });
-    });
+
+        // Toggle show/hide password
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function () {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    togglePassword.innerHTML = '<i class="ri-eye-off-line"></i>';
+                } else {
+                    passwordInput.type = 'password';
+                    togglePassword.innerHTML = '<i class="ri-eye-line"></i>';
+                }
+            });
+        }
+
+        // Toggle show/hide confirm password
+        const toggleConfirm = document.getElementById('toggleConfirmPassword');
+        const confirmInput = document.getElementById('confirm_password');
+        if (toggleConfirm && confirmInput) {
+            toggleConfirm.addEventListener('click', function () {
+                if (confirmInput.type === 'password') {
+                    confirmInput.type = 'text';
+                    toggleConfirm.innerHTML = '<i class="ri-eye-off-line"></i>';
+                } else {
+                    confirmInput.type = 'password';
+                    toggleConfirm.innerHTML = '<i class="ri-eye-line"></i>';
+                }
+            });
+        }
+
+        // Validation des mots de passe
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirm_password');
+        
+        if (password && confirmPassword) {
+            function validatePassword() {
+                if (password.value !== confirmPassword.value) {
+                    confirmPassword.setCustomValidity("Les mots de passe ne correspondent pas");
+                } else {
+                    confirmPassword.setCustomValidity('');
+                }
+            }
+            
+            password.addEventListener('change', validatePassword);
+            confirmPassword.addEventListener('keyup', validatePassword);
+        }
+    })();
 </script>
 {% endblock %}

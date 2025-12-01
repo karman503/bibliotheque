@@ -9,6 +9,17 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - BibliosDjib</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body class="has-sidebar admin-panel">
@@ -69,32 +80,9 @@
                     </a>
                 </div>
 
-                <!-- GESTION DES EMPRUNTS -->
-                <div class="admin-nav-section">
-                    <h6 class="text-uppercase text-muted small mb-2 mt-3 px-1">Gestion des prêts</h6>
-                    <a href="/dashboard/emprunts" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2 
-                    {% if title == 'Emprunts' %}bg-danger text-white{% else %}bg-light text-dark{% endif %}">
-                        <i class="ri-bookmark-line"></i> Emprunts
-                    </a>
+                <!-- GESTION DES EMPRUNTS (removed) -->
 
-                    <a href="/dashboard/reservations" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2 
-                    {% if title == 'Réservations' %}bg-danger text-white{% else %}bg-light text-dark{% endif %}">
-                        <i class="ri-calendar-line"></i> Réservations
-                    </a>
-                </div>
-
-                <!-- RAPPORTS ET STATISTIQUES -->
-                <div class="admin-nav-section">
-                    <h6 class="text-uppercase text-muted small mb-2 mt-3 px-1">Rapports & Analyses</h6>
-                    <a href="/dashboard/statistiques" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2 
-                    {% if title == 'Statistiques' %}bg-danger text-white{% else %}bg-light text-dark{% endif %}">
-                        <i class="ri-bar-chart-line"></i> Statistiques
-                    </a>
-
-                    <a href="#" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="ri-file-chart-line"></i> Rapports
-                    </a>
-                </div>
+                <!-- RAPPORTS ET STATISTIQUES (removed) -->
 
                 <!-- ADMINISTRATION SYSTÈME -->
                 <div class="admin-nav-section">
@@ -104,26 +92,10 @@
                         <i class="ri-settings-line"></i> Paramètres système
                     </a>
 
-                    <a href="#" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="ri-shield-keyhole-line"></i> Sécurité
-                    </a>
-
-                    <a href="#" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="ri-database-line"></i> Sauvegarde
-                    </a>
+                    
                 </div>
 
-                <!-- SUPPORT ET AIDE -->
-                <div class="admin-nav-section">
-                    <h6 class="text-uppercase text-muted small mb-2 mt-3 px-1">Support</h6>
-                    <a href="#" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="ri-question-line"></i> Aide & Support
-                    </a>
-
-                    <a href="/contact" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2">
-                        <i class="ri-customer-service-line"></i> Contact
-                    </a>
-                </div>
+                <!-- SUPPORT ET AIDE (removed) -->
 
                 <!-- LIEN PROFIL -->
                 <a href="/profil" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2 mt-3">

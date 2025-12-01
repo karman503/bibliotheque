@@ -17,6 +17,16 @@ import re
 from functools import wraps
 import csv
 from io import StringIO
+import io
+
+# Ajout des imports pour ReportLab (PDF)
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch, cm
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 
 logging.basicConfig(level=logging.INFO)
 
@@ -215,6 +225,280 @@ with app.app_context():
             db.session.commit()
     except Exception:
         current_app.logger.exception('Impossible d\'ajouter automatiquement les colonnes de confirmation')
+
+# Fonctions pour générer les PDF
+def generate_bibliothecaires_pdf(bibliothecaires):
+    """Générer un PDF avec la liste des bibliothécaires"""
+    buffer = io.BytesIO()
+    
+    # Créer le document
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=72
+    )
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        alignment=1  # Centré
+    )
+    
+    # Contenu du PDF
+    story = []
+    
+    # Titre
+    story.append(Paragraph("LISTE DES BIBLIOTHÉCAIRES", title_style))
+    story.append(Spacer(1, 20))
+    
+    # Informations générales
+    date_str = datetime.now().strftime("%d/%m/%Y")
+    total = len(bibliothecaires)
+    info_text = f"<b>Date d'export :</b> {date_str} | <b>Total :</b> {total} bibliothécaires"
+    story.append(Paragraph(info_text, styles['Normal']))
+    story.append(Spacer(1, 20))
+    
+    # Préparer les données du tableau
+    data = []
+    
+    # En-têtes du tableau
+    headers = [
+        "Nom", 
+        "Prénom", 
+        "Email", 
+        "Téléphone", 
+        "Poste", 
+        "Département", 
+        "Statut",
+        "Date embauche"
+    ]
+    data.append(headers)
+    
+    # Données des bibliothécaires
+    for bib in bibliothecaires:
+        row = [
+            bib.nom or '',
+            bib.prenom or '',
+            bib.email or '',
+            bib.telephone or '',
+            bib.poste or '',
+            bib.departement or '',
+            bib.statut or '',
+            bib.date_embauche.strftime('%d/%m/%Y') if bib.date_embauche else ''
+        ]
+        data.append(row)
+    
+    # Créer le tableau
+    table = Table(data, repeatRows=1)
+    
+    # Style du tableau
+    table.setStyle(TableStyle([
+        # Style de l'en-tête
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        
+        # Bordures
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+        ('BOX', (0, 0), (-1, -1), 2, colors.black),
+        
+        # Alignement des cellules
+        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        
+        # Alternance des couleurs des lignes
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), 
+         [colors.white, colors.HexColor('#f8f9fa')]),
+        
+        # Hauteur des lignes
+        ('MINIMUMHEIGHT', (0, 0), (-1, -1), 20),
+        
+        # Padding
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    
+    # Ajuster la largeur des colonnes
+    table._argW = [
+        1.5*cm,  # Nom
+        1.5*cm,  # Prénom
+        3*cm,    # Email
+        2*cm,    # Téléphone
+        2*cm,    # Poste
+        2*cm,    # Département
+        1.5*cm,  # Statut
+        2*cm     # Date embauche
+    ]
+    
+    story.append(table)
+    story.append(Spacer(1, 30))
+    
+    # Statistiques
+    actifs = len([b for b in bibliothecaires if b.statut == 'Actif'])
+    inactifs = total - actifs
+    
+    stats_text = f"""
+    <b>STATISTIQUES :</b><br/>
+    • Bibliothécaires actifs : {actifs}<br/>
+    • Bibliothécaires inactifs : {inactifs}<br/>
+    • Total : {total}
+    """
+    story.append(Paragraph(stats_text, styles['Normal']))
+    
+    # Pied de page
+    story.append(Spacer(1, 50))
+    footer_text = f"Export généré le {date_str} - Système de Gestion de Bibliothèque"
+    story.append(Paragraph(footer_text, ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.grey,
+        alignment=1
+    )))
+    
+    # Générer le PDF
+    doc.build(story)
+    
+    # Récupérer le PDF depuis le buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    return pdf
+
+def generate_detailed_bibliothecaire_pdf(bibliothecaire):
+    """Générer un PDF détaillé pour un bibliothécaire spécifique"""
+    buffer = io.BytesIO()
+    
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=72
+    )
+    
+    styles = getSampleStyleSheet()
+    story = []
+    
+    # Titre
+    story.append(Paragraph(f"FICHE DU BIBLIOTHÉCAIRE", ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=20,
+        alignment=1
+    )))
+    
+    # Informations principales
+    info_data = [
+        [Paragraph("<b>Nom complet :</b>", styles['Normal']), 
+         f"{bibliothecaire.prenom} {bibliothecaire.nom}"],
+        [Paragraph("<b>Email professionnel :</b>", styles['Normal']), 
+         bibliothecaire.email],
+        [Paragraph("<b>Téléphone professionnel :</b>", styles['Normal']), 
+         bibliothecaire.telephone or 'Non renseigné'],
+        [Paragraph("<b>Poste :</b>", styles['Normal']), 
+         bibliothecaire.poste],
+        [Paragraph("<b>Département :</b>", styles['Normal']), 
+         bibliothecaire.departement or 'Non renseigné'],
+        [Paragraph("<b>Statut :</b>", styles['Normal']), 
+         bibliothecaire.statut],
+        [Paragraph("<b>Date d'embauche :</b>", styles['Normal']), 
+         bibliothecaire.date_embauche.strftime('%d/%m/%Y') if bibliothecaire.date_embauche else 'Non renseigné'],
+    ]
+    
+    # Informations personnelles (si disponibles)
+    if bibliothecaire.date_naissance or bibliothecaire.genre or bibliothecaire.adresse:
+        story.append(Spacer(1, 20))
+        story.append(Paragraph("INFORMATIONS PERSONNELLES", ParagraphStyle(
+            'Subtitle',
+            parent=styles['Heading2'],
+            fontSize=16,
+            spaceAfter=10
+        )))
+        
+        perso_data = []
+        if bibliothecaire.date_naissance:
+            perso_data.append([
+                Paragraph("<b>Date de naissance :</b>", styles['Normal']),
+                bibliothecaire.date_naissance.strftime('%d/%m/%Y')
+            ])
+        if bibliothecaire.genre:
+            perso_data.append([
+                Paragraph("<b>Genre :</b>", styles['Normal']),
+                'Masculin' if bibliothecaire.genre == 'M' else 'Féminin' if bibliothecaire.genre == 'F' else 'Autre'
+            ])
+        if bibliothecaire.adresse:
+            perso_data.append([
+                Paragraph("<b>Adresse :</b>", styles['Normal']),
+                Paragraph(bibliothecaire.adresse, styles['Normal'])
+            ])
+        if bibliothecaire.email_personnel:
+            perso_data.append([
+                Paragraph("<b>Email personnel :</b>", styles['Normal']),
+                bibliothecaire.email_personnel
+            ])
+        if bibliothecaire.telephone_personnel:
+            perso_data.append([
+                Paragraph("<b>Téléphone personnel :</b>", styles['Normal']),
+                bibliothecaire.telephone_personnel
+            ])
+        
+        info_data.extend(perso_data)
+    
+    # Créer le tableau d'informations
+    info_table = Table(info_data, colWidths=[3*cm, 10*cm])
+    info_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+    ]))
+    
+    story.append(info_table)
+    
+    # Description du poste
+    if bibliothecaire.description_poste:
+        story.append(Spacer(1, 20))
+        story.append(Paragraph("DESCRIPTION DU POSTE", ParagraphStyle(
+            'Subtitle',
+            parent=styles['Heading2'],
+            fontSize=16,
+            spaceAfter=10
+        )))
+        story.append(Paragraph(bibliothecaire.description_poste, styles['Normal']))
+    
+    # Pied de page
+    story.append(Spacer(1, 50))
+    date_str = datetime.now().strftime("%d/%m/%Y")
+    footer_text = f"Document généré le {date_str} - Système de Gestion de Bibliothèque"
+    story.append(Paragraph(footer_text, ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.grey,
+        alignment=1
+    )))
+    
+    doc.build(story)
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    return pdf
 
 # Route pour créer un admin
 @app.route('/setup/admin', methods=['GET', 'POST'])
@@ -525,18 +809,15 @@ def contact():
     
     return render_template("contact.html", title="Contact")
 
-# Route pour choisir le type d'inscription
-@app.route('/inscription/choix', methods=['GET'])
-def register_choice():
+# Route d'inscription par défaut (inscription automatique adhérent)
+@app.route("/inscription", methods=['GET', 'POST'])
+def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     
-    # Vérifier si un admin existe déjà
-    admin_exists = User.query.filter_by(role='admin').first() is not None
-    
-    return render_template('register_choice.html', 
-                         title='Choix d\'inscription',
-                         admin_exists=admin_exists)
+    # Utiliser directement la route d'inscription adhérent
+    return register_with_type('adherent')
+
 
 # Route d'inscription générique avec type
 @app.route('/inscription/<string:user_type>', methods=['GET', 'POST'])
@@ -547,7 +828,7 @@ def register_with_type(user_type):
     allowed_types = ['adherent', 'bibliothecaire', 'admin']
     if user_type not in allowed_types:
         flash('Type d\'utilisateur invalide', 'danger')
-        return redirect(url_for('register_choice'))
+        return redirect(url_for('index'))
     
     # Vérifier si un admin existe déjà (pour éviter les doublons)
     admin_exists = User.query.filter_by(role='admin').first() is not None
@@ -572,14 +853,14 @@ def register_with_type(user_type):
         if not username or not email or not password:
             flash('Tous les champs obligatoires doivent être remplis', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
         
         if password != confirm_password:
             flash('Les mots de passe ne correspondent pas', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
         
@@ -587,14 +868,14 @@ def register_with_type(user_type):
         if User.query.filter_by(username=username).first():
             flash('Ce nom d\'utilisateur est déjà pris', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
             
         if User.query.filter_by(email=email).first():
             flash('Cette adresse email est déjà utilisée', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
         
@@ -602,7 +883,7 @@ def register_with_type(user_type):
         if not is_valid_email(email):
             flash('Adresse email invalide', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
         
@@ -661,22 +942,15 @@ def register_with_type(user_type):
             db.session.rollback()
             flash(f'Erreur lors de l\'inscription: {str(e)}', 'danger')
             return render_template('register_form.html', 
-                                 title=f'Inscription - {user_type.capitalize()}',
+                                 title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
     
     # GET request
     return render_template('register_form.html', 
-                         title=f'Inscription - {user_type.capitalize()}',
+                         title=f'Inscription',
                          user_type=user_type,
                          admin_exists=admin_exists)
-
-# Route d'inscription par défaut (redirige)
-@app.route("/inscription", methods=['GET'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('register_choice'))
 
 # CONNEXION
 @app.route("/connexion", methods=['GET', 'POST'])
@@ -1500,7 +1774,33 @@ def delete_bibliothecaire(id):
 @role_required(['admin'])
 def export_bibliothecaires(format):
     """Exporter la liste des bibliothécaires"""
-    bibliothecaires = Bibliothecaire.query.all()
+    
+    # Récupérer les mêmes filtres que pour l'affichage
+    recherche = request.args.get('recherche', '').strip()
+    poste = request.args.get('poste', '')
+    statut = request.args.get('statut', '')
+    
+    # Construire la requête avec les mêmes filtres
+    query = Bibliothecaire.query
+    
+    if recherche:
+        recherche_pattern = f"%{recherche}%"
+        query = query.filter(
+            db.or_(
+                Bibliothecaire.nom.ilike(recherche_pattern),
+                Bibliothecaire.prenom.ilike(recherche_pattern),
+                Bibliothecaire.email.ilike(recherche_pattern),
+                Bibliothecaire.telephone.ilike(recherche_pattern)
+            )
+        )
+    
+    if poste:
+        query = query.filter(Bibliothecaire.poste == poste)
+    
+    if statut:
+        query = query.filter(Bibliothecaire.statut == statut)
+    
+    bibliothecaires = query.order_by(Bibliothecaire.nom.asc()).all()
     
     if format == 'csv':
         # Générer un CSV simple
@@ -1508,7 +1808,8 @@ def export_bibliothecaires(format):
         writer = csv.writer(si)
         
         # En-têtes
-        writer.writerow(['Nom', 'Prénom', 'Email', 'Téléphone', 'Poste', 'Département', 'Statut', 'Date d\'embauche'])
+        writer.writerow(['Nom', 'Prénom', 'Email', 'Téléphone', 'Poste', 
+                        'Département', 'Statut', 'Date d\'embauche'])
         
         # Données
         for bib in bibliothecaires:
@@ -1527,14 +1828,28 @@ def export_bibliothecaires(format):
         return Response(
             output,
             mimetype="text/csv",
-            headers={"Content-disposition": "attachment; filename=bibliothecaires.csv"}
+            headers={"Content-disposition": 
+                    f"attachment; filename=bibliothecaires_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
         )
     
     elif format == 'pdf':
-        # Pour PDF, vous devrez installer une librairie comme ReportLab
-        # Pour l'instant, retourner un message
-        flash('L\'export PDF n\'est pas encore implémenté', 'info')
-        return redirect(url_for('bibliothecaires'))
+        try:
+            pdf = generate_bibliothecaires_pdf(bibliothecaires)
+            
+            filename = f"bibliothecaires_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            
+            return Response(
+                pdf,
+                mimetype="application/pdf",
+                headers={
+                    "Content-disposition": f"attachment; filename={filename}",
+                    "Content-Type": "application/pdf"
+                }
+            )
+        except Exception as e:
+            current_app.logger.error(f"Erreur lors de la génération du PDF : {str(e)}")
+            flash(f'Erreur lors de la génération du PDF : {str(e)}', 'danger')
+            return redirect(url_for('bibliothecaires'))
     
     flash('Format d\'export non supporté', 'danger')
     return redirect(url_for('bibliothecaires'))
@@ -1646,6 +1961,31 @@ def create_bibliothecaire_account(id):
         flash(f'Erreur lors de la création du compte : {str(e)}', 'danger')
     
     return redirect(url_for('view_bibliothecaire', id=id))
+
+@app.route("/dashboard/bibliothecaires/<int:id>/export_pdf")
+@login_required
+@role_required(['admin'])
+def export_bibliothecaire_pdf(id):
+    """Exporter la fiche d'un bibliothécaire en PDF"""
+    bibliothecaire = Bibliothecaire.query.get_or_404(id)
+    
+    try:
+        pdf = generate_detailed_bibliothecaire_pdf(bibliothecaire)
+        
+        filename = f"bibliothecaire_{bibliothecaire.nom}_{bibliothecaire.prenom}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        
+        return Response(
+            pdf,
+            mimetype="application/pdf",
+            headers={
+                "Content-disposition": f"attachment; filename={filename}",
+                "Content-Type": "application/pdf"
+            }
+        )
+    except Exception as e:
+        current_app.logger.error(f"Erreur lors de la génération du PDF : {str(e)}")
+        flash(f'Erreur lors de la génération du PDF : {str(e)}', 'danger')
+        return redirect(url_for('view_bibliothecaire', id=id))
 
 # ROUTES RESERVATIONS
 @app.route('/reservation/create', methods=['POST'])
@@ -2302,15 +2642,6 @@ def utility_processor():
         now=datetime.utcnow(),
         format_date=format_date,
         datetime=datetime
-    )
-
-@app.context_processor
-def utility_processor():
-    return dict(
-        timedelta=timedelta,
-        now=datetime.utcnow(),
-        datetime=datetime,
-        today=datetime.utcnow().date()
     )
 
 if __name__ == "__main__":
