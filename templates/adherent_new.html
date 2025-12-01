@@ -76,6 +76,7 @@
                             </div>
                         </div>
                     </div>
+                    {% if current_user.role != 'bibliothecaire' %}
                     <div id="userRoleField" class="col-12 mt-2">
                         <div class="row g-3">
                             <div class="col-md-4">
@@ -88,6 +89,7 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
 
                     <div class="col-12 text-end mt-3">
                         <a href="{{ url_for('adherents') }}" class="btn btn-outline-secondary">Annuler</a>

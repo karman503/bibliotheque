@@ -56,7 +56,7 @@
 
                     {% if current_user and current_user.role in ['admin','bibliothecaire'] %}
                     <a href="{{ url_for('new_adherent') }}" class="btn btn-primary ms-auto">
-                        <i class="ri-user-add-line me-1"></i> Nouvel utilisateur
+                        <i class="ri-user-add-line me-1"></i> Nouvel Adherent
                     </a>
                     {% endif %}
 
@@ -253,6 +253,7 @@
                                 </div>
                             </div>
                         </div>
+                        {% if current_user.role != 'bibliothecaire' %}
                         <div id="userRoleField" class="col-12 mt-2">
                             <div class="row g-3">
                                 <div class="col-md-4">
@@ -265,6 +266,7 @@
                                 </div>
                             </div>
                         </div>
+                        {% endif %}
                     </div>
                 </form>
             </div>

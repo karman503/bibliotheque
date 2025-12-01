@@ -110,7 +110,6 @@ class Adherent(db.Model):
     statut = db.Column(db.String(20), default='Actif')
     date_inscription = db.Column(db.DateTime, default=datetime.utcnow)
     emprunts = db.relationship('Emprunt', backref='adherent', lazy=True)
-
 class Livre(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titre = db.Column(db.String(200), nullable=False)
@@ -787,6 +786,9 @@ def adherents():
                 role_selected = (request.form.get('role') or 'user').strip()
                 if role_selected not in ('user', 'bibliothecaire', 'admin'):
                     role_selected = 'user'
+                # Bibliothécaires ne peuvent pas créer des comptes avec un rôle autre que 'user'
+                if current_user.role == 'bibliothecaire':
+                    role_selected = 'user'
 
                 if not username:
                     username = (nouveau_adherent.email.split('@')[0] if nouveau_adherent.email else f'user{nouveau_adherent.id}').strip()
@@ -956,6 +958,9 @@ def new_adherent():
                 # Allow admin to choose role for the created user (default 'user')
                 role_selected = (request.form.get('role') or 'user').strip()
                 if role_selected not in ('user', 'bibliothecaire', 'admin'):
+                    role_selected = 'user'
+                # Bibliothécaires ne peuvent pas créer des comptes avec un rôle autre que 'user'
+                if current_user.role == 'bibliothecaire':
                     role_selected = 'user'
 
                 existing_user = User.query.filter((User.username == username) | (User.email == nouveau_adherent.email)).first()
@@ -1594,7 +1599,8 @@ def delete_adherent():
 @app.route("/profil")
 @login_required
 def profil():
-    return render_template("profil.html", title="Mon Profil", user=current_user)
+    # Redirect old /profil page to the settings page profile tab
+    return redirect(url_for('parametres') + '#profil')
 
 @app.route("/profil/update", methods=["POST"])
 @login_required
@@ -1605,22 +1611,37 @@ def update_profil():
 
     if not username or not email:
         flash("Veuillez remplir tous les champs.", "danger")
-        return redirect(url_for("profil"))
+        return redirect(url_for("parametres") + '#profil')
 
     if current_password:
         if not current_user.check_password(current_password):
             flash("Mot de passe actuel incorrect.", "danger")
-            return redirect(url_for("profil"))
+            return redirect(url_for("parametres") + '#profil')
+
+    # Handle password change: if new_password provided, require current_password and confirmation
+    new_password = request.form.get('new_password') or ''
+    confirm_new = request.form.get('confirm_new_password') or ''
+    if new_password:
+        # require current_password
+        if not current_password:
+            flash('Pour changer le mot de passe, veuillez fournir votre mot de passe actuel.', 'danger')
+            return redirect(url_for('parametres') + '#profil')
+        if new_password != confirm_new:
+            flash('Le nouveau mot de passe et sa confirmation ne correspondent pas.', 'danger')
+            return redirect(url_for('parametres') + '#profil')
+        if len(new_password) < 6:
+            flash('Le mot de passe doit contenir au moins 6 caractères.', 'danger')
+            return redirect(url_for('parametres') + '#profil')
 
     existing_user = User.query.filter(User.username == username, User.id != current_user.id).first()
     if existing_user:
         flash("Ce nom d'utilisateur est déjà pris.", "danger")
-        return redirect(url_for("profil"))
+        return redirect(url_for("parametres") + '#profil')
 
     existing_email = User.query.filter(User.email == email, User.id != current_user.id).first()
     if existing_email:
         flash("Cette adresse email est déjà utilisée.", "danger")
-        return redirect(url_for("profil"))
+        return redirect(url_for("parametres") + '#profil')
 
     try:
         current_user.username = username
@@ -1632,6 +1653,16 @@ def update_profil():
             except Exception:
                 current_app.logger.exception('Impossible de mettre à jour le téléphone de l\'adhérent')
         db.session.commit()
+        # apply password update after commit of profile info
+        if new_password:
+            try:
+                current_user.set_password(new_password)
+                db.session.commit()
+                flash('Mot de passe mis à jour', 'success')
+            except Exception:
+                db.session.rollback()
+                current_app.logger.exception('Erreur lors de la mise à jour du mot de passe')
+                flash('Erreur lors de la mise à jour du mot de passe.', 'danger')
         flash("Informations mises à jour", "success")
     except Exception:
         db.session.rollback()
@@ -1743,6 +1774,7 @@ def utility_processor():
         format_date=format_date,
         datetime=datetime
     )
+
 @app.context_processor
 def utility_processor():
     return dict(

@@ -68,7 +68,8 @@
                     {% if title == 'Paramètres' %}bg-primary text-white{% else %}bg-light text-dark{% endif %}">
                     <i class="ri-settings-line"></i> Paramètres
                 </a>
-                <a href="/profil" class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2">
+                <a href="{{ url_for('parametres') }}#profil"
+                    class="btn w-100 text-start d-flex align-items-center gap-3 px-3 py-2">
                     <i class="ri-user-3-line"></i> Mon profil
                 </a>
             </nav>
