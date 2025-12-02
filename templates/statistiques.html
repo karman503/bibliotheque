@@ -916,7 +916,7 @@
 <!-- Your existing HTML code... -->
 {% block scripts %}
 {{ super() }}
-<script>
+<!-- <script>
     document.addEventListener('DOMContentLoaded', function () {
         // Gestion des boutons de période
         var buttons = document.querySelectorAll('[data-period]');
@@ -1184,10 +1184,10 @@
 
     // Initialiser les animations au chargement
     window.addEventListener('load', animateProgressBars);
-</script>
+</script> -->
 
 <!-- Script stats.js séparé -->
-<script src="{{ url_for('static', filename='js/stats.js') }}"></script>
+<!-- <script src="{{ url_for('static', filename='js/stats.js') }}"></script> -->
 
 <style>
     .hover-overlay:hover {

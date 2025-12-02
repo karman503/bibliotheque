@@ -146,6 +146,28 @@ class Adherent(db.Model):
     emprunts = db.relationship('Emprunt', backref='adherent', lazy=True)
 
 
+class Bibliothecaire(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(100), nullable=False)
+    prenom = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    telephone = db.Column(db.String(20))
+    poste = db.Column(db.String(50), default='Bibliothécaire')
+    departement = db.Column(db.String(50))
+    date_embauche = db.Column(db.Date, default=datetime.utcnow)
+    statut = db.Column(db.String(20), default='Actif')
+    date_naissance = db.Column(db.Date)
+    genre = db.Column(db.String(1))
+    adresse = db.Column(db.Text)
+    email_personnel = db.Column(db.String(120))
+    telephone_personnel = db.Column(db.String(20))
+    description_poste = db.Column(db.Text)
+    image = db.Column(db.String(200), nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class Livre(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     titre = db.Column(db.String(200), nullable=False)
@@ -1674,7 +1696,8 @@ def view_bibliothecaire(id):
         "view_bibliothecaire.html",
         title=f"Bibliothécaire {bibliothecaire.prenom} {bibliothecaire.nom}",
         bibliothecaire=bibliothecaire,
-        emprunts_geres=emprunts_geres
+        emprunts_geres=emprunts_geres,
+        now=datetime.now()
     )
 
 
