@@ -3,89 +3,346 @@
 
 <div class="container-fluid p-4">
 
-    <h2 class="fw-bold mb-2">Tableau de bord — Bibliothécaire</h2>
-    <p class="text-muted mb-4">Bienvenue, {{ current_user.username }}</p>
-
-    <!-- Boutons rapides BIBLIOTHECAIRE -->
-    <div class="d-flex flex-wrap gap-2 mb-4">
-        <a href="{{ url_for('emprunts') }}" class="btn btn-info">
-            <i class="ri-bookmark-line me-1"></i> Emprunts
-        </a>
-        <a href="{{ url_for('reservations_list') }}" class="btn btn-secondary">
-            <i class="ri-calendar-line me-1"></i> Réservations
-        </a>
-        <a href="{{ url_for('parametres') }}" class="btn btn-outline-secondary">
-            <i class="ri-settings-3-line me-1"></i> Paramètres
-        </a>
+    <!-- En-tête avec indicateurs -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">Centre de gestion bibliothèque</h2>
+            <p class="text-muted mb-0">Bonjour, <span class="fw-semibold text-info">{{ current_user.username }}</span>
+            </p>
+            <small class="text-muted">Gestion des prêts et retours</small>
+        </div>
+        <div class="text-end">
+            <div class="badge bg-info-subtle text-info p-2">
+                <i class="ri-user-star-line me-1"></i> Bibliothécaire
+            </div>
+            <p class="text-muted small mt-1">{{ date_jour }}</p>
+        </div>
     </div>
 
-    <!-- Cartes statistiques pour BIBLIOTHECAIRE -->
-    <div class="row g-4 mb-4">
-
-        <div class="col-md-4">
-            <div class="card text-white bg-info shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1">Total livres</p>
-                        <h3 class="fw-bold">{{ total_livres }}</h3>
-                        <small>Collection totale</small>
-                    </div>
-                    <div class="bg-white bg-opacity-25 rounded p-2">
-                        <i class="ri-book-line fs-3"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card text-white bg-primary shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1">Livres disponibles</p>
-                        <h3 class="fw-bold">{{ livres_disponibles }}</h3>
-                        <small>Disponibles</small>
-                    </div>
-                    <div class="bg-white bg-opacity-25 rounded p-2">
-                        <i class="ri-checkbox-multiple-line fs-3"></i>
+    <!-- Cartes d'actions principales -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('emprunts') }}" class="text-decoration-none">
+                <div class="card card-action bg-primary text-white shadow-lg border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <div class="bg-white bg-opacity-25 rounded-circle d-inline-flex p-3">
+                                <i class="ri-book-mark-line fs-2"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-1">Gérer les prêts</h4>
+                        <p class="mb-0 opacity-75">Enregistrer retours et prêts</p>
+                        <div class="mt-3">
+                            <span class="badge bg-white text-primary">{{ emprunts_actifs }} actifs</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
 
-        <div class="col-md-4">
-            <div class="card text-white bg-warning shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1">Total adhérents</p>
-                        <h3 class="fw-bold">{{ total_adherents }}</h3>
-                        <small>Membres inscrits</small>
-                    </div>
-                    <div class="bg-white bg-opacity-25 rounded p-2">
-                        <i class="ri-user-line fs-3"></i>
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('adherents') }}" class="text-decoration-none">
+                <div class="card card-action bg-success text-white shadow-lg border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <div class="bg-white bg-opacity-25 rounded-circle d-inline-flex p-3">
+                                <i class="ri-user-search-line fs-2"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-1">Gérer adhérents</h4>
+                        <p class="mb-0 opacity-75">Voir et gérer les membres</p>
+                        <div class="mt-3">
+                            <span class="badge bg-white text-success">{{ total_adherents }} membres</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
 
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('reservations_list') }}" class="text-decoration-none">
+                <div class="card card-action bg-warning text-dark shadow-lg border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <div class="bg-white bg-opacity-25 rounded-circle d-inline-flex p-3">
+                                <i class="ri-calendar-check-line fs-2"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-1">Réservations</h4>
+                        <p class="mb-0 opacity-75">Gérer les réservations</p>
+                        <div class="mt-3">
+                            <span class="badge bg-white text-warning">{{ reservations_en_attente }} en attente</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <a href="{{ url_for('livres') }}" class="text-decoration-none">
+                <div class="card card-action bg-info text-white shadow-lg border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <div class="bg-white bg-opacity-25 rounded-circle d-inline-flex p-3">
+                                <i class="ri-book-2-line fs-2"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-1">Catalogue</h4>
+                        <p class="mb-0 opacity-75">Parcourir les livres</p>
+                        <div class="mt-3">
+                            <span class="badge bg-white text-info">{{ total_livres }} livres</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 
-    <!-- Actions rapides -->
+    <!-- Statistiques et alertes -->
     <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 p-3">
-                <h5>Gestion</h5>
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                    <a href="{{ url_for('adherents') }}" class="btn btn-info">
-                        <i class="ri-user-line me-1"></i> Voir adhérents
-                    </a>
-                    <a href="{{ url_for('livres') }}" class="btn btn-info">
-                        <i class="ri-book-2-line me-1"></i> Voir livres
-                    </a>
+        <!-- Colonne gauche : Statistiques -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="ri-dashboard-line text-primary me-2"></i>Statistiques du jour
+                    </h5>
+                    <span class="badge bg-primary">{{ date_jour }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Disponibilité</h6>
+                                            <h2 class="fw-bold text-primary">{{ livres_disponibles }}</h2>
+                                            <small class="text-muted">Livres disponibles sur {{ total_livres }}</small>
+                                        </div>
+                                        <div class="progress-circle"
+                                            data-percent="{% if total_livres > 0 %}{{ (livres_disponibles/total_livres*100)|round|int }}{% else %}0{% endif %}">
+                                            <span class="progress-value">
+                                                {% if total_livres > 0 %}
+                                                {{ (livres_disponibles/total_livres*100)|round|int }}%
+                                                {% else %}
+                                                0%
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Retours aujourd'hui</h6>
+                                            <h2 class="fw-bold text-success">{{ retours_du_jour }}</h2>
+                                            <small class="text-muted">Retours prévus</small>
+                                        </div>
+                                        <div class="bg-success-subtle rounded-circle p-3">
+                                            <i class="ri-check-double-line fs-3 text-success"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">En retard</h6>
+                                            <h2
+                                                class="fw-bold {% if retards_totaux > 0 %}text-danger{% else %}text-secondary{% endif %}">
+                                                {{ retards_totaux }}
+                                            </h2>
+                                            <small class="text-muted">Emprunts en retard</small>
+                                        </div>
+                                        <div
+                                            class="{% if retards_totaux > 0 %}bg-danger-subtle{% else %}bg-secondary-subtle{% endif %} rounded-circle p-3">
+                                            <i
+                                                class="ri-time-line fs-3 {% if retards_totaux > 0 %}text-danger{% else %}text-secondary{% endif %}"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-1">Nouveaux membres</h6>
+                                            <h2 class="fw-bold text-warning">{{ nouveaux_adherents_mois }}</h2>
+                                            <small class="text-muted">Ce mois-ci</small>
+                                        </div>
+                                        <div class="bg-warning-subtle rounded-circle p-3">
+                                            <i class="ri-user-add-line fs-3 text-warning"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite : Alertes et actions rapides -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0">
+                    <h5 class="fw-bold mb-0">
+                        <i class="ri-alarm-warning-line text-danger me-2"></i>Alertes importantes
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% if retards_totaux > 0 %}
+                        <a href="{{ url_for('emprunts') }}?filter=retard"
+                            class="list-group-item list-group-item-action list-group-item-danger">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="ri-alert-line fs-4"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ retards_totaux }} emprunt(s) en retard</h6>
+                                    <small>Action requise immédiatement</small>
+                                </div>
+                                <i class="ri-arrow-right-s-line ms-auto"></i>
+                            </div>
+                        </a>
+                        {% endif %}
+
+                        {% if reservations_en_attente > 0 %}
+                        <a href="{{ url_for('reservations_list') }}"
+                            class="list-group-item list-group-item-action list-group-item-warning">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="ri-calendar-todo-line fs-4"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ reservations_en_attente }} réservation(s)</h6>
+                                    <small>En attente de traitement</small>
+                                </div>
+                                <i class="ri-arrow-right-s-line ms-auto"></i>
+                            </div>
+                        </a>
+                        {% endif %}
+
+                        {% if livres_bientot_retour > 0 %}
+                        <a href="{{ url_for('emprunts') }}?filter=bientot_retour"
+                            class="list-group-item list-group-item-action list-group-item-info">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="ri-time-line fs-4"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ livres_bientot_retour }} retour(s) demain</h6>
+                                    <small>À préparer</small>
+                                </div>
+                                <i class="ri-arrow-right-s-line ms-auto"></i>
+                            </div>
+                        </a>
+                        {% endif %}
+
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="ri-checkbox-circle-line fs-4 text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Système opérationnel</h6>
+                                    <small>Toutes les fonctions sont disponibles</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0">
+                    <button class="btn btn-outline-primary w-100"
+                        onclick="location.href='{{ url_for('parametres') }}';">
+                        <i class="ri-settings-3-line me-2"></i>Paramètres système
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
 </div>
+
+<style>
+    .card-action {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .card-action:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .progress-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .progress-circle::before {
+        content: '';
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        background: white;
+        border-radius: 50%;
+    }
+
+    .progress-value {
+        position: relative;
+        z-index: 1;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .list-group-item-danger {
+        background-color: #f8d7da;
+        border-color: #f5c2c7;
+    }
+
+    .list-group-item-warning {
+        background-color: #fff3cd;
+        border-color: #ffecb5;
+    }
+
+    .list-group-item-info {
+        background-color: #cff4fc;
+        border-color: #b6effb;
+    }
+</style>
+
+<script>
+    // Définir le pourcentage pour les cercles de progression
+    document.addEventListener('DOMContentLoaded', function () {
+        const progressCircles = document.querySelectorAll('.progress-circle');
+        progressCircles.forEach(function (circle) {
+            const percent = circle.getAttribute('data-percent');
+            if (percent > 0) {
+                circle.style.background = `conic-gradient(#0d6efd ${percent}%, #e9ecef 0)`;
+            }
+        });
+    });
+</script>
 
 {% endblock %}

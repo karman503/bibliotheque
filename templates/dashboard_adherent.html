@@ -3,68 +3,250 @@
 
 <div class="container-fluid p-4">
 
-    <h2 class="fw-bold mb-2">Mon tableau de bord</h2>
-    <p class="text-muted mb-4">Bienvenue, {{ current_user.username }}</p>
+    <!-- En-tête personnalisé -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">Mon espace personnel</h2>
+            <p class="text-muted mb-0">Bienvenue, <span class="fw-semibold text-primary">{{ current_user.username
+                    }}</span> 👋</p>
+            <small class="text-muted">Votre bibliothèque numérique</small>
+        </div>
+        <div class="text-end">
+            <div class="badge bg-success-subtle text-success p-2">
+                <i class="ri-star-fill me-1"></i> Adhérent actif
+            </div>
+            <p class="text-muted small mt-1">Membre depuis: {{
+                current_user.adherent.date_inscription.strftime('%d/%m/%Y') if current_user.adherent else 'N/A' }}</p>
+        </div>
+    </div>
 
-    <!-- Cartes statistiques personnelles -->
+    <!-- Statistiques personnelles avec animations -->
     <div class="row g-4 mb-4">
-
-        <div class="col-md-3">
-            <div class="card text-white bg-primary shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1">Emprunts en cours</p>
-                        <h3 class="fw-bold">{{ emprunts_en_cours_user }}</h3>
-                        <small>Livres empruntés</small>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-stat card-hover shadow-sm border-0"
+                onclick="location.href='{{ url_for('mes_emprunts') }}';">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Emprunts en cours</h6>
+                            <h2 class="fw-bold text-primary mb-0 animate-count">{{ emprunts_en_cours_user }}</h2>
+                            <small class="text-muted">{{ emprunts_en_cours_user }} livre(s)</small>
+                        </div>
+                        <div
+                            class="avatar-sm bg-primary-subtle rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="ri-bookmark-line fs-3 text-primary"></i>
+                        </div>
                     </div>
-                    <div class="bg-white bg-opacity-25 rounded p-2">
-                        <i class="ri-bookmark-line fs-3"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card text-white bg-success shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1">Total emprunts</p>
-                        <h3 class="fw-bold">{{ total_emprunts_user }}</h3>
-                        <small>Depuis votre inscription</small>
-                    </div>
-                    <div class="bg-white bg-opacity-25 rounded p-2">
-                        <i class="ri-book-line fs-3"></i>
+                    <div class="progress mt-3" style="height: 4px;">
+                        {% set progress_width = 0 %}
+                        {% if total_emprunts_user > 0 %}
+                        {% set progress_width = (emprunts_en_cours_user/total_emprunts_user*100)|min(100) %}
+                        {% endif %}
+                        <div class="progress-bar bg-primary" style="width: {{ progress_width }}%"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card text-white {% if retards_user > 0 %}bg-danger{% else %}bg-info{% endif %} shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1">Emprunts en retard</p>
-                        <h3 class="fw-bold">{{ retards_user }}</h3>
-                        <small>À retourner</small>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-stat card-hover shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Historique d'emprunts</h6>
+                            <h2 class="fw-bold text-success mb-0 animate-count">{{ total_emprunts_user }}</h2>
+                            <small class="text-muted">Depuis votre inscription</small>
+                        </div>
+                        <div
+                            class="avatar-sm bg-success-subtle rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="ri-history-line fs-3 text-success"></i>
+                        </div>
                     </div>
-                    <div class="bg-white bg-opacity-25 rounded p-2">
-                        <i class="ri-time-line fs-3"></i>
+                    <div class="mt-3">
+                        <span class="badge bg-success-subtle text-success">
+                            <i class="ri-trending-up-line me-1"></i> Lecteur assidu
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div
-                class="card text-white {% if total_amende_user > 0 %}bg-danger{% else %}bg-secondary{% endif %} shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1">Amendes</p>
-                        <h3 class="fw-bold">{{ "%.2f"|format(total_amende_user) }} DJF</h3>
-                        <small>Total des amendes</small>
+        <div class="col-xl-3 col-md-6">
+            {% if retards_user > 0 %}
+            <div class="card card-stat card-hover shadow-sm border-0 border-danger border-2"
+                onclick="location.href='{{ url_for('mes_emprunts') }}?filter=retard';">
+                {% else %}
+                <div class="card card-stat card-hover shadow-sm border-0">
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Retards</h6>
+                                <h2
+                                    class="fw-bold {% if retards_user > 0 %}text-danger{% else %}text-info{% endif %} mb-0 animate-count">
+                                    {{ retards_user }}
+                                </h2>
+                                <small class="text-muted">À retourner rapidement</small>
+                            </div>
+                            <div
+                                class="avatar-sm {% if retards_user > 0 %}bg-danger-subtle{% else %}bg-info-subtle{% endif %} rounded-circle d-flex align-items-center justify-content-center">
+                                <i
+                                    class="ri-time-line fs-3 {% if retards_user > 0 %}text-danger{% else %}text-info{% endif %}"></i>
+                            </div>
+                        </div>
+                        {% if retards_user > 0 %}
+                        <div class="mt-2">
+                            <span class="badge bg-danger animate-pulse">
+                                <i class="ri-alert-line me-1"></i> Action requise
+                            </span>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="bg-white bg-opacity-25 rounded p-2">
-                        <i class="ri-money-cny-circle-line fs-3"></i>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div
+                    class="card card-stat card-hover shadow-sm border-0 {% if total_amende_user > 0 %}border-warning border-2{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Amendes</h6>
+                                <h2
+                                    class="fw-bold {% if total_amende_user > 0 %}text-warning{% else %}text-secondary{% endif %} mb-0">
+                                    {{ "%.2f"|format(total_amende_user) }} <small class="fs-6">DJF</small>
+                                </h2>
+                                <small class="text-muted">Solde total</small>
+                            </div>
+                            <div
+                                class="avatar-sm {% if total_amende_user > 0 %}bg-warning-subtle{% else %}bg-secondary-subtle{% endif %} rounded-circle d-flex align-items-center justify-content-center">
+                                <i
+                                    class="ri-money-cny-circle-line fs-3 {% if total_amende_user > 0 %}text-warning{% else %}text-secondary{% endif %}"></i>
+                            </div>
+                        </div>
+                        {% if total_amende_user > 0 %}
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-warning w-100">
+                                <i class="ri-bank-card-line me-1"></i> Payer maintenant
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section d'actions rapides -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-0 pb-0">
+                        <h5 class="fw-bold mb-0">
+                            <i class="ri-flashlight-line text-warning me-2"></i>Accès rapide
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('catalogue') }}"
+                                        class="btn btn-primary btn-lg d-flex align-items-center justify-content-start p-3">
+                                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                                            <i class="ri-book-open-line fs-4"></i>
+                                        </div>
+                                        <div class="text-start">
+                                            <h6 class="mb-0 fw-bold">Explorer le catalogue</h6>
+                                            <small class="opacity-75">Parcourez nos livres</small>
+                                        </div>
+                                        <i class="ri-arrow-right-s-line ms-auto fs-5"></i>
+                                    </a>
+
+                                    <a href="{{ url_for('mes_emprunts') }}"
+                                        class="btn btn-success btn-lg d-flex align-items-center justify-content-start p-3">
+                                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                                            <i class="ri-bookmark-line fs-4"></i>
+                                        </div>
+                                        <div class="text-start">
+                                            <h6 class="mb-0 fw-bold">Mes emprunts</h6>
+                                            <small class="opacity-75">Voir et gérer</small>
+                                        </div>
+                                        <i class="ri-arrow-right-s-line ms-auto fs-5"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('parametres') }}"
+                                        class="btn btn-info btn-lg d-flex align-items-center justify-content-start p-3">
+                                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                                            <i class="ri-user-settings-line fs-4"></i>
+                                        </div>
+                                        <div class="text-start">
+                                            <h6 class="mb-0 fw-bold">Mon profil</h6>
+                                            <small class="opacity-75">Modifier mes informations</small>
+                                        </div>
+                                        <i class="ri-arrow-right-s-line ms-auto fs-5"></i>
+                                    </a>
+
+                                    <a href="#"
+                                        class="btn btn-secondary btn-lg d-flex align-items-center justify-content-start p-3">
+                                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                                            <i class="ri-heart-line fs-4"></i>
+                                        </div>
+                                        <div class="text-start">
+                                            <h6 class="mb-0 fw-bold">Mes favoris</h6>
+                                            <small class="opacity-75">Livres sauvegardés</small>
+                                        </div>
+                                        <i class="ri-arrow-right-s-line ms-auto fs-5"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section suggestions -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pb-0">
+                        <h5 class="fw-bold mb-0">
+                            <i class="ri-lightbulb-flash-line text-primary me-2"></i>Suggestions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info bg-info-subtle border-info">
+                            <i class="ri-information-line me-2"></i>
+                            <strong>Nouveautés disponibles !</strong>
+                            <p class="mb-0 small mt-1">Découvrez les derniers livres ajoutés au catalogue.</p>
+                        </div>
+
+                        <div class="list-group list-group-flush">
+                            <a href="#" class="list-group-item list-group-item-action border-0 py-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary-subtle rounded p-2 me-3">
+                                        <i class="ri-fire-line text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Tendances du moment</h6>
+                                        <small class="text-muted">Les livres les plus populaires</small>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="#" class="list-group-item list-group-item-action border-0 py-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-success-subtle rounded p-2 me-3">
+                                        <i class="ri-calendar-check-line text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Événements à venir</h6>
+                                        <small class="text-muted">Rencontres et ateliers</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -72,39 +254,65 @@
 
     </div>
 
-    <!-- Actions rapides pour utilisateur normal -->
-    <div class="row g-4">
+    <style>
+        .card-stat {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
 
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 p-3">
-                <h5>Mes livres</h5>
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                    <a href="{{ url_for('catalogue') }}" class="btn btn-primary">
-                        <i class="ri-book-line me-1"></i> Consulter
-                    </a>
-                    <a href="{{ url_for('mes_emprunts') }}" class="btn btn-success">
-                        <i class="ri-bookmark-line me-1"></i> Mes emprunts
-                    </a>
-                </div>
-            </div>
-        </div>
+        .card-stat:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
 
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 p-3">
-                <h5>Mon profil</h5>
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                    <a href="{{ url_for('parametres') }}#profil" class="btn btn-primary">
-                        <i class="ri-user-line me-1"></i> Voir
-                    </a>
-                    <a href="{{ url_for('parametres') }}" class="btn btn-warning text-white">
-                        <i class="ri-settings-line me-1"></i> Paramètres
-                    </a>
-                </div>
-            </div>
-        </div>
+        .avatar-sm {
+            width: 50px;
+            height: 50px;
+        }
 
-    </div>
+        .animate-count {
+            transition: all 0.5s ease;
+        }
 
-</div>
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
 
-{% endblock %}
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        // Animation pour les compteurs
+        document.addEventListener('DOMContentLoaded', function () {
+            const countElements = document.querySelectorAll('.animate-count');
+            countElements.forEach(function (element) {
+                const target = parseInt(element.textContent);
+                let current = 0;
+                const increment = target / 50;
+
+                const timer = setInterval(function () {
+                    current += increment;
+                    if (current >= target) {
+                        element.textContent = target;
+                        clearInterval(timer);
+                    } else {
+                        element.textContent = Math.floor(current);
+                    }
+                }, 20);
+            });
+        });
+    </script>
+
+    {% endblock %}

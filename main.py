@@ -502,8 +502,6 @@ def generate_detailed_bibliothecaire_pdf(bibliothecaire):
     
     return pdf
 
-# Note: the old '/setup/admin' route was removed. Creating an admin is handled
-# via the standard registration flow using `register_with_type('admin')`.
 
 @app.route("/")
 def index():
@@ -1023,6 +1021,7 @@ def dashboard():
         total_adherents = Adherent.query.count()
         total_bibliothecaires = Bibliothecaire.query.count()
         emprunts_en_cours = Emprunt.query.filter_by(status='en_cours').count()
+        adherents_actifs = db.session.query(Adherent).join(Emprunt).distinct().count()
 
         return render_template(
             "dashboard_admin.html",
@@ -1033,6 +1032,7 @@ def dashboard():
             total_adherents=total_adherents,
             total_bibliothecaires=total_bibliothecaires,
             emprunts_en_cours=emprunts_en_cours,
+            adherents_actifs=adherents_actifs,
             timedelta=timedelta,
             now=datetime.utcnow()
         )
@@ -1042,6 +1042,21 @@ def dashboard():
         total_livres = Livre.query.count()
         livres_disponibles = Livre.query.filter_by(disponible=True).count()
         total_adherents = Adherent.query.count()
+        retards_totaux = Emprunt.query.filter(
+            Emprunt.date_retour_effective == None,
+            Emprunt.date_retour_prevue < datetime.utcnow()
+        ).count()
+        reservations_en_attente = Reservation.query.filter_by(status='active').count()
+        
+        # Livres à retourner demain
+        tomorrow = datetime.utcnow() + timedelta(days=1)
+        tomorrow_start = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
+        tomorrow_end = tomorrow.replace(hour=23, minute=59, second=59, microsecond=999999)
+        livres_bientot_retour = Emprunt.query.filter(
+            Emprunt.date_retour_effective == None,
+            Emprunt.date_retour_prevue >= tomorrow_start,
+            Emprunt.date_retour_prevue <= tomorrow_end
+        ).count()
 
         return render_template(
             "dashboard_bibliothecaire.html",
@@ -1050,6 +1065,9 @@ def dashboard():
             total_livres=total_livres,
             livres_disponibles=livres_disponibles,
             total_adherents=total_adherents,
+            retards_totaux=retards_totaux,
+            reservations_en_attente=reservations_en_attente,
+            livres_bientot_retour=livres_bientot_retour,
             timedelta=timedelta,
             now=datetime.utcnow()
         )
@@ -2448,8 +2466,6 @@ def statistiques():
 @app.route("/dashboard/parametres")
 @login_required
 def parametres():
-    # Prepare dynamic data for the template
-    # Library settings could be stored in DB or config; use app.config defaults for now
     library_settings = {
         'max_emprunts': app.config.get('MAX_EMPRUNTS_PER_USER', 3),
         'duree_emprunt': app.config.get('DUREE_EMPRUNT_JOURS', 14),
@@ -2485,7 +2501,6 @@ def parametres():
 @app.route('/dashboard/parametres/delete_all_non_admins', methods=['POST'])
 @login_required
 def delete_all_non_admins():
-    # Allow admin and bibliothecaire to remove all non-admin accounts
     if not has_roles('admin', 'bibliothecaire'):
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('parametres'))
@@ -2591,7 +2606,6 @@ def delete_adherent():
 
     return redirect(url_for('parametres'))
 
-# NOTE: old /profil page removed. Profile UI lives under /dashboard/parametres#profil
 
 @app.route("/profil/update", methods=["POST"])
 @login_required

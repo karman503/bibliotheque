@@ -30,7 +30,8 @@
                         </div>
                         {% endif %}
 
-                        <form method="POST" action="{{ url_for('register_with_type', user_type=user_type) }}" id="registerForm">
+                        <form method="POST" action="{{ url_for('register_with_type', user_type=user_type) }}"
+                            id="registerForm">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="nom" class="form-label">Nom *</label>
@@ -50,7 +51,8 @@
                                             <i class="ri-user-line"></i>
                                         </span>
                                         <input type="text" class="form-control" id="prenom" name="prenom" required
-                                            placeholder="Votre prénom" value="{{ request.form.prenom if request.form.prenom }}">
+                                            placeholder="Votre prénom"
+                                            value="{{ request.form.prenom if request.form.prenom }}">
                                     </div>
                                 </div>
                             </div>
@@ -62,7 +64,8 @@
                                         <i class="ri-user-line"></i>
                                     </span>
                                     <input type="text" class="form-control" id="username" name="username" required
-                                        placeholder="Choisissez un nom d'utilisateur" value="{{ request.form.username if request.form.username }}">
+                                        placeholder="Choisissez un nom d'utilisateur"
+                                        value="{{ request.form.username if request.form.username }}">
                                 </div>
                                 <div class="form-text">Ce nom sera utilisé pour vous connecter</div>
                             </div>
@@ -74,7 +77,8 @@
                                         <i class="ri-mail-line"></i>
                                     </span>
                                     <input type="email" class="form-control" id="email" name="email" required
-                                        placeholder="votre@email.com" value="{{ request.form.email if request.form.email }}">
+                                        placeholder="votre@email.com"
+                                        value="{{ request.form.email if request.form.email }}">
                                 </div>
                             </div>
 
@@ -86,7 +90,8 @@
                                             <i class="ri-phone-line"></i>
                                         </span>
                                         <input type="tel" class="form-control" id="telephone" name="telephone"
-                                            placeholder="Votre numéro" value="{{ request.form.telephone if request.form.telephone }}">
+                                            placeholder="Votre numéro"
+                                            value="{{ request.form.telephone if request.form.telephone }}">
                                     </div>
                                 </div>
 
@@ -97,7 +102,7 @@
                                             <i class="ri-book-line"></i>
                                         </span>
                                         <input type="text" class="form-control" id="classe" name="classe"
-                                            placeholder="Ex: Terminale, Licence 2" value="{{ request.form.classe if request.form.classe }}">
+                                            placeholder="...." value="{{ request.form.classe if request.form.classe }}">
                                     </div>
                                 </div>
                             </div>
@@ -109,8 +114,8 @@
                                         <span class="input-group-text">
                                             <i class="ri-lock-line"></i>
                                         </span>
-                                        <input type="password" class="form-control" id="password" name="password" required
-                                            placeholder="Créez un mot de passe">
+                                        <input type="password" class="form-control" id="password" name="password"
+                                            required placeholder="Créez un mot de passe">
                                         <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                             <i class="ri-eye-line"></i>
                                         </button>
@@ -124,9 +129,10 @@
                                         <span class="input-group-text">
                                             <i class="ri-lock-line"></i>
                                         </span>
-                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required
-                                            placeholder="Retapez votre mot de passe">
-                                        <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <input type="password" class="form-control" id="confirm_password"
+                                            name="confirm_password" required placeholder="Retapez votre mot de passe">
+                                        <button class="btn btn-outline-secondary" type="button"
+                                            id="toggleConfirmPassword">
                                             <i class="ri-eye-line"></i>
                                         </button>
                                     </div>
@@ -136,7 +142,8 @@
                             {% if user_type == 'admin' %}
                             <div class="alert alert-info">
                                 <i class="ri-information-line me-2"></i>
-                                <small>Le compte administrateur sera créé sans vérification email et vous serez connecté automatiquement.</small>
+                                <small>Le compte administrateur sera créé sans vérification email et vous serez connecté
+                                    automatiquement.</small>
                             </div>
                             {% else %}
                             <div class="alert alert-info">
@@ -159,9 +166,9 @@
 
                         <div class="text-center mt-4">
                             <p class="text-muted mb-0">
-                                En vous inscrivant, vous acceptez nos 
+                                En vous inscrivant, vous acceptez nos
                                 <a href="#" class="text-primary text-decoration-none">conditions d'utilisation</a>
-                                et notre 
+                                et notre
                                 <a href="#" class="text-primary text-decoration-none">politique de confidentialité</a>.
                             </p>
                         </div>
@@ -220,7 +227,7 @@
         // Validation des mots de passe
         const password = document.getElementById('password');
         const confirmPassword = document.getElementById('confirm_password');
-        
+
         if (password && confirmPassword) {
             function validatePassword() {
                 if (password.value !== confirmPassword.value) {
@@ -229,7 +236,7 @@
                     confirmPassword.setCustomValidity('');
                 }
             }
-            
+
             password.addEventListener('change', validatePassword);
             confirmPassword.addEventListener('keyup', validatePassword);
         }
