@@ -1,8 +1,8 @@
 /* ===== VARIABLES ET RESET ===== */
 :root {
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
-    --primary-light: #8b5cf6;
+    --primary: #0F4C81;
+    --primary-dark: #0B3A63;
+    --primary-light: #3C78D8;
     --secondary: #06d6a0;
     --secondary-dark: #05b384;
     --accent: #f59e0b;
@@ -19,8 +19,8 @@
     --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-light));
     --gradient-secondary: linear-gradient(135deg, var(--secondary), #34d399);
     --gradient-accent: linear-gradient(135deg, var(--accent), #fbbf24);
-    --bg-primary-subtle: rgba(99, 102, 241, 0.1);
-    --text-primary: #6366f1;
+    --bg-primary-subtle: rgba(15, 76, 129, 0.08);
+    --text-primary: #0F4C81;
 }
 
 * {
@@ -1629,4 +1629,3 @@ footer::before {
     justify-content: center;
     margin: 0 auto 1.5rem auto !important;
 }
-

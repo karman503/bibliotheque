@@ -502,48 +502,8 @@ def generate_detailed_bibliothecaire_pdf(bibliothecaire):
     
     return pdf
 
-# Route pour créer un admin
-@app.route('/setup/admin', methods=['GET', 'POST'])
-def setup_admin():
-    if User.query.filter_by(role='admin').first():
-        flash('Un administrateur existe déjà', 'warning')
-        return redirect(url_for('login'))
-    
-    if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip()
-        password = request.form.get('password', '')
-        
-        if not username or not email or not password:
-            flash('Tous les champs sont requis', 'danger')
-            return render_template('setup_admin.html', title='Créer un administrateur')
-        
-        if User.query.filter_by(username=username).first():
-            flash('Ce nom d\'utilisateur existe déjà', 'danger')
-            return render_template('setup_admin.html', title='Créer un administrateur')
-        
-        if User.query.filter_by(email=email).first():
-            flash('Cet email existe déjà', 'danger')
-            return render_template('setup_admin.html', title='Créer un administrateur')
-        
-        admin = User(
-            username=username,
-            email=email,
-            role='admin',
-            confirmed=True  # Admin n'a pas besoin de vérification email
-        )
-        admin.set_password(password)
-        
-        try:
-            db.session.add(admin)
-            db.session.commit()
-            flash('Administrateur créé avec succès! Vous pouvez maintenant vous connecter', 'success')
-            return redirect(url_for('login'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Erreur lors de la création: {str(e)}', 'danger')
-    
-    return render_template('setup_admin.html', title='Créer un administrateur')
+# Note: the old '/setup/admin' route was removed. Creating an admin is handled
+# via the standard registration flow using `register_with_type('admin')`.
 
 @app.route("/")
 def index():
@@ -811,13 +771,20 @@ def contact():
     
     return render_template("contact.html", title="Contact")
 
-# Route d'inscription par défaut (inscription automatique adhérent)
+# Route d'inscription par défaut (affiche un choix si aucun admin n'existe)
 @app.route("/inscription", methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    
-    # Utiliser directement la route d'inscription adhérent
+
+    # Vérifier si un administrateur existe déjà
+    admin_exists = User.query.filter_by(role='admin').first() is not None
+
+    # Si aucun admin n'existe, afficher la page de choix (permet de créer le premier admin)
+    if not admin_exists:
+        return render_template('register_choice.html', admin_exists=admin_exists)
+
+    # Sinon, conserver le comportement précédent : inscription adhérent par défaut
     return register_with_type('adherent')
 
 
@@ -837,6 +804,9 @@ def register_with_type(user_type):
     if user_type == 'admin' and admin_exists:
         flash('Un administrateur existe déjà. Contactez l\'administrateur actuel pour créer un nouveau compte admin.', 'warning')
         return redirect(url_for('login'))
+
+    # Choisir le template en fonction du type d'utilisateur
+    template = 'register_admin.html' if user_type == 'admin' else 'register_form.html'
     
     if request.method == 'POST':
         # Données du formulaire commun
@@ -854,14 +824,14 @@ def register_with_type(user_type):
         # Validation
         if not username or not email or not password:
             flash('Tous les champs obligatoires doivent être remplis', 'danger')
-            return render_template('register_form.html', 
+            return render_template(template, 
                                  title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
         
         if password != confirm_password:
             flash('Les mots de passe ne correspondent pas', 'danger')
-            return render_template('register_form.html', 
+            return render_template(template, 
                                  title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
@@ -869,14 +839,14 @@ def register_with_type(user_type):
         # Vérifier l'existence
         if User.query.filter_by(username=username).first():
             flash('Ce nom d\'utilisateur est déjà pris', 'danger')
-            return render_template('register_form.html', 
+            return render_template(template, 
                                  title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
             
         if User.query.filter_by(email=email).first():
             flash('Cette adresse email est déjà utilisée', 'danger')
-            return render_template('register_form.html', 
+            return render_template(template, 
                                  title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
@@ -884,7 +854,7 @@ def register_with_type(user_type):
         # Validation email
         if not is_valid_email(email):
             flash('Adresse email invalide', 'danger')
-            return render_template('register_form.html', 
+            return render_template(template, 
                                  title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
@@ -942,7 +912,7 @@ def register_with_type(user_type):
                     adherent = Adherent.query.filter_by(email=email).first()
                     if not adherent:
                         flash('Erreur lors de la création du profil adhérent (conflit email).', 'danger')
-                        return render_template('register_form.html', 
+                        return render_template(template, 
                              title=f'Inscription - {user_type.capitalize()}',
                              user_type=user_type,
                              admin_exists=admin_exists)
@@ -970,13 +940,13 @@ def register_with_type(user_type):
         except Exception as e:
             db.session.rollback()
             flash(f'Erreur lors de l\'inscription: {str(e)}', 'danger')
-            return render_template('register_form.html', 
+            return render_template(template, 
                                  title=f'Inscription',
                                  user_type=user_type,
                                  admin_exists=admin_exists)
     
     # GET request
-    return render_template('register_form.html', 
+    return render_template(template, 
                          title=f'Inscription',
                          user_type=user_type,
                          admin_exists=admin_exists)
@@ -1046,7 +1016,8 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    if has_roles('admin', 'bibliothecaire'):
+    # Admin dashboard
+    if has_roles('admin'):
         total_livres = Livre.query.count()
         livres_disponibles = Livre.query.filter_by(disponible=True).count()
         total_adherents = Adherent.query.count()
@@ -1054,10 +1025,9 @@ def dashboard():
         emprunts_en_cours = Emprunt.query.filter_by(status='en_cours').count()
 
         return render_template(
-            "dashboard.html",
+            "dashboard_admin.html",
             title="Dashboard",
             user=current_user,
-            is_admin=True,
             total_livres=total_livres,
             livres_disponibles=livres_disponibles,
             total_adherents=total_adherents,
@@ -1066,9 +1036,27 @@ def dashboard():
             timedelta=timedelta,
             now=datetime.utcnow()
         )
-    
+
+    # Bibliothécaire dashboard
+    if has_roles('bibliothecaire'):
+        total_livres = Livre.query.count()
+        livres_disponibles = Livre.query.filter_by(disponible=True).count()
+        total_adherents = Adherent.query.count()
+
+        return render_template(
+            "dashboard_bibliothecaire.html",
+            title="Dashboard",
+            user=current_user,
+            total_livres=total_livres,
+            livres_disponibles=livres_disponibles,
+            total_adherents=total_adherents,
+            timedelta=timedelta,
+            now=datetime.utcnow()
+        )
+
+    # Adherent / utilisateur normal
     adherent_id_for_query = getattr(current_user, 'adherent_id', None) or current_user.id
-    
+
     total_emprunts_user = Emprunt.query.filter_by(adherent_id=adherent_id_for_query).count()
     emprunts_en_cours_user = Emprunt.query.filter_by(adherent_id=adherent_id_for_query, status='en_cours').count()
     retards_user = Emprunt.query.filter(
@@ -1077,12 +1065,11 @@ def dashboard():
         Emprunt.date_retour_prevue < datetime.utcnow()
     ).count()
     total_amende_user = db.session.query(db.func.coalesce(db.func.sum(Emprunt.amende), 0.0)).filter(Emprunt.adherent_id == adherent_id_for_query).scalar() or 0.0
-    
+
     return render_template(
-        "dashboard.html",
-        title="Dashboard",
+        "dashboard_adherent.html",
+        title="Mon tableau de bord",
         user=current_user,
-        is_admin=False,
         total_emprunts_user=total_emprunts_user,
         emprunts_en_cours_user=emprunts_en_cours_user,
         retards_user=retards_user,

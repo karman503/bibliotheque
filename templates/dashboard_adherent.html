@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid p-4">
+
+    <h2 class="fw-bold mb-2">Mon tableau de bord</h2>
+    <p class="text-muted mb-4">Bienvenue, {{ current_user.username }}</p>
+
+    <!-- Cartes statistiques personnelles -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-3">
+            <div class="card text-white bg-primary shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Emprunts en cours</p>
+                        <h3 class="fw-bold">{{ emprunts_en_cours_user }}</h3>
+                        <small>Livres empruntés</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-bookmark-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-success shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Total emprunts</p>
+                        <h3 class="fw-bold">{{ total_emprunts_user }}</h3>
+                        <small>Depuis votre inscription</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-book-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white {% if retards_user > 0 %}bg-danger{% else %}bg-info{% endif %} shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Emprunts en retard</p>
+                        <h3 class="fw-bold">{{ retards_user }}</h3>
+                        <small>À retourner</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-time-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div
+                class="card text-white {% if total_amende_user > 0 %}bg-danger{% else %}bg-secondary{% endif %} shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1">Amendes</p>
+                        <h3 class="fw-bold">{{ "%.2f"|format(total_amende_user) }} DJF</h3>
+                        <small>Total des amendes</small>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2">
+                        <i class="ri-money-cny-circle-line fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Actions rapides pour utilisateur normal -->
+    <div class="row g-4">
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 p-3">
+                <h5>Mes livres</h5>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <a href="{{ url_for('catalogue') }}" class="btn btn-primary">
+                        <i class="ri-book-line me-1"></i> Consulter
+                    </a>
+                    <a href="{{ url_for('mes_emprunts') }}" class="btn btn-success">
+                        <i class="ri-bookmark-line me-1"></i> Mes emprunts
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 p-3">
+                <h5>Mon profil</h5>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <a href="{{ url_for('parametres') }}#profil" class="btn btn-primary">
+                        <i class="ri-user-line me-1"></i> Voir
+                    </a>
+                    <a href="{{ url_for('parametres') }}" class="btn btn-warning text-white">
+                        <i class="ri-settings-line me-1"></i> Paramètres
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

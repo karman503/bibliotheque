@@ -914,282 +914,278 @@
 {% endblock %}
 
 <!-- Your existing HTML code... -->
-{% block scripts %}
-{{ super() }}
-<!-- <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Gestion des boutons de période
-        var buttons = document.querySelectorAll('[data-period]');
-        var periodInput = document.getElementById('periodInput');
-        var current = periodInput ? periodInput.value : 'month';
-        buttons.forEach(function (b) {
-            if (b.getAttribute('data-period') === current) {
-                b.classList.remove('btn-outline-secondary');
-                b.classList.add('btn-primary');
-            }
-            b.addEventListener('click', function () {
-                if (periodInput) periodInput.value = b.getAttribute('data-period');
-                document.getElementById('periodeForm').submit();
-            });
-        });
+{# BEGIN commented-out scripts/styles block (temporarily disabled)
+This prevents Jinja from parsing JS/CSS that caused a TemplateSyntaxError
+#
+document.addEventListener('DOMContentLoaded', function () {
+// Gestion des boutons de période
+var buttons = document.querySelectorAll('[data-period]');
+var periodInput = document.getElementById('periodInput');
+var current = periodInput ? periodInput.value : 'month';
+buttons.forEach(function (b) {
+if (b.getAttribute('data-period') === current) {
+b.classList.remove('btn-outline-secondary');
+b.classList.add('btn-primary');
+}
+b.addEventListener('click', function () {
+if (periodInput) periodInput.value = b.getAttribute('data-period');
+document.getElementById('periodeForm').submit();
+});
+});
 
-        // Animer les barres de progression
-        document.querySelectorAll('.stat-percentage').forEach(function (bar) {
-            const percentage = bar.dataset.percentage || '0';
-            const color = bar.dataset.color || '';
+// Animer les barres de progression
+document.querySelectorAll('.stat-percentage').forEach(function (bar) {
+const percentage = bar.dataset.percentage || '0';
+const color = bar.dataset.color || '';
 
-            // Initialiser à 0
-            bar.style.width = '0';
+// Initialiser à 0
+bar.style.width = '0';
 
-            // Appliquer la couleur si spécifiée
-            if (color && color !== 'undefined') {
-                try {
-                    bar.style.backgroundColor = color;
-                } catch (e) {
-                    console.log('Couleur invalide:', color);
-                }
-            }
+// Appliquer la couleur si spécifiée
+if (color && color !== 'undefined') {
+try {
+bar.style.backgroundColor = color;
+} catch (e) {
+console.log('Couleur invalide:', color);
+}
+}
 
-            // Animer après un délai
-            setTimeout(() => {
-                let widthValue = percentage;
-                if (percentage && !percentage.includes('%')) {
-                    widthValue = percentage + '%';
-                }
-                bar.style.width = widthValue;
-                bar.style.transition = 'width 1s ease-in-out';
-            }, 100);
-        });
+// Animer après un délai
+setTimeout(() => {
+let widthValue = percentage;
+if (percentage && !percentage.includes('%')) {
+widthValue = percentage + '%';
+}
+bar.style.width = widthValue;
+bar.style.transition = 'width 1s ease-in-out';
+}, 100);
+});
 
-        // Appliquer les couleurs aux points de catégorie
-        document.querySelectorAll('.category-dot').forEach(function (dot) {
-            const color = dot.dataset.color || '';
-            if (color && color !== 'undefined') {
-                try {
-                    dot.style.backgroundColor = color;
-                } catch (e) {
-                    console.log('Couleur invalide pour dot:', color);
-                }
-            }
-        });
+// Appliquer les couleurs aux points de catégorie
+document.querySelectorAll('.category-dot').forEach(function (dot) {
+const color = dot.dataset.color || '';
+if (color && color !== 'undefined') {
+try {
+dot.style.backgroundColor = color;
+} catch (e) {
+console.log('Couleur invalide pour dot:', color);
+}
+}
+});
 
-        // Chart.js pour l'état de la collection (admin)
-        {% if is_admin %}
-        const collectionCtx = document.getElementById('collectionChart');
-        if (collectionCtx) {
-            // Utiliser des valeurs par défaut pour éviter les erreurs
-            const disponibleValue = {{ livres_disponibles|default (0)
-        }
-    };
-    const emprunteValue = {{ livres_empruntes|default (0) }};
-    const reserveValue = {{ livres_reserves|default (0) }};
+// Chart.js pour l'état de la collection (admin)
+{% if is_admin %}
+const collectionCtx = document.getElementById('collectionChart');
+if (collectionCtx) {
+// Utiliser des valeurs par défaut pour éviter les erreurs
+const disponibleValue = {{ livres_disponibles|default (0)
+}
+};
+const emprunteValue = {{ livres_empruntes|default (0) }};
+const reserveValue = {{ livres_reserves|default (0) }};
 
-    const collectionData = [
-        disponibleValue,
-        emprunteValue,
-        reserveValue
-    ];
+const collectionData = [
+disponibleValue,
+emprunteValue,
+reserveValue
+];
 
-    new Chart(collectionCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Disponibles', 'Empruntés', 'Réservés'],
-            datasets: [{
-                data: collectionData,
-                backgroundColor: ['#28a745', '#007bff', '#ffc107'],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            let label = context.label || '';
-                            if (label) label += ': ';
-                            label += context.raw + ' livres';
-                            return label;
-                        }
-                    }
-                }
-            }
-        }
-    });
-        }
-    {% endif %}
+new Chart(collectionCtx, {
+type: 'doughnut',
+data: {
+labels: ['Disponibles', 'Empruntés', 'Réservés'],
+datasets: [{
+data: collectionData,
+backgroundColor: ['#28a745', '#007bff', '#ffc107'],
+borderWidth: 2,
+borderColor: '#fff'
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: { display: false },
+tooltip: {
+callbacks: {
+label: function (context) {
+let label = context.label || '';
+if (label) label += ': ';
+label += context.raw + ' livres';
+return label;
+}
+}
+}
+}
+}
+});
+}
+{% endif %}
 
-    // Chart.js pour les emprunts par jour
-    {% if stats_days and is_admin %}
-    const dailyCtx = document.getElementById('dailyChart');
-    if (dailyCtx) {
-        // Préparer les données de manière sécurisée
-        const dailyLabels = [];
-        const dailyData = [];
+// Chart.js pour les emprunts par jour
+{% if stats_days and is_admin %}
+const dailyCtx = document.getElementById('dailyChart');
+if (dailyCtx) {
+// Préparer les données de manière sécurisée
+const dailyLabels = [];
+const dailyData = [];
 
-        // Utiliser une approche plus simple
-        {% for d in stats_days %}
-        dailyLabels.push("{{ d.label|escapejs }}");
-        {% set totalDay = 0 %}
-        {% if d.bars %}
-        {% for bar in d.bars %}
-        {% set totalDay = totalDay + bar.get('count', 0) %}
-        {% endfor %}
-        {% endif %}
-        dailyData.push({{ totalDay }});
-    {% endfor %}
+// Utiliser une approche plus simple
+{% for d in stats_days %}
+dailyLabels.push("{{ d.label|escapejs }}");
+{% set totalDay = 0 %}
+{% if d.bars %}
+{% for bar in d.bars %}
+{% set totalDay = totalDay + bar.get('count', 0) %}
+{% endfor %}
+{% endif %}
+dailyData.push({{ totalDay }});
+{% endfor %}
 
-    new Chart(dailyCtx, {
-        type: 'bar',
-        data: {
-            labels: dailyLabels,
-            datasets: [{
-                label: 'Emprunts',
-                data: dailyData,
-                backgroundColor: 'rgba(0, 123, 255, 0.7)',
-                borderColor: 'rgba(0, 123, 255, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: "Nombre d'emprunts"
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Jours'
-                    }
-                }
-            }
-        }
-    });
-        }
-    {% endif %}
+new Chart(dailyCtx, {
+type: 'bar',
+data: {
+labels: dailyLabels,
+datasets: [{
+label: 'Emprunts',
+data: dailyData,
+backgroundColor: 'rgba(0, 123, 255, 0.7)',
+borderColor: 'rgba(0, 123, 255, 1)',
+borderWidth: 1
+}]
+},
+options: {
+responsive: true,
+scales: {
+y: {
+beginAtZero: true,
+title: {
+display: true,
+text: "Nombre d'emprunts"
+}
+},
+x: {
+title: {
+display: true,
+text: 'Jours'
+}
+}
+}
+}
+});
+}
+{% endif %}
 
-    // Chart.js pour les catégories utilisateur (non-admin)
-    {% if not is_admin and stats_categories %}
-    const userCategoryCtx = document.getElementById('userCategoryChart');
-    if (userCategoryCtx) {
-        // Préparer les données de manière sécurisée
-        const userLabels = [];
-        const userData = [];
+// Chart.js pour les catégories utilisateur (non-admin)
+{% if not is_admin and stats_categories %}
+const userCategoryCtx = document.getElementById('userCategoryChart');
+if (userCategoryCtx) {
+// Préparer les données de manière sécurisée
+const userLabels = [];
+const userData = [];
 
-        {% for stat in stats_categories %}
-        userLabels.push("{{ stat.categorie|escapejs }}");
-        userData.push({{ stat.count |default(0) }});
-    {% endfor %}
+{% for stat in stats_categories %}
+userLabels.push("{{ stat.categorie|escapejs }}");
+userData.push({{ stat.count |default(0) }});
+{% endfor %}
 
-    const backgroundColors = [
-        'rgba(0, 123, 255, 0.7)',
-        'rgba(40, 167, 69, 0.7)',
-        'rgba(255, 193, 7, 0.7)',
-        'rgba(111, 66, 193, 0.7)',
-        'rgba(220, 53, 69, 0.7)',
-        'rgba(108, 117, 125, 0.7)'
-    ];
+const backgroundColors = [
+'rgba(0, 123, 255, 0.7)',
+'rgba(40, 167, 69, 0.7)',
+'rgba(255, 193, 7, 0.7)',
+'rgba(111, 66, 193, 0.7)',
+'rgba(220, 53, 69, 0.7)',
+'rgba(108, 117, 125, 0.7)'
+];
 
-    new Chart(userCategoryCtx, {
-        type: 'pie',
-        data: {
-            labels: userLabels,
-            datasets: [{
-                data: userData,
-                backgroundColor: backgroundColors.slice(0, userLabels.length),
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { padding: 20, usePointStyle: true }
-                }
-            }
-        }
-    });
-        }
-    {% endif %}
-    });
+new Chart(userCategoryCtx, {
+type: 'pie',
+data: {
+labels: userLabels,
+datasets: [{
+data: userData,
+backgroundColor: backgroundColors.slice(0, userLabels.length),
+borderWidth: 2,
+borderColor: '#fff'
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+position: 'right',
+labels: { padding: 20, usePointStyle: true }
+}
+}
+}
+});
+}
+{% endif %}
+});
 
-    // Fonction d'export CSV
-    function exportTableToCSV(filename) {
-        var csv = [];
-        var rows = document.querySelectorAll("#categoryStatsTable tr");
+// Fonction d'export CSV
+function exportTableToCSV(filename) {
+var csv = [];
+var rows = document.querySelectorAll("#categoryStatsTable tr");
 
-        for (var i = 0; i < rows.length; i++) {
-            var row = [], cols = rows[i].querySelectorAll("td, th");
+for (var i = 0; i < rows.length; i++) { var row=[], cols=rows[i].querySelectorAll("td, th"); for (var j=0; j <
+    cols.length; j++) { var text=cols[j].innerText; text=text.replace(/"/g, '""' ); if (text.indexOf(',')> -1 ||
+    text.indexOf('"') > -1) {
+    text = '"' + text + '"';
+    }
+    row.push(text);
+    }
 
-            for (var j = 0; j < cols.length; j++) {
-                var text = cols[j].innerText;
-                text = text.replace(/"/g, '""');
-                if (text.indexOf(',') > -1 || text.indexOf('"') > -1) {
-                    text = '"' + text + '"';
-                }
-                row.push(text);
-            }
+    csv.push(row.join(","));
+    }
 
-            csv.push(row.join(","));
-        }
-
-        // Télécharger le fichier CSV
-        var csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
-        var downloadLink = document.createElement("a");
-        downloadLink.download = filename;
-        downloadLink.href = window.URL.createObjectURL(csvFile);
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+    // Télécharger le fichier CSV
+    var csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+    var downloadLink = document.createElement("a");
+    downloadLink.download = filename;
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
     }
 
     // Fonction pour animer les barres de progression
     function animateProgressBars() {
-        document.querySelectorAll('.stat-percentage').forEach(bar => {
-            const percentage = bar.dataset.percentage || '0';
-            const color = bar.dataset.color || '';
+    document.querySelectorAll('.stat-percentage').forEach(bar => {
+    const percentage = bar.dataset.percentage || '0';
+    const color = bar.dataset.color || '';
 
-            bar.style.width = '0';
+    bar.style.width = '0';
 
-            if (color && color !== 'undefined') {
-                try {
-                    bar.style.backgroundColor = color;
-                } catch (e) {
-                    // Ignorer les erreurs de couleur
-                }
-            }
+    if (color && color !== 'undefined') {
+    try {
+    bar.style.backgroundColor = color;
+    } catch (e) {
+    // Ignorer les erreurs de couleur
+    }
+    }
 
-            setTimeout(() => {
-                let widthValue = percentage;
-                if (percentage && !percentage.includes('%')) {
-                    widthValue = percentage + '%';
-                }
-                bar.style.width = widthValue;
-                bar.style.transition = 'width 1s ease-in-out';
-            }, 100);
-        });
+    setTimeout(() => {
+    let widthValue = percentage;
+    if (percentage && !percentage.includes('%')) {
+    widthValue = percentage + '%';
+    }
+    bar.style.width = widthValue;
+    bar.style.transition = 'width 1s ease-in-out';
+    }, 100);
+    });
     }
 
     // Initialiser les animations au chargement
     window.addEventListener('load', animateProgressBars);
-</script> -->
+    </script> -->
 
-<!-- Script stats.js séparé -->
-<!-- <script src="{{ url_for('static', filename='js/stats.js') }}"></script> -->
+    <!-- Script stats.js séparé -->
+    <!-- <script src="{{ url_for('static', filename='js/stats.js') }}"></script> -->
 
-<style>
+    <!-- <style>
     .hover-overlay:hover {
         background-color: rgba(0, 123, 255, 0.1) !important;
         transform: translateY(-2px);
@@ -1234,4 +1230,4 @@
         }
     }
 </style>
-{% endblock %}
+# END commented-out scripts/styles block #}
