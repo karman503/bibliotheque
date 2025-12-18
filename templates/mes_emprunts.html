@@ -49,6 +49,9 @@
                             <th>Date d'emprunt</th>
                             <th>Date de retour prévue</th>
                             <th>Statut</th>
+                            {% if current_user.is_authenticated and current_user.adherent %}
+                            <th>Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -71,10 +74,21 @@
                                     <span class="badge bg-primary">En cours</span>
                                     {% endif %}
                             </td>
+                            {% if current_user.is_authenticated and current_user.adherent %}
+                            <td>
+                                <a href="{{ url_for('view_emprunt', emprunt_id=emprunt.id) }}"
+                                    class="btn btn-sm btn-outline-primary">Voir</a>
+                                {% if not emprunt.date_retour_effective %}
+                                <a href="{{ url_for('retourner_livre', emprunt_id=emprunt.id) }}"
+                                    class="btn btn-sm btn-outline-success ms-1">Retour</a>
+                                {% endif %}
+                            </td>
+                            {% endif %}
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
+                            <td colspan="{{ 6 if current_user.is_authenticated and current_user.adherent else 5 }}"
+                                class="text-center text-muted py-4">
                                 <i class="ri-book-line display-4"></i>
                                 <p class="mt-2">Aucun emprunt pour le moment</p>
                                 <a href="{{ url_for('catalogue') }}" class="btn btn-primary mt-2">Parcourir le

@@ -2228,11 +2228,14 @@ def livres():
 @app.route("/dashboard/emprunts/retour/<int:emprunt_id>")
 @login_required
 def retourner_livre(emprunt_id):
-    if not has_roles('admin', 'bibliothecaire'):
+    emprunt = Emprunt.query.get_or_404(emprunt_id)
+    # Autoriser le bibliothécaire/admin ou l'adhérent propriétaire à marquer le retour
+    allowed = has_roles('admin', 'bibliothecaire') or (
+        current_user.is_authenticated and getattr(current_user, 'adherent', None) and current_user.adherent.id == emprunt.adherent_id
+    )
+    if not allowed:
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
-        
-    emprunt = Emprunt.query.get_or_404(emprunt_id)
     emprunt.status = 'retourne'
     emprunt.date_retour_effective = datetime.utcnow()
     emprunt.livre.disponible = True
@@ -2273,12 +2276,17 @@ def prolonger_emprunt(emprunt_id):
 @app.route('/dashboard/emprunts/<int:emprunt_id>')
 @login_required
 def view_emprunt(emprunt_id):
-    if not has_roles('admin', 'bibliothecaire'):
+    e = Emprunt.query.get_or_404(emprunt_id)
+    # Autoriser bibliothécaire/admin ou l'adhérent propriétaire à voir le détail
+    allowed = has_roles('admin', 'bibliothecaire') or (
+        current_user.is_authenticated and getattr(current_user, 'adherent', None) and current_user.adherent.id == e.adherent_id
+    )
+    if not allowed:
         flash('Accès non autorisé', 'danger')
         return redirect(url_for('dashboard'))
-        
-    e = Emprunt.query.get_or_404(emprunt_id)
-    return render_template('emprunt_detail.html', title=f"Emprunt {e.id}", emprunt=e)
+
+    is_staff = has_roles('admin', 'bibliothecaire')
+    return render_template('emprunt_detail.html', title=f"Emprunt {e.id}", emprunt=e, is_staff=is_staff)
 
 # STATISTIQUES
 @app.route("/dashboard/statistiques")

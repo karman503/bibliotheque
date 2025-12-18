@@ -23,8 +23,8 @@
     <!-- Statistiques personnelles avec animations -->
     <div class="row g-4 mb-4">
         <div class="col-xl-3 col-md-6">
-            <div class="card card-stat card-hover shadow-sm border-0"
-                onclick="location.href='{{ url_for('mes_emprunts') }}';">
+            <div class="card card-stat card-hover shadow-sm border-0" data-href="{{ url_for('mes_emprunts') }}"
+                onclick="location.href=this.dataset.href;">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -42,7 +42,7 @@
                         {% if total_emprunts_user > 0 %}
                         {% set progress_width = [ (emprunts_en_cours_user/total_emprunts_user*100), 100 ]|min %}
                         {% endif %}
-                        <div class="progress-bar bg-primary" style="width: {{ progress_width }}%"></div>
+                        <div class="progress-bar bg-primary" data-progress="{{ progress_width }}"></div>
                     </div>
                 </div>
             </div>
@@ -74,7 +74,7 @@
         <div class="col-xl-3 col-md-6">
             {% if retards_user > 0 %}
             <div class="card card-stat card-hover shadow-sm border-0 border-danger border-2"
-                onclick="location.href='{{ url_for('mes_emprunts') }}?filter=retard';">
+                data-href="{{ url_for('mes_emprunts') }}?filter=retard" onclick="location.href=this.dataset.href;">
                 {% else %}
                 <div class="card card-stat card-hover shadow-sm border-0">
                     {% endif %}
@@ -311,6 +311,13 @@
                         element.textContent = Math.floor(current);
                     }
                 }, 20);
+            });
+
+            // Appliquer les largeurs de barres de progression définies côté serveur
+            const progressBars = document.querySelectorAll('.progress-bar[data-progress]');
+            progressBars.forEach(function (bar) {
+                const val = parseFloat(bar.dataset.progress) || 0;
+                bar.style.width = val + '%';
             });
         });
     </script>

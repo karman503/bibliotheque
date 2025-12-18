@@ -12,6 +12,10 @@
             <p><strong>Prolongations:</strong> {{ emprunt.prolongations }}</p>
             <p><strong>Amende:</strong> {{ emprunt.amende }}€</p>
             <div class="mt-3 d-flex gap-2">
+                {% if emprunt.livre.contenu_pdf %}
+                <a href="{{ url_for('static', filename='livres/' ~ emprunt.livre.contenu_pdf) }}" target="_blank"
+                    class="btn btn-outline-primary">Voir le livre</a>
+                {% endif %}
                 {% if not emprunt.date_retour_effective %}
                 <a href="{{ url_for('retourner_livre', emprunt_id=emprunt.id) }}"
                     class="btn btn-outline-secondary">Marquer comme rendu</a>
@@ -19,7 +23,11 @@
                     <button class="btn btn-outline-primary">Prolonger (+7j)</button>
                 </form>
                 {% endif %}
+                {% if is_staff %}
                 <a href="{{ url_for('emprunts') }}" class="btn btn-secondary">Retour</a>
+                {% else %}
+                <a href="{{ url_for('mes_emprunts') }}" class="btn btn-secondary">Retour</a>
+                {% endif %}
             </div>
         </div>
     </div>
