@@ -40,7 +40,7 @@
                     <div class="progress mt-3" style="height: 4px;">
                         {% set progress_width = 0 %}
                         {% if total_emprunts_user > 0 %}
-                        {% set progress_width = (emprunts_en_cours_user/total_emprunts_user*100)|min(100) %}
+                        {% set progress_width = [ (emprunts_en_cours_user/total_emprunts_user*100), 100 ]|min %}
                         {% endif %}
                         <div class="progress-bar bg-primary" style="width: {{ progress_width }}%"></div>
                     </div>

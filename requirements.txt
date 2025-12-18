@@ -1,18 +1,28 @@
-# Dépendances Python détectées dans le projet
+# Dépendances Python détectées pour ce projet
+
+# Framework & extensions
 Flask
-Flask-SQLAlchemy
 Flask-Login
-Werkzeug
+Flask-Migrate
+Flask-SQLAlchemy
+SQLAlchemy
+
+# Database drivers (choisissez celui que vous utilisez en production)
+PyMySQL
 mysql-connector-python
-mysqlclient  # Requis pour Flask-SQLAlchemy avec MySQL
+mysqlclient
 
-# Assets front-end inclus dans le dépôt
-# Bootstrap est fourni comme fichiers statiques (CSS/JS) dans /static
-# Version détectée dans les fichiers statiques: 5.2.3
-# bootstrap==5.2.3  # (fichiers inclus dans static/css et static/js)
+# Migrations
+alembic
 
-# NOTE:
-# - Les modules de la librairie standard (par ex. datetime) ne sont pas listés.
-# - Si vous souhaitez des versions précises, exécutez dans l'environnement virtuel:
+# Génération de PDF
+reportlab
+
+# Utilitaires (inclus via Flask/werkzeug mais listés explicitement)
+Werkzeug
+
+# Notes:
+# - Si vous voulez verrouiller des versions, exécutez dans un env virtuel:
 #     pip freeze > requirements.txt
-#   puis adaptez/supprimez les lignes ci-dessus selon vos besoins.
+# - Installez ensuite avec:
+#     pip install -r requirements.txt
