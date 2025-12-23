@@ -1110,7 +1110,7 @@ def register_with_type(user_type):
 @app.route("/connexion", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('catalogue'))
+        return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -1146,7 +1146,7 @@ def login():
                 if has_roles('admin', 'bibliothecaire'):
                     return redirect(url_for('dashboard'))
                 else:
-                    return redirect(url_for('catalogue'))
+                    return redirect(url_for('dashboard'))
             else:
                 flash('Mot de passe incorrect', 'danger')
         else:
