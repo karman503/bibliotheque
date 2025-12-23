@@ -4,7 +4,7 @@ from sqlalchemy import text, inspect
 from sqlalchemy.exc import IntegrityError
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import os
 from werkzeug.utils import secure_filename
 from flask_migrate import Migrate
@@ -70,6 +70,64 @@ migrate = Migrate(app, db)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+@app.context_processor
+def inject_global_adherents_livres():
+    """Fournit automatiquement `adherents`, `livres` (disponibles) et `today`
+    à tous les templates afin que les modals et menus aient accès aux données.
+    """
+    try:
+        adherents = Adherent.query.order_by(Adherent.nom, Adherent.prenom).all()
+        livres = Livre.query.filter_by(disponible=True).order_by(Livre.titre).all()
+    except Exception:
+        adherents = []
+        livres = []
+    today = datetime.utcnow().date()
+    # Récupérer les paramètres de la bibliothèque (pour exposer p.ex. le montant de l'amende)
+    try:
+        cfg_global = get_library_config()
+        library_settings = {
+            'amende_par_jour': cfg_global.amende_par_jour,
+            'duree_emprunt': cfg_global.duree_emprunt,
+            'max_emprunts': cfg_global.max_emprunts
+        }
+    except Exception:
+        library_settings = {'amende_par_jour': 0.0, 'duree_emprunt': 14, 'max_emprunts': 3}
+    # Si l'utilisateur courant est lié à un adhérent, recalculer et fournir ses amendes/retards
+    total_amende_user = 0.0
+    retards_user = 0
+    try:
+        if current_user.is_authenticated:
+            adherent_id = getattr(current_user, 'adherent_id', None) or current_user.id
+            # Mettre à jour les amendes pour les emprunts en retard
+            now = datetime.utcnow()
+            overdues = Emprunt.query.filter(
+                Emprunt.adherent_id == adherent_id,
+                Emprunt.date_retour_effective == None,
+                Emprunt.date_retour_prevue < now
+            ).all()
+            updated = False
+            cfg = get_library_config()
+            for od in overdues:
+                ret_prevue = _to_date(od.date_retour_prevue)
+                days_late = (now.date() - ret_prevue).days if ret_prevue is not None else 0
+                new_amende = cfg.amende_par_jour * days_late if days_late > 0 else 0.0
+                if (od.amende or 0.0) != new_amende:
+                    od.amende = new_amende
+                    updated = True
+            if updated:
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            total_amende_user = db.session.query(db.func.coalesce(db.func.sum(Emprunt.amende), 0.0)).filter(Emprunt.adherent_id == adherent_id).scalar() or 0.0
+            retards_user = len(overdues)
+    except Exception:
+        current_app.logger.exception('Erreur calcul amendes global')
+
+    return dict(adherents=adherents, livres=livres, today=today, total_amende_user=total_amende_user, retards_user=retards_user, library_settings=library_settings)
 
 
 def role_required(roles):
@@ -201,6 +259,45 @@ class Reservation(db.Model):
 
     adherent = db.relationship('Adherent', backref='reservations')
     livre = db.relationship('Livre', backref='reservations')
+
+
+class Configuration(db.Model):
+    """Singleton table pour stocker les paramètres de la bibliothèque."""
+    id = db.Column(db.Integer, primary_key=True)
+    max_emprunts = db.Column(db.Integer, default=3)
+    duree_emprunt = db.Column(db.Integer, default=14)
+    max_prolongations = db.Column(db.Integer, default=2)
+    jours_prolongation = db.Column(db.Integer, default=7)
+    amende_par_jour = db.Column(db.Float, default=0.5)
+
+
+def get_library_config():
+    cfg = Configuration.query.first()
+    if not cfg:
+        cfg = Configuration()
+        try:
+            db.session.add(cfg)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+    return cfg
+
+
+def _to_date(dt):
+    """Return a date object for a datetime/date-like value or None.
+    Safe helper to handle both datetime and date instances.
+    """
+    if dt is None:
+        return None
+    try:
+        if isinstance(dt, datetime):
+            return dt.date()
+        if isinstance(dt, date):
+            return dt
+        # Fallback: try calling .date() (some DB objects behave like datetimes)
+        return dt.date()
+    except Exception:
+        return None
 
 # Création des tables
 with app.app_context():
@@ -653,6 +750,11 @@ def send_verification_email(to_email, username, code):
 @app.route('/emprunter_livre/<int:livre_id>', methods=['POST'])
 @login_required
 def emprunter_livre(livre_id):
+    return _perform_emprunt(livre_id)
+
+
+def _perform_emprunt(livre_id):
+    """Logique partagée pour effectuer un emprunt (utilisée par plusieurs routes)."""
     livre = Livre.query.get_or_404(livre_id)
     
     if not livre.disponible:
@@ -660,6 +762,54 @@ def emprunter_livre(livre_id):
         return redirect(url_for('catalogue'))
     
     adherent_id_for_query = getattr(current_user, 'adherent_id', None) or current_user.id
+
+    # Charger la configuration de la bibliothèque
+    cfg = get_library_config()
+
+    # Mettre à jour les amendes pour les emprunts en retard (actifs) et calculer total amendes
+    try:
+        now = datetime.utcnow()
+        overdues = Emprunt.query.filter(
+            Emprunt.adherent_id == adherent_id_for_query,
+            Emprunt.date_retour_effective == None,
+            Emprunt.date_retour_prevue < now
+        ).all()
+        updated = False
+        for od in overdues:
+            ret_prevue = _to_date(od.date_retour_prevue)
+            days_late = (now.date() - ret_prevue).days if ret_prevue is not None else 0
+            if days_late > 0:
+                new_amende = cfg.amende_par_jour * days_late
+            else:
+                new_amende = 0.0
+            if (od.amende or 0.0) != new_amende:
+                od.amende = new_amende
+                updated = True
+        if updated:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+    except Exception:
+        current_app.logger.exception('Erreur mise à jour amendes en amont emprunt')
+
+    total_amende = db.session.query(db.func.coalesce(db.func.sum(Emprunt.amende), 0.0)).filter(Emprunt.adherent_id == adherent_id_for_query).scalar() or 0.0
+
+    # Empêcher un nouvel emprunt si l'adhérent a des amendes impayées ou des retards actifs
+    has_overdue_active = Emprunt.query.filter(
+        Emprunt.adherent_id == adherent_id_for_query,
+        Emprunt.date_retour_effective == None,
+        Emprunt.date_retour_prevue < datetime.utcnow()
+    ).count() > 0
+    if total_amende > 0 or has_overdue_active:
+        flash('Impossible d\'effectuer un emprunt: adhérent en retard ou amendes impayées', 'error')
+        return redirect(url_for('catalogue'))
+
+    # Vérifier le nombre d'emprunts en cours pour cet adhérent
+    emprunts_en_cours = Emprunt.query.filter_by(adherent_id=adherent_id_for_query, date_retour_effective=None).count()
+    if emprunts_en_cours >= (cfg.max_emprunts or 3):
+        flash('Nombre maximum d\'emprunts atteint pour cet adhérent', 'error')
+        return redirect(url_for('catalogue'))
 
     emprunt_existant = Emprunt.query.filter_by(
         adherent_id=adherent_id_for_query,
@@ -674,7 +824,7 @@ def emprunter_livre(livre_id):
     nouvel_emprunt = Emprunt(
         adherent_id=adherent_id_for_query,
         livre_id=livre_id,
-        date_retour_prevue=datetime.utcnow() + timedelta(days=14),
+        date_retour_prevue=datetime.utcnow() + timedelta(days=(cfg.duree_emprunt or 14)),
         status='en_cours'
     )
     
@@ -689,6 +839,13 @@ def emprunter_livre(livre_id):
         flash('Erreur lors de l\'emprunt', 'error')
     
     return redirect(url_for('catalogue'))
+
+
+# Route de compatibilité (ancien chemin sans "_livre")
+@app.route('/emprunter/<int:livre_id>', methods=['POST'])
+@login_required
+def emprunter_compat(livre_id):
+    return _perform_emprunt(livre_id)
 
 # MES EMPRUNTS
 @app.route("/mes_emprunts")
@@ -1391,7 +1548,37 @@ def new_adherent():
 @login_required
 def view_adherent(adherent_id):
     a = Adherent.query.get_or_404(adherent_id)
-    return render_template('adherent_view.html', title=f"Adhérent {a.nom}", adherent=a)
+    # Mettre à jour et calculer les amendes courantes pour l'adhérent
+    try:
+        cfg = get_library_config()
+        now = datetime.utcnow()
+        overdues = Emprunt.query.filter(
+            Emprunt.adherent_id == a.id,
+            Emprunt.date_retour_effective == None,
+            Emprunt.date_retour_prevue < now
+        ).all()
+        updated = False
+        for od in overdues:
+            ret_prevue = _to_date(od.date_retour_prevue)
+            days_late = (now.date() - ret_prevue).days if ret_prevue is not None else 0
+            if days_late > 0:
+                new_amende = cfg.amende_par_jour * days_late
+            else:
+                new_amende = 0.0
+            if (od.amende or 0.0) != new_amende:
+                od.amende = new_amende
+                updated = True
+        if updated:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+    except Exception:
+        current_app.logger.exception('Erreur calcul amendes vue adherent')
+
+    total_amende = db.session.query(db.func.coalesce(db.func.sum(Emprunt.amende), 0.0)).filter(Emprunt.adherent_id == a.id).scalar() or 0.0
+
+    return render_template('adherent_view.html', title=f"Adhérent {a.nom}", adherent=a, total_amende=total_amende)
 
 @app.route('/dashboard/adherents/<int:adherent_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1429,13 +1616,58 @@ def emprunts():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        # TODO: gérer la soumission POST (création / modification d'emprunts)
-        pass
+        # Gestion création d'un nouvel emprunt via le formulaire (bibliothécaire)
+        adherent_id = request.form.get('adherent_id')
+        livre_id = request.form.get('livre_id')
+        date_retour_str = request.form.get('date_retour')
+
+        if not adherent_id or not livre_id or not date_retour_str:
+            flash('Tous les champs obligatoires doivent être remplis', 'danger')
+            return redirect(url_for('emprunts'))
+
+        try:
+            adherent = Adherent.query.get(int(adherent_id))
+            livre = Livre.query.get(int(livre_id))
+            date_retour_prevue = datetime.strptime(date_retour_str, '%Y-%m-%d')
+
+            if not adherent or not livre:
+                flash('Adhérent ou livre introuvable', 'danger')
+                return redirect(url_for('emprunts'))
+
+            if not livre.disponible:
+                flash('Le livre sélectionné n\'est pas disponible', 'danger')
+                return redirect(url_for('emprunts'))
+
+            # Vérifier qu'il n'y a pas déjà un emprunt actif pour ce livre
+            emprunt_actif = Emprunt.query.filter_by(livre_id=livre.id, date_retour_effective=None).first()
+            if emprunt_actif:
+                flash('Le livre est déjà emprunté', 'danger')
+                return redirect(url_for('emprunts'))
+
+            nouvel_emprunt = Emprunt(
+                adherent_id=adherent.id,
+                livre_id=livre.id,
+                date_retour_prevue=date_retour_prevue,
+                status='en_cours'
+            )
+
+            livre.disponible = False
+
+            db.session.add(nouvel_emprunt)
+            db.session.commit()
+            flash(f'Emprunt créé: "{livre.titre}" pour {adherent.nom} {adherent.prenom}', 'success')
+            return redirect(url_for('emprunts'))
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('Erreur lors de la création de l\'emprunt')
+            flash('Erreur lors de la création de l\'emprunt', 'danger')
+            return redirect(url_for('emprunts'))
 
     emprunts_liste = Emprunt.query.all()
     adherents_liste = Adherent.query.all()
     livres_disponibles = Livre.query.filter_by(disponible=True).all()
     reservations_liste = Reservation.query.order_by(Reservation.date_reservation.desc()).all()
+    cfg = get_library_config()
 
     return render_template(
         "emprunts.html",
@@ -1447,6 +1679,13 @@ def emprunts():
         now=datetime.utcnow(),
         today=datetime.utcnow().date(),
         timedelta=timedelta
+        ,library_settings={
+            'duree_emprunt': cfg.duree_emprunt,
+            'max_emprunts': cfg.max_emprunts,
+            'max_prolongations': cfg.max_prolongations,
+            'jours_prolongation': cfg.jours_prolongation,
+            'amende_par_jour': cfg.amende_par_jour
+        }
     )
 
 # ============================================
@@ -2130,7 +2369,37 @@ def fulfill_reservation(res_id):
         flash('Livre non disponible pour prêt', 'danger')
         return redirect(url_for('reservations_list'))
 
-    empr = Emprunt(adherent_id=r.adherent_id, livre_id=r.livre_id, date_retour_prevue=datetime.utcnow() + timedelta(days=14), status='en_cours')
+    cfg = get_library_config()
+    # Vérifier amendes/retards pour l'adhérent de la réservation
+    try:
+        now = datetime.utcnow()
+        overdues = Emprunt.query.filter(
+            Emprunt.adherent_id == r.adherent_id,
+            Emprunt.date_retour_effective == None,
+            Emprunt.date_retour_prevue < now
+        ).all()
+        updated = False
+        for od in overdues:
+            ret_prevue = _to_date(od.date_retour_prevue)
+            days_late = (now.date() - ret_prevue).days if ret_prevue is not None else 0
+            new_amende = cfg.amende_par_jour * days_late if days_late > 0 else 0.0
+            if (od.amende or 0.0) != new_amende:
+                od.amende = new_amende
+                updated = True
+        if updated:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
+        total_amende_for_adherent = db.session.query(db.func.coalesce(db.func.sum(Emprunt.amende), 0.0)).filter(Emprunt.adherent_id == r.adherent_id).scalar() or 0.0
+        if total_amende_for_adherent > 0 or len(overdues) > 0:
+            flash('Impossible de transformer la réservation en emprunt: adhérent en retard ou amendes impayées', 'danger')
+            return redirect(url_for('reservations_list'))
+    except Exception:
+        current_app.logger.exception('Erreur vérification amendes fulfil reservation')
+
+    empr = Emprunt(adherent_id=r.adherent_id, livre_id=r.livre_id, date_retour_prevue=datetime.utcnow() + timedelta(days=(cfg.duree_emprunt or 14)), status='en_cours')
     r.status = 'fulfilled'
     r.livre.disponible = False
     db.session.add(empr)
@@ -2238,6 +2507,22 @@ def retourner_livre(emprunt_id):
         return redirect(url_for('dashboard'))
     emprunt.status = 'retourne'
     emprunt.date_retour_effective = datetime.utcnow()
+    # Calculer l'amende si retour en retard
+    try:
+        cfg = get_library_config()
+        if emprunt.date_retour_prevue and emprunt.date_retour_effective:
+            ret_eff = _to_date(emprunt.date_retour_effective)
+            ret_prevue = _to_date(emprunt.date_retour_prevue)
+            if ret_eff is not None and ret_prevue is not None:
+                days_late = (ret_eff - ret_prevue).days
+            else:
+                days_late = 0
+            if days_late > 0:
+                emprunt.amende = cfg.amende_par_jour * days_late
+            else:
+                emprunt.amende = 0.0
+    except Exception:
+        current_app.logger.exception('Erreur calcul amende')
     emprunt.livre.disponible = True
     db.session.commit()
     
@@ -2258,16 +2543,17 @@ def prolonger_emprunt(emprunt_id):
         
     emprunt = Emprunt.query.get_or_404(emprunt_id)
     try:
+        cfg = get_library_config()
         if emprunt.date_retour_effective:
             flash('Impossible de prolonger un emprunt déjà retourné.', 'warning')
             return redirect(url_for('emprunts'))
-        if emprunt.prolongations >= 2:
+        if emprunt.prolongations >= (cfg.max_prolongations or 2):
             flash('Nombre maximum de prolongations atteint.', 'warning')
             return redirect(url_for('emprunts'))
         emprunt.prolongations = emprunt.prolongations + 1
-        emprunt.date_retour_prevue = emprunt.date_retour_prevue + timedelta(days=7)
+        emprunt.date_retour_prevue = emprunt.date_retour_prevue + timedelta(days=(cfg.jours_prolongation or 7))
         db.session.commit()
-        flash('Prolongation effectuée (+7 jours)', 'success')
+        flash(f'Prolongation effectuée (+{cfg.jours_prolongation or 7} jours)', 'success')
     except Exception:
         db.session.rollback()
         flash('Erreur lors de la prolongation', 'danger')
@@ -2471,14 +2757,107 @@ def statistiques():
                          stats_categories=stats_categories,
                          recent_emprunts=recent_emprunts)
 
-@app.route("/dashboard/parametres")
+
+@app.route('/dashboard/export_data')
+@login_required
+def export_data():
+    if not has_roles('admin', 'bibliothecaire'):
+        flash('Accès non autorisé', 'danger')
+        return redirect(url_for('dashboard'))
+
+    import csv, zipfile
+
+    mem_zip = io.BytesIO()
+    with zipfile.ZipFile(mem_zip, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
+        # Adherents
+        s = StringIO()
+        writer = csv.writer(s)
+        writer.writerow(['id', 'nom', 'prenom', 'email', 'telephone', 'classe', 'statut', 'date_inscription'])
+        for a in Adherent.query.all():
+            writer.writerow([a.id, a.nom, a.prenom, a.email, a.telephone, a.classe, a.statut, a.date_inscription])
+        zf.writestr('adherents.csv', s.getvalue())
+
+        # Livres
+        s = StringIO()
+        writer = csv.writer(s)
+        writer.writerow(['id', 'titre', 'auteur', 'isbn', 'annee_publication', 'categorie', 'disponible'])
+        for l in Livre.query.all():
+            writer.writerow([l.id, l.titre, l.auteur, l.isbn, l.annee_publication, l.categorie, l.disponible])
+        zf.writestr('livres.csv', s.getvalue())
+
+        # Emprunts
+        s = StringIO()
+        writer = csv.writer(s)
+        writer.writerow(['id', 'adherent_id', 'livre_id', 'date_emprunt', 'date_retour_prevue', 'date_retour_effective', 'status', 'prolongations', 'amende'])
+        for e in Emprunt.query.all():
+            writer.writerow([e.id, e.adherent_id, e.livre_id, e.date_emprunt, e.date_retour_prevue, e.date_retour_effective, e.status, e.prolongations, e.amende])
+        zf.writestr('emprunts.csv', s.getvalue())
+
+        # Reservations
+        s = StringIO()
+        writer = csv.writer(s)
+        writer.writerow(['id', 'adherent_id', 'livre_id', 'date_reservation', 'status'])
+        for r in Reservation.query.all():
+            writer.writerow([r.id, r.adherent_id, r.livre_id, r.date_reservation, r.status])
+        zf.writestr('reservations.csv', s.getvalue())
+
+    mem_zip.seek(0)
+    return Response(mem_zip.getvalue(), mimetype='application/zip', headers={
+        'Content-Disposition': 'attachment; filename=bibliotheque_export.zip'
+    })
+
+
+@app.route('/dashboard/download_backup')
+@login_required
+def download_backup():
+    if not has_roles('admin', 'bibliothecaire'):
+        flash('Accès non autorisé', 'danger')
+        return redirect(url_for('dashboard'))
+
+    # Simple JSON backup of key tables
+    import json
+    data = {
+        'adherents': [
+            { 'id': a.id, 'nom': a.nom, 'prenom': a.prenom, 'email': a.email } for a in Adherent.query.all()
+        ],
+        'livres': [ { 'id': l.id, 'titre': l.titre, 'auteur': l.auteur } for l in Livre.query.all() ],
+        'emprunts': [ { 'id': e.id, 'adherent_id': e.adherent_id, 'livre_id': e.livre_id } for e in Emprunt.query.all() ]
+    }
+    payload = json.dumps(data, default=str, ensure_ascii=False)
+    return Response(payload, mimetype='application/json', headers={'Content-Disposition': 'attachment; filename=bibliotheque_backup.json'})
+
+@app.route("/dashboard/parametres", methods=["GET", "POST"])
 @login_required
 def parametres():
+    # Gestion POST pour sauvegarder la configuration
+    cfg = get_library_config()
+    if request.method == 'POST':
+        try:
+            max_emprunts = int(request.form.get('max_emprunts') or cfg.max_emprunts)
+            duree_emprunt = int(request.form.get('duree_emprunt') or cfg.duree_emprunt)
+            max_prolongations = int(request.form.get('max_prolongations') or cfg.max_prolongations)
+            jours_prolongation = int(request.form.get('jours_prolongation') or cfg.jours_prolongation)
+            amende_par_jour = float(request.form.get('amende_par_jour') or cfg.amende_par_jour)
+
+            cfg.max_emprunts = max_emprunts
+            cfg.duree_emprunt = duree_emprunt
+            cfg.max_prolongations = max_prolongations
+            cfg.jours_prolongation = jours_prolongation
+            cfg.amende_par_jour = amende_par_jour
+            db.session.commit()
+            flash('Paramètres sauvegardés', 'success')
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('Erreur sauvegarde paramètres')
+            flash('Erreur lors de la sauvegarde des paramètres', 'danger')
+        return redirect(url_for('parametres'))
+
     library_settings = {
-        'max_emprunts': app.config.get('MAX_EMPRUNTS_PER_USER', 3),
-        'duree_emprunt': app.config.get('DUREE_EMPRUNT_JOURS', 14),
-        'max_prolongations': app.config.get('MAX_PROLONGATIONS', 2),
-        'amende_par_jour': app.config.get('AMENDE_PAR_JOUR', 0.5)
+        'max_emprunts': cfg.max_emprunts,
+        'duree_emprunt': cfg.duree_emprunt,
+        'max_prolongations': cfg.max_prolongations,
+        'jours_prolongation': cfg.jours_prolongation,
+        'amende_par_jour': cfg.amende_par_jour
     }
 
     # Notification preferences placeholders (in future, persist per-user)
@@ -2780,22 +3159,23 @@ def utility_processor():
         if date:
             return date.strftime(format)
         return ''
-    
+
+    def days_until(dt):
+        """Return number of days from today until `dt` (positive if in future, negative if past).
+        Accepts both `datetime` and `date` values.
+        """
+        d = _to_date(dt)
+        if d is None:
+            return 0
+        return (d - datetime.utcnow().date()).days
+
     return dict(
         timedelta=timedelta,
         now=datetime.utcnow(),
         format_date=format_date,
-        datetime=datetime
-    )
-
-
-@app.context_processor
-def utility_processor():
-    return dict(
-        timedelta=timedelta,
-        now=datetime.utcnow,
         datetime=datetime,
-        today=datetime.utcnow().date()
+        today=datetime.utcnow().date(),
+        days_until=days_until
     )
 
 

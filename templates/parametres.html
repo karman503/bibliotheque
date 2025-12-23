@@ -201,27 +201,38 @@
                     <div class="card shadow-sm border-light">
                         <div class="card-body">
                             <h3 class="h5 mb-4">Paramètres des emprunts</h3>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Nombre maximum d'emprunts par adhérent</label>
-                                    <input type="number" class="form-control" value="3">
+                            <form method="POST" action="{{ url_for('parametres') }}">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nombre maximum d'emprunts par adhérent</label>
+                                        <input name="max_emprunts" type="number" class="form-control"
+                                            value="{{ library_settings.max_emprunts }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Durée d'emprunt (jours)</label>
+                                        <input name="duree_emprunt" type="number" class="form-control"
+                                            value="{{ library_settings.duree_emprunt }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nombre maximum de prolongations</label>
+                                        <input name="max_prolongations" type="number" class="form-control"
+                                            value="{{ library_settings.max_prolongations }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Jours ajoutés par prolongation</label>
+                                        <input name="jours_prolongation" type="number" class="form-control"
+                                            value="{{ library_settings.jours_prolongation }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Amende par jour de retard (€)</label>
+                                        <input name="amende_par_jour" type="number" step="0.1" class="form-control"
+                                            value="{{ library_settings.amende_par_jour }}">
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Durée d'emprunt (jours)</label>
-                                    <input type="number" class="form-control" value="14">
+                                <div class="mt-4">
+                                    <button class="btn btn-primary">Sauvegarder les paramètres</button>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Nombre maximum de prolongations</label>
-                                    <input type="number" class="form-control" value="2">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Amende par jour de retard (€)</label>
-                                    <input type="number" step="0.1" class="form-control" value="0.5">
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <button class="btn btn-primary">Sauvegarder les paramètres</button>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -238,9 +249,9 @@
                                     <p class="mb-1 fw-medium">Sauvegarde automatique</p>
                                     <p class="mb-0 small text-secondary">Dernière sauvegarde: Aujourd'hui à 03:00</p>
                                 </div>
-                                <button class="btn btn-outline-secondary">
+                                <a class="btn btn-outline-secondary" href="{{ url_for('download_backup') }}">
                                     <i class="ri-download-line me-2"></i>Télécharger
-                                </button>
+                                </a>
                             </div>
 
                             <!-- Exporter les données -->
@@ -249,9 +260,9 @@
                                     <p class="mb-1 fw-medium">Exporter les données</p>
                                     <p class="mb-0 small text-secondary">Exporter toutes les données en format CSV</p>
                                 </div>
-                                <button class="btn btn-outline-secondary">
+                                <a class="btn btn-outline-secondary" href="{{ url_for('export_data') }}">
                                     <i class="ri-file-excel-line me-2"></i>Exporter
-                                </button>
+                                </a>
                             </div>
 
                         </div>

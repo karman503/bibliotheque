@@ -20,7 +20,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for e in emprunts_actuels %}
+          {% for e in emprunts %}
           <tr>
             <td>
               <strong>{{ e.livre.titre if e.livre else '—' }}</strong><br>
@@ -35,7 +35,7 @@
             </td>
             <td>
               {% if e.date_retour_prevue %}
-              {% set jours_restants = (e.date_retour_prevue.date() - today).days %}
+              {% set jours_restants = days_until(e.date_retour_prevue) %}
               {% if jours_restants < 0 %} <span class="badge bg-danger">En retard ({{ -jours_restants }}j)</span>
                 {% else %}
                 <span class="badge bg-success">{{ jours_restants }}j</span>

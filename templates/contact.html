@@ -173,7 +173,9 @@
                         directement.</p>
 
                     <h6 class="fw-semibold">Que faire en cas de retard ?</h6>
-                    <p class="text-muted small mb-3">Des frais de retard de 0,50€ par jour et par livre s'appliquent
+                    <p class="text-muted small mb-3">Des frais de retard de {{
+                        "%.2f"|format(library_settings.amende_par_jour if library_settings is defined else 0.5) }}€ par
+                        jour et par livre s'appliquent
                         après la date d'échéance.</p>
 
                     <h6 class="fw-semibold">Proposez-vous des services numériques ?</h6>

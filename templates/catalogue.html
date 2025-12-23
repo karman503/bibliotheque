@@ -258,7 +258,7 @@
 
                 // Mettre à jour le bouton emprunter
                 const borrowForm = document.getElementById('modalBorrowForm');
-                borrowForm.action = `/emprunter/${livreId}`;
+                borrowForm.action = `/emprunter_livre/${livreId}`;
 
                 const borrowBtn = document.getElementById('modalBorrowBtn');
                 borrowBtn.disabled = !disponible;
