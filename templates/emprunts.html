@@ -100,7 +100,7 @@
                                     <span class="badge bg-success">rendu</span>
                                     {% elif emprunt.date_retour_prevue < now and not emprunt.date_retour_effective %}
                                         <span class="badge bg-danger">en retard</span>
-                                        <br><small class="text-danger">Amende: {{ emprunt.amende }}€</small>
+                                        <br><small class="text-danger">Amende: {{ emprunt.amende }} DJF</small>
                                         {% else %}
                                         <span class="badge bg-primary">en cours</span>
                                         {% endif %}
