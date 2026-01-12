@@ -10,7 +10,8 @@
                 Bibliothécaire : {{ bibliothecaire.prenom }} {{ bibliothecaire.nom }}
             </h2>
             <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-{{ 'success' if bibliothecaire.statut == 'Actif' else 'warning' if bibliothecaire.statut == 'En congé' else 'secondary' }}">
+                <span
+                    class="badge bg-{{ 'success' if bibliothecaire.statut == 'Actif' else 'warning' if bibliothecaire.statut == 'En congé' else 'secondary' }}">
                     {{ bibliothecaire.statut }}
                 </span>
                 <span class="text-muted">ID: {{ bibliothecaire.id }}</span>
@@ -48,32 +49,32 @@
                                     <label class="form-label text-muted small mb-1">Nom complet</label>
                                     <p class="fw-bold mb-0">{{ bibliothecaire.nom }} {{ bibliothecaire.prenom }}</p>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label text-muted small mb-1">Genre</label>
                                     <p class="mb-0">
                                         {% if bibliothecaire.genre == 'M' %}
-                                            <i class="ri-men-line text-primary me-1"></i> Masculin
+                                        <i class="ri-men-line text-primary me-1"></i> Masculin
                                         {% elif bibliothecaire.genre == 'F' %}
-                                            <i class="ri-women-line text-danger me-1"></i> Féminin
+                                        <i class="ri-women-line text-danger me-1"></i> Féminin
                                         {% elif bibliothecaire.genre == 'A' %}
-                                            <i class="ri-user-line text-info me-1"></i> Autre
+                                        <i class="ri-user-line text-info me-1"></i> Autre
                                         {% else %}
-                                            <span class="text-muted">Non spécifié</span>
+                                        <span class="text-muted">Non spécifié</span>
                                         {% endif %}
                                     </p>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label text-muted small mb-1">Date de naissance</label>
                                     <p class="mb-0">
                                         {% if bibliothecaire.date_naissance %}
-                                            {{ bibliothecaire.date_naissance.strftime('%d/%m/%Y') }}
-                                            <span class="text-muted small ms-1">
-                                                ({{ ((now.date() - bibliothecaire.date_naissance).days // 365) }} ans)
-                                            </span>
+                                        {{ bibliothecaire.date_naissance.strftime('%d/%m/%Y') }}
+                                        <span class="text-muted small ms-1">
+                                            ({{ ((now.date() - bibliothecaire.date_naissance).days // 365) }} ans)
+                                        </span>
                                         {% else %}
-                                            <span class="text-muted">Non spécifiée</span>
+                                        <span class="text-muted">Non spécifiée</span>
                                         {% endif %}
                                     </p>
                                 </div>
@@ -98,39 +99,40 @@
                                         <span class="badge bg-info">{{ bibliothecaire.poste }}</span>
                                     </p>
                                 </div>
-                                
+
                                 <div class="col-12">
                                     <label class="form-label text-muted small mb-1">Département</label>
                                     <p class="mb-0">
                                         {% if bibliothecaire.departement %}
-                                            {{ bibliothecaire.departement }}
+                                        {{ bibliothecaire.departement }}
                                         {% else %}
-                                            <span class="text-muted">Non spécifié</span>
+                                        <span class="text-muted">Non spécifié</span>
                                         {% endif %}
                                     </p>
                                 </div>
-                                
+
                                 <div class="col-12">
                                     <label class="form-label text-muted small mb-1">Date d'embauche</label>
                                     <p class="mb-0">
                                         {% if bibliothecaire.date_embauche %}
-                                            {{ bibliothecaire.date_embauche.strftime('%d/%m/%Y') }}
-                                            <span class="text-muted small ms-1">
-                                                ({{ ((now.date() - bibliothecaire.date_embauche).days // 365) }} ans d'ancienneté)
-                                            </span>
+                                        {{ bibliothecaire.date_embauche.strftime('%d/%m/%Y') }}
+                                        <span class="text-muted small ms-1">
+                                            ({{ ((now.date() - bibliothecaire.date_embauche).days // 365) }} ans
+                                            d'ancienneté)
+                                        </span>
                                         {% else %}
-                                            <span class="text-muted">Non spécifiée</span>
+                                        <span class="text-muted">Non spécifiée</span>
                                         {% endif %}
                                     </p>
                                 </div>
-                                
+
                                 <div class="col-12">
                                     <label class="form-label text-muted small mb-1">Description du poste</label>
                                     <p class="mb-0">
                                         {% if bibliothecaire.description_poste %}
-                                            {{ bibliothecaire.description_poste }}
+                                        {{ bibliothecaire.description_poste }}
                                         {% else %}
-                                            <span class="text-muted">Aucune description</span>
+                                        <span class="text-muted">Aucune description</span>
                                         {% endif %}
                                     </p>
                                 </div>
@@ -158,15 +160,15 @@
                                         </a>
                                     </p>
                                 </div>
-                                
+
                                 <div class="col-12">
                                     <label class="form-label text-muted small mb-1">Téléphone professionnel</label>
                                     <p class="mb-0">
                                         <i class="ri-phone-line text-muted me-1"></i>
                                         {% if bibliothecaire.telephone %}
-                                            {{ bibliothecaire.telephone }}
+                                        {{ bibliothecaire.telephone }}
                                         {% else %}
-                                            <span class="text-muted">Non spécifié</span>
+                                        <span class="text-muted">Non spécifié</span>
                                         {% endif %}
                                     </p>
                                 </div>
@@ -189,36 +191,37 @@
                                     <label class="form-label text-muted small mb-1">Email personnel</label>
                                     <p class="mb-0">
                                         {% if bibliothecaire.email_personnel %}
-                                            <i class="ri-mail-line text-muted me-1"></i>
-                                            <a href="mailto:{{ bibliothecaire.email_personnel }}" class="text-decoration-none">
-                                                {{ bibliothecaire.email_personnel }}
-                                            </a>
+                                        <i class="ri-mail-line text-muted me-1"></i>
+                                        <a href="mailto:{{ bibliothecaire.email_personnel }}"
+                                            class="text-decoration-none">
+                                            {{ bibliothecaire.email_personnel }}
+                                        </a>
                                         {% else %}
-                                            <span class="text-muted">Non spécifié</span>
+                                        <span class="text-muted">Non spécifié</span>
                                         {% endif %}
                                     </p>
                                 </div>
-                                
+
                                 <div class="col-12">
                                     <label class="form-label text-muted small mb-1">Téléphone personnel</label>
                                     <p class="mb-0">
                                         {% if bibliothecaire.telephone_personnel %}
-                                            <i class="ri-phone-line text-muted me-1"></i>
-                                            {{ bibliothecaire.telephone_personnel }}
+                                        <i class="ri-phone-line text-muted me-1"></i>
+                                        {{ bibliothecaire.telephone_personnel }}
                                         {% else %}
-                                            <span class="text-muted">Non spécifié</span>
+                                        <span class="text-muted">Non spécifié</span>
                                         {% endif %}
                                     </p>
                                 </div>
-                                
+
                                 <div class="col-12">
                                     <label class="form-label text-muted small mb-1">Adresse</label>
                                     <p class="mb-0">
                                         {% if bibliothecaire.adresse %}
-                                            <i class="ri-home-line text-muted me-1"></i>
-                                            {{ bibliothecaire.adresse }}
+                                        <i class="ri-home-line text-muted me-1"></i>
+                                        {{ bibliothecaire.adresse }}
                                         {% else %}
-                                            <span class="text-muted">Non spécifiée</span>
+                                        <span class="text-muted">Non spécifiée</span>
                                         {% endif %}
                                     </p>
                                 </div>
@@ -240,25 +243,27 @@
                 </div>
                 <div class="card-body text-center">
                     {% if bibliothecaire.image %}
-                        <img src="{{ url_for('static', filename='uploads/profiles/' + bibliothecaire.image) }}" 
-                             alt="{{ bibliothecaire.prenom }} {{ bibliothecaire.nom }}"
-                             class="rounded-circle mb-3"
-                             style="width: 200px; height: 200px; object-fit: cover; border: 3px solid #dee2e6;">
+                    <img src="{{ url_for('static', filename='uploads/profiles/' + bibliothecaire.image) }}"
+                        alt="{{ bibliothecaire.prenom }} {{ bibliothecaire.nom }}" class="rounded-circle mb-3"
+                        style="width: 200px; height: 200px; object-fit: cover; border: 3px solid #dee2e6;">
                     {% else %}
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center mx-auto mb-3"
-                             style="width: 200px; height: 200px; border: 3px solid #dee2e6;">
-                            <i class="ri-user-line fs-1"></i>
-                        </div>
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center mx-auto mb-3"
+                        style="width: 200px; height: 200px; border: 3px solid #dee2e6;">
+                        <i class="ri-user-line fs-1"></i>
+                    </div>
                     {% endif %}
-                    
+
                     <h5 class="fw-bold">{{ bibliothecaire.prenom }} {{ bibliothecaire.nom }}</h5>
                     <p class="text-muted mb-3">{{ bibliothecaire.poste }}</p>
-                    
+
                     <!-- Statut -->
                     <div class="mb-3">
-                        <form method="POST" action="{{ url_for('toggle_bibliothecaire_status', id=bibliothecaire.id) }}" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-outline-{{ 'success' if bibliothecaire.statut != 'Actif' else 'warning' }}">
-                                <i class="ri-toggle-{{ 'off' if bibliothecaire.statut != 'Actif' else 'on' }}-line me-1"></i>
+                        <form method="POST" action="{{ url_for('toggle_bibliothecaire_status', id=bibliothecaire.id) }}"
+                            class="d-inline">
+                            <button type="submit"
+                                class="btn btn-sm btn-outline-{{ 'success' if bibliothecaire.statut != 'Actif' else 'warning' }}">
+                                <i
+                                    class="ri-toggle-{{ 'off' if bibliothecaire.statut != 'Actif' else 'on' }}-line me-1"></i>
                                 {{ 'Activer' if bibliothecaire.statut != 'Actif' else 'Désactiver' }}
                             </button>
                         </form>
@@ -275,48 +280,51 @@
                 </div>
                 <div class="card-body">
                     {% if bibliothecaire.user %}
-                        <div class="alert alert-success">
-                            <i class="ri-checkbox-circle-line me-2"></i>
-                            <strong>Compte actif</strong>
-                            <div class="small mt-1">
-                                Nom d'utilisateur: {{ bibliothecaire.user.username }}<br>
-                                Rôle: <span class="badge bg-info">{{ bibliothecaire.user.role }}</span><br>
-                                Créé le: {{ bibliothecaire.user.created_at.strftime('%d/%m/%Y') }}
-                            </div>
+                    <div class="alert alert-success">
+                        <i class="ri-checkbox-circle-line me-2"></i>
+                        <strong>Compte actif</strong>
+                        <div class="small mt-1">
+                            Nom d'utilisateur: {{ bibliothecaire.user.username }}<br>
+                            Rôle: <span class="badge bg-info">{{ bibliothecaire.user.role }}</span><br>
+                            Créé le: {{ bibliothecaire.user.created_at.strftime('%d/%m/%Y') }}
                         </div>
+                    </div>
                     {% else %}
-                        <div class="alert alert-warning">
-                            <i class="ri-alert-line me-2"></i>
-                            <strong>Aucun compte utilisateur</strong>
-                            <p class="small mb-2 mt-2">Ce bibliothécaire n'a pas encore de compte utilisateur pour accéder au système.</p>
-                            
-                            <!-- Formulaire pour créer un compte -->
-                            <form method="POST" action="{{ url_for('create_bibliothecaire_account', id=bibliothecaire.id) }}" class="mt-3">
-                                <div class="mb-2">
-                                    <label class="form-label small">Nom d'utilisateur</label>
-                                    <input type="text" name="username" class="form-control form-control-sm" 
-                                           placeholder="Ex: j.dupont" required>
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label small">Mot de passe</label>
-                                    <input type="password" name="password" class="form-control form-control-sm" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label small">Confirmer le mot de passe</label>
-                                    <input type="password" name="confirm_password" class="form-control form-control-sm" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label small">Rôle</label>
-                                    <select name="role" class="form-select form-select-sm">
-                                        <option value="bibliothecaire" selected>Bibliothécaire</option>
-                                        <option value="admin">Administrateur</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-sm btn-primary w-100">
-                                    <i class="ri-user-add-line me-1"></i> Créer le compte
-                                </button>
-                            </form>
-                        </div>
+                    <div class="alert alert-warning">
+                        <i class="ri-alert-line me-2"></i>
+                        <strong>Aucun compte utilisateur</strong>
+                        <p class="small mb-2 mt-2">Ce bibliothécaire n'a pas encore de compte utilisateur pour accéder
+                            au système.</p>
+
+                        <!-- Formulaire pour créer un compte -->
+                        <form method="POST"
+                            action="{{ url_for('create_bibliothecaire_account', id=bibliothecaire.id) }}" class="mt-3">
+                            <div class="mb-2">
+                                <label class="form-label small">Nom d'utilisateur</label>
+                                <input type="text" name="username" class="form-control form-control-sm"
+                                    placeholder="Ex: Karrieh" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Mot de passe</label>
+                                <input type="password" name="password" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Confirmer le mot de passe</label>
+                                <input type="password" name="confirm_password" class="form-control form-control-sm"
+                                    required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">Rôle</label>
+                                <select name="role" class="form-select form-select-sm">
+                                    <option value="bibliothecaire" selected>Bibliothécaire</option>
+                                    <option value="admin">Administrateur</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary w-100">
+                                <i class="ri-user-add-line me-1"></i> Créer le compte
+                            </button>
+                        </form>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -341,7 +349,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Êtes-vous sûr de vouloir supprimer le bibliothécaire <strong>{{ bibliothecaire.prenom }} {{ bibliothecaire.nom }}</strong> ?</p>
+                <p>Êtes-vous sûr de vouloir supprimer le bibliothécaire <strong>{{ bibliothecaire.prenom }} {{
+                        bibliothecaire.nom }}</strong> ?</p>
                 <p class="text-danger small">
                     <i class="ri-alert-line me-1"></i>
                     Cette action supprimera également le compte utilisateur associé si il existe.

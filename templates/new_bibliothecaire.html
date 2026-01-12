@@ -21,7 +21,8 @@
             <!-- Formulaire -->
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('create_bibliothecaire') }}" enctype="multipart/form-data" id="bibliothecaireForm">
+                    <form method="POST" action="{{ url_for('create_bibliothecaire') }}" enctype="multipart/form-data"
+                        id="bibliothecaireForm">
                         <!-- Section 1: Informations personnelles -->
                         <div class="mb-5">
                             <h5 class="border-bottom pb-2 mb-4">
@@ -31,21 +32,21 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Nom *</label>
-                                    <input type="text" name="nom" class="form-control" required 
-                                           placeholder="Ex: DUPONT">
+                                    <input type="text" name="nom" class="form-control" required
+                                        placeholder="Ex: Karrieh">
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label">Prénom *</label>
-                                    <input type="text" name="prenom" class="form-control" required 
-                                           placeholder="Ex: Jean">
+                                    <input type="text" name="prenom" class="form-control" required
+                                        placeholder="Ex: choueb">
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label">Date de naissance</label>
                                     <input type="date" name="date_naissance" class="form-control">
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label">Genre</label>
                                     <select name="genre" class="form-select">
@@ -76,7 +77,7 @@
                                         <option value="Administrateur">Administrateur</option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label">Département *</label>
                                     <select name="departement" class="form-select" required>
@@ -89,12 +90,12 @@
                                         <option value="Administration">Administration</option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label">Date d'embauche *</label>
                                     <input type="date" name="date_embauche" class="form-control" required>
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label">Statut *</label>
                                     <select name="statut" class="form-select" required>
@@ -104,11 +105,11 @@
                                         <option value="Suspendu">Suspendu</option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="col-12">
                                     <label class="form-label">Description du poste</label>
-                                    <textarea name="description_poste" class="form-control" rows="3" 
-                                              placeholder="Décrivez les principales responsabilités..."></textarea>
+                                    <textarea name="description_poste" class="form-control" rows="3"
+                                        placeholder="Décrivez les principales responsabilités..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -122,32 +123,32 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Email professionnel *</label>
-                                    <input type="email" name="email" class="form-control" required 
-                                           placeholder="exemple@bibliotheque.dj">
+                                    <input type="email" name="email" class="form-control" required
+                                        placeholder="exemple@bibliotheque.dj">
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label">Téléphone professionnel *</label>
-                                    <input type="tel" name="telephone" class="form-control" required 
-                                           placeholder="+253 XX XX XX XX">
+                                    <input type="tel" name="telephone" class="form-control" required
+                                        placeholder="+253 XX XX XX XX">
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label">Email personnel</label>
-                                    <input type="email" name="email_personnel" class="form-control" 
-                                           placeholder="exemple@domaine.com">
+                                    <input type="email" name="email_personnel" class="form-control"
+                                        placeholder="exemple@domaine.com">
                                 </div>
-                                
+
                                 <div class="col-md-6">
                                     <label class="form-label">Téléphone personnel</label>
-                                    <input type="tel" name="telephone_personnel" class="form-control" 
-                                           placeholder="+253 XX XX XX XX">
+                                    <input type="tel" name="telephone_personnel" class="form-control"
+                                        placeholder="+253 XX XX XX XX">
                                 </div>
-                                
+
                                 <div class="col-12">
                                     <label class="form-label">Adresse</label>
-                                    <textarea name="adresse" class="form-control" rows="2" 
-                                              placeholder="Adresse complète..."></textarea>
+                                    <textarea name="adresse" class="form-control" rows="2"
+                                        placeholder="Adresse complète..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -158,24 +159,24 @@
                                 <i class="ri-shield-user-line text-primary me-2"></i>
                                 Compte utilisateur
                             </h5>
-                            
+
                             <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" name="creer_compte" 
-                                       id="creerCompte" checked>
+                                <input class="form-check-input" type="checkbox" name="creer_compte" id="creerCompte"
+                                    checked>
                                 <label class="form-check-label fw-bold" for="creerCompte">
                                     Créer un compte utilisateur pour ce bibliothécaire
                                 </label>
                             </div>
-                            
+
                             <div id="compteFields">
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label">Nom d'utilisateur *</label>
-                                        <input type="text" name="username" class="form-control" 
-                                               placeholder="Ex: j.dupont" required>
+                                        <input type="text" name="username" class="form-control"
+                                            placeholder="Ex: Karrieh" required>
                                         <div class="form-text">Utilisé pour se connecter au système</div>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <label class="form-label">Rôle *</label>
                                         <select name="role" class="form-select" required>
@@ -183,36 +184,37 @@
                                             <option value="admin">Administrateur</option>
                                         </select>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <label class="form-label">Mot de passe *</label>
                                         <div class="input-group">
-                                            <input type="password" name="password" class="form-control" 
-                                                   id="password" required>
-                                            <button class="btn btn-outline-secondary" type="button" 
-                                                    onclick="togglePassword('password')">
+                                            <input type="password" name="password" class="form-control" id="password"
+                                                required>
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                onclick="togglePassword('password')">
                                                 <i class="ri-eye-line"></i>
                                             </button>
                                         </div>
                                         <div class="form-text">Minimum 8 caractères</div>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <label class="form-label">Confirmer le mot de passe *</label>
                                         <div class="input-group">
-                                            <input type="password" name="confirm_password" class="form-control" 
-                                                   id="confirmPassword" required>
-                                            <button class="btn btn-outline-secondary" type="button" 
-                                                    onclick="togglePassword('confirmPassword')">
+                                            <input type="password" name="confirm_password" class="form-control"
+                                                id="confirmPassword" required>
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                onclick="togglePassword('confirmPassword')">
                                                 <i class="ri-eye-line"></i>
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-12">
                                         <div class="alert alert-info">
                                             <i class="ri-information-line me-2"></i>
-                                            Un email contenant les informations de connexion sera envoyé à l'adresse email professionnelle.
+                                            Un email contenant les informations de connexion sera envoyé à l'adresse
+                                            email professionnelle.
                                         </div>
                                     </div>
                                 </div>
@@ -228,10 +230,8 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <label class="form-label">Photo (optionnel)</label>
-                                    <input type="file" name="photo" class="form-control" 
-                                           accept=".jpg,.jpeg,.png,.gif" 
-                                           id="photoInput" 
-                                           onchange="previewImage(event)">
+                                    <input type="file" name="photo" class="form-control" accept=".jpg,.jpeg,.png,.gif"
+                                        id="photoInput" onchange="previewImage(event)">
                                     <div class="form-text">
                                         Formats acceptés: JPG, PNG, GIF (max 2MB)
                                     </div>
@@ -239,9 +239,9 @@
                                 <div class="col-md-6">
                                     <div id="imagePreviewContainer" class="text-center" style="display: none;">
                                         <p class="form-label">Aperçu</p>
-                                        <img id="imagePreview" src="#" alt="Aperçu de la photo" 
-                                             class="img-thumbnail rounded-circle" 
-                                             style="width: 150px; height: 150px; object-fit: cover;">
+                                        <img id="imagePreview" src="#" alt="Aperçu de la photo"
+                                            class="img-thumbnail rounded-circle"
+                                            style="width: 150px; height: 150px; object-fit: cover;">
                                     </div>
                                 </div>
                             </div>
@@ -271,59 +271,59 @@
 </div>
 
 <script>
-// Afficher/masquer les champs du compte
-document.getElementById('creerCompte').addEventListener('change', function() {
-    const compteFields = document.getElementById('compteFields');
-    const compteInputs = compteFields.querySelectorAll('input, select');
-    
-    if (this.checked) {
-        compteFields.style.display = 'block';
-        compteInputs.forEach(input => input.required = true);
-    } else {
-        compteFields.style.display = 'none';
-        compteInputs.forEach(input => input.required = false);
-    }
-});
+    // Afficher/masquer les champs du compte
+    document.getElementById('creerCompte').addEventListener('change', function () {
+        const compteFields = document.getElementById('compteFields');
+        const compteInputs = compteFields.querySelectorAll('input, select');
 
-// Prévisualisation de l'image
-function previewImage(event) {
-    const input = event.target;
-    const previewContainer = document.getElementById('imagePreviewContainer');
-    const preview = document.getElementById('imagePreview');
-    
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            previewContainer.style.display = 'block';
+        if (this.checked) {
+            compteFields.style.display = 'block';
+            compteInputs.forEach(input => input.required = true);
+        } else {
+            compteFields.style.display = 'none';
+            compteInputs.forEach(input => input.required = false);
         }
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        previewContainer.style.display = 'none';
-    }
-}
+    });
 
-// Afficher/masquer le mot de passe
-function togglePassword(inputId) {
-    const input = document.getElementById(inputId);
-    if (input.type === 'password') {
-        input.type = 'text';
-    } else {
-        input.type = 'password';
-    }
-}
+    // Prévisualisation de l'image
+    function previewImage(event) {
+        const input = event.target;
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        const preview = document.getElementById('imagePreview');
 
-// Générer un nom d'utilisateur automatique
-document.querySelector('input[name="email"]').addEventListener('blur', function() {
-    const usernameInput = document.querySelector('input[name="username"]');
-    const email = this.value;
-    
-    if (email && (!usernameInput.value || usernameInput.value.trim() === '')) {
-        // Extraire la partie avant @ et remplacer les points par des underscores
-        const username = email.split('@')[0].toLowerCase().replace('.', '_');
-        usernameInput.value = username;
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                previewContainer.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            previewContainer.style.display = 'none';
+        }
     }
-});
+
+    // Afficher/masquer le mot de passe
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+        } else {
+            input.type = 'password';
+        }
+    }
+
+    // Générer un nom d'utilisateur automatique
+    document.querySelector('input[name="email"]').addEventListener('blur', function () {
+        const usernameInput = document.querySelector('input[name="username"]');
+        const email = this.value;
+
+        if (email && (!usernameInput.value || usernameInput.value.trim() === '')) {
+            // Extraire la partie avant @ et remplacer les points par des underscores
+            const username = email.split('@')[0].toLowerCase().replace('.', '_');
+            usernameInput.value = username;
+        }
+    });
 </script>
 
 {% endblock %}
