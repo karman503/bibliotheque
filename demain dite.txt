@@ -1,0 +1,38 @@
+Le journal de bord est l’outil qui nous a permis de suivre l’avancement du projet jour par jour et de garder une trace claire des actions réalisées par l’équipe.
+
+En tant que chef de projet, j’ai veillé à ce que chaque étape importante soit enregistrée : la réunion de lancement, l’analyse des besoins, la rédaction de la charte, la conception du MCD, le choix des technologies, la création des maquettes, le développement des interfaces, les tests et enfin la préparation de la livraison.
+
+Nous avons noté également les difficultés rencontrées, comme la répartition des rôles, les erreurs MySQL, ou des hésitations sur la maquette. Pour chaque problème, nous avons indiqué les solutions prises immédiatement : discussions d’équipe, validations collectives, corrections techniques, ou ajustements ergonomiques.
+
+L’objectif du journal était double : d’abord suivre l’évolution du travail, ensuite garder une trace claire pour améliorer la coordination. Grâce à ce suivi, l’équipe est restée organisée, réactive et cohérente, ce qui nous a permis de respecter le planning jusqu’à la clôture du projet le 30 novembre. »
+
+
+
+
+
+
+Le registre des risques est un document essentiel dans la gestion de projet. Il nous a permis d’anticiper tous les problèmes potentiels avant qu’ils ne surviennent, afin de ne pas ralentir le projet.
+
+Nous avons identifié plusieurs risques majeurs :
+
+* la perte des fichiers,
+* une maquette mal conçue,
+* le retard dans le développement,
+* les problèmes de connexion MySQL,
+* les conflits internes,
+* et le risque d’un rapport final rendu en retard.
+
+Pour chacun, nous avons évalué la probabilité, l’impact et surtout l’effet possible sur notre projet : blocage du développement, mauvaise interface, retard global ou baisse de productivité.
+
+Ensuite, nous avons défini des actions de prévention. Par exemple :
+
+* sauvegardes quotidiennes sur Drive et GitHub pour éviter les pertes,
+* validation des maquettes avant de coder,
+* respect du planning Gantt,
+* tests de connexion MySQL dès le début,
+* réunions régulières pour éviter les conflits,
+* rédaction du rapport en parallèle du développement.
+
+Ce registre nous a permis d’être prêts à réagir rapidement et d’éviter des retards ou des erreurs qui auraient pu compromettre le projet. Grâce à cette anticipation, nous avons pu mener le projet jusqu’à la fin dans de bonnes conditions. »
+
+
